@@ -3,6 +3,7 @@
 \usepackage{enumitem}
 \usepackage{hyperref}
 \usepackage{bbm}
+\usepackage{algorithm2e}
 
 \usepackage[verbose=true,letterpaper]{geometry}
 \newgeometry{
@@ -35,6 +36,11 @@
 
 \newcommand{\argmin}{\arg\min}
 
+\usepackage{color}
+\usepackage{todonotes}
+\newcommand{\todoT}[1]{\todo[inline,color=blue!40]{{\textbf{T:}~}#1}}
+
+
 % To include the section number in the equation numbering:
 \numberwithin{equation}{section}
 \title{Adaptive stopping in Monte-Carlo evaluation for Deep RL}
@@ -42,11 +48,68 @@
 \begin{document}
 \maketitle
 \section{Description of the problem}
+In Reinforcement Learning, we often use Monte-Carlo methods to evaluate the performances of an algorithm. In particular, if we denote $e(A)$ some evaluation of algorithm $A$), the global score of an algorithm by 
+$$S(A)=\frac{1}{N}\sum_{i=1}^N e_i(A) $$
+where $e_1(A), \dots,e_N(A)$ are the evaluation of the algorithm $A$ on $N$ different seeds (i.e. $e_1(A),\dots,e_N(A)$ are supposed i.i.d).
+
+The goal of this article is to evaluate how high $N$ must be to have a good control on $S(A)$. In particular, when we compare two algorithms $A_1$ and $A_2$, how can we choose the value of $N$ that is large enough to compare $S(A_1)$ and $S(A_2)$? This is a trade-off between computational time and the need to assess correctly the scores of $A_1$ and $A_2$.
+
 \section{Adaptive stopping using Group Sequential Testing}
-\section{Algorithmic considerations}
+
+\todoT{Explain why must be careful when doing GST and that we can't just do several tests. Maybe also motivate using the confidence interval approach from NIPS article.}
+
+To choose $N$ adaptively, we propose to use group sequential testing (GST). GST are used in particular in clinical trials in which case an early stopping is desirable when comparing two drugs. We choose to use GST in particular and not sequential testing because the data are often naturally grouped due to the parallelization of the computation.
+
+GST often suppose strong models on the data, in particular it is often supposed that the data are i.i.d. from a Gaussian distribution. This assumption is often not verified in the case of $e_i(A)$ being evaluations from a RL algorithm. In particular, the distribution of $e_i(A)$ often presents several modes and it can sometimes contain outliers. 
+
+\todoT{Explain why several modes and give examples of distributions of DeepRL algos on classical environments}
+
+The presence of several modes in the distributions of the evaluations and the difficulty to make any distributional assumption justify a non-parametric approach of the problem, but to further justify this approach we did a study of the effect of model misspecification on simulated data when using Gaussian GST algorithm. 
+
+\begin{algorithm}[h]
+\SetAlgoLined
+\SetKwInput{KwParameter}{Parameters}
+\KwParameter{Algorithms $A_1,A_2$, environment $\mathcal{E}$, number of blocks $K \in \N^*$, size of a block $n$, level of the test $\alpha\in (0,1)$.}
+Define $2nK$ different seeds $s_{1,1},\dots,s_{1,n},s_{2,1},\dots,s_{2,n}$.\\
+\For{$t=1,\dots,K$}{
+\For{$i=1,2$}{
+Train aglorithm $A_i$ on environment $\mathcal{E}$ on seeds $s_{i,tn},\dots,s_{i,(t+1)n}$.\\
+Collect evaluations $e_{tn}(A_i),\dots,e_{(t+1)n}(A_i)$.\\
+Compute $S_t(A_i)=\frac{1}{nt}\sum_{j=1}^{nt}e_{j}(A_i)$.
+}
+Test  $H_0: S_t(A_1)=S_t(A_2)$ versus $H_1: S_t(A_1)\neq S_t(A_2)$ using Algorithm~\ref{alg:gst}.\\
+If reject $H_0$, break the loop.
+}
+If the test was never rejected, return accept. Else return reject.
+\caption{Adaptive Stopping.}\label{alg:adastop}
+\end{algorithm}
+
+
+\begin{algorithm}[h]
+\SetAlgoLined
+\SetKwInput{KwParameter}{Parameters}
+\KwParameter{Evaluations $e_1(A_i),\dots,e_t(A_i)$ for $i \in \{1,2\}$, level of the test $\alpha$, number of blocks $K$, number of permutations $B$.}
+Compute $t_0=S_t(A_1)-S_t(A_2)$.\\
+Define $Z_1,\dots,Z_{2t}$ with 
+$$Z_i = \begin{cases}e_i(A_1) & \text{ if }1\le i\le t\\ e_{i-t}(A) & \text{ if }t+1\le i\le 2t \end{cases} $$ 
+\For{$b=1,\dots,B$}{
+Draw a permutation $\sigma$ uniformly at random in $\mathcal{S}_{2t}$.\\
+Compute 
+$$t_b = \frac{1}{t}\sum_{i=1}^t Z_{\sigma(i)}-\frac{1}{t}\sum_{i=t+1}^{2t} Z_{\sigma(i)}$$
+}
+Let $q_1$ be the empirical quantile of level $\frac{\alpha}{2K}$ of $t_1,\dots,t_B$ and $q_2$ the empirical quantile of level $1-\frac{\alpha}{2K}$.\\
+If $t_0\le q_1$ or $t_0 \ge q_2$  then reject $H_0$. Else, do not reject $H_0$.
+\caption{Step $t$ of Permutation GST.}\label{alg:gst}
+\end{algorithm}
+
+\todoT{Give several proposition of GST algorithms and change the permutation test using Improved Bonferroni inequality.}
+\newpage
+\section{Simulation study}
+\todoT{Misspecification study of Gaussian GST on uniform and maybe on multi-modal distributions}
+\todoT{Comparison of GST algorithms on gaussian Data.}
 \section{Experimental results}
-
-
+\todoT{Apply to some classical algorithms on classical environments. Maybe also try to 
+replicate adaptively the results of the NIPS article : do we also stop around 20 iterations when comparing two agents on an Atari environment?}
 \bibliographystyle{plain}
 \bibliography{biblio_file}
 \end{document}
