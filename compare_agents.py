@@ -7,6 +7,7 @@ from alt_agent_manager import AgentManager
 import os
 from scipy.special import binom
 import pdb
+from sortedcontainers import SortedList
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +33,9 @@ class AgentComparator:
             )
 
     def explore_graph(self, k, Rs, boundary):
-        records = ([np.array([0] * (k + 1))], [1])
+        sl = SortedList()
+        sl.add([0] * (k + 1))
+        records = ( sl, [1])
         for j in range(k + 1):
             cs = [(0, 0)]
             rec_nodes = [(0, 0)]*len(records[0])
@@ -40,7 +43,7 @@ class AgentComparator:
                 nodes = deepcopy(rec_nodes)
                 old_records = deepcopy(records)
                 assert len(nodes) == len(old_records[0])
-                records = ([], [])
+                records = (SortedList(), [])
                 rec_nodes = []
                 csnew = []
                 for id_record in range(len(old_records[0])):  # Step 1
@@ -75,17 +78,18 @@ class AgentComparator:
                                 #         can_be_dropped = True
                                 #     print(unew, test, boundary[-1], records)
                             if len(records[0]) > 0:
-                                is_in = np.all(unew == np.array(records[0]), axis=1) 
+                                is_in = unew in records[0]
                             else:
                                 is_in = False
                             #if can_be_dropped == False:
-                            if np.any(is_in):
-                                l = np.where(is_in)[0][0]
+                            if is_in:
+                                l = records[0].index(unew)
+
                             if np.any(is_in) and (rec_nodes[l]==child):  # Step 4
                                 records[1][l] += cu
                             else:
 
-                                records[0].append(unew)
+                                records[0].add(unew)
                                 records[1].append(cu)
                                 rec_nodes.append(child)
                             # else:
@@ -107,14 +111,17 @@ class AgentComparator:
 
     def postprocess_records(self, records, boundary, rec_nodes):
         # Pruning for conditional proba
-        idxs = np.array([r[0] < boundary[-1] for r in records[0]])
+        idxs = np.where(np.array([r[0] < boundary[-1] for r in records[0]]))[0]
         if len(idxs)>0:
-            records = (list(np.array(records[0])[idxs]), list(np.array(records[1])[idxs]))
-            rec_nodes = list(np.array(rec_nodes)[idxs])
+            #breakpoint()
+            new_list = [ records[0][i] for i in idxs]
+            records = (new_list, list(np.array(records[1])[idxs]))
+            rec_nodes = [ rec_nodes[i] for i in idxs]
 
         # Remove the first element of all the records.
         for i in range(len(records[0])):
             records[0][i] = records[0][i][1:]
+        records = (SortedList(records[0]), records[1])
         return records, rec_nodes
 
     def compare(self, manager1, manager2):
