@@ -8,6 +8,7 @@ import os
 from scipy.special import binom
 import pdb
 from sortedcontainers import SortedList
+from scipy.stats import rankdata
 
 logger = logging.getLogger(__name__)
 
@@ -35,11 +36,12 @@ class AgentComparator:
     def explore_graph(self, k, Rs, boundary):
         sl = SortedList()
         sl.add([0] * (k + 1))
-        records = ( sl, [1], [(0,0)]*(k+1)) # rank score, count of number of path yielding rank, nodes
+        records = ( sl, [1], [(0,0)]) # rank score, count of number of path yielding rank, nodes
         for j in range(k + 1):
             cs = [(0, 0)]
+            records=(records[0], records[1],[(0,0)]*len(records[0]))
             for f in range(2 * self.n):  # Stage f of the network
-                old_records = (records[0], records[1],  [(0,0)]*len(records[0]))
+                old_records = (records[0], records[1],  records[2])
                 records = (SortedList(), [], [])
                 csnew = []
                 for id_record in range(len(old_records[0])):  # Step 1
@@ -72,7 +74,6 @@ class AgentComparator:
                                 #         test += np.sum(rs[idx][:self.n])
                                 #     if test > boundary[-1]:
                                 #         can_be_dropped = True
-                                #     print(unew, test, boundary[-1], records)
                             if len(records[0]) > 0:
                                 is_in = unew in records[0]
                             else:
@@ -97,7 +98,7 @@ class AgentComparator:
                             #         rec_nodes.pop(l)
                             if child not in csnew:
                                 csnew.append(child)
-                            #print(unew, records[0], child, rec_nodes)
+                            #print(unew, records[0], child)
                         
                 cs = csnew
             if j != k:
@@ -159,7 +160,7 @@ class AgentComparator:
             # Z1 = self._get_rewards(m1)
             # Z2 = self._get_rewards(m2)
             Z1 = np.random.normal(size=self.n)
-            Z2 = 3+np.random.normal(size=self.n)
+            Z2 = np.random.normal(size=self.n)
 
             Z = np.hstack([Z, Z1, Z2])
             X = np.hstack([X, np.zeros(self.n), np.ones(self.n)])
@@ -182,7 +183,6 @@ class AgentComparator:
             
             T = np.sum(Rs[-1] * X)
             level_spent += cumulative_probas[level_spent + cumulative_probas <= clevel][0]
-            breakpoint()
 
             if T > bk:
                 self.decision = "reject"
@@ -205,7 +205,7 @@ class AgentComparator:
     def _get_ranks(self, Z, k):
         Rs = []
         for j in range(k + 1):
-            Rs.append(np.argsort(Z[: (2 * self.n * (j + 1))])+1)
+            Rs.append(rankdata(Z[: (2 * self.n * (j + 1))]))
         return Rs
 
     def _get_rewards(self, manager):
