@@ -182,7 +182,7 @@ class AgentComparator:
             
             T = np.sum(Rs[-1] * X)
             level_spent += cumulative_probas[level_spent + cumulative_probas <= clevel][0]
-            #breakpoint()
+            breakpoint()
 
             if T > bk:
                 self.decision = "reject"
