@@ -5,9 +5,9 @@ from compare_agents import AgentComparator
 import time
 # GST definition
 
-K = 7  # at most 5 groups
+K = 6  # at most 5 groups
 alpha = 0.05
-n = 2 # size of a group
+n = 3 # size of a group
 
 comparator = AgentComparator(n, K, alpha)
 
@@ -47,7 +47,7 @@ if __name__ == "__main__":
         parallelization="process",
         mp_context="forkserver",)
     )
-    M = 1
+    M = 100
     res = []
     for _ in range(M):
         a = time.time()
