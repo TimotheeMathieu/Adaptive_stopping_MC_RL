@@ -2,7 +2,7 @@ import logging
 import numpy as np
 import pandas as pd
 from scipy import stats
-from copy import deepcopy
+from copy import copy
 from alt_agent_manager import AgentManager
 import os
 from scipy.special import binom
@@ -36,12 +36,16 @@ class AgentComparator:
     def explore_graph(self, k, Rs, boundary):
         sl = SortedList()
         sl.add([0] * (k + 1))
-        records = ( sl, [1], [(0,0)]) # rank score, count of number of path yielding rank, nodes
+        records = (
+            sl,
+            [1],
+            [(0, 0)],
+        )  # rank score, count of number of path yielding rank, nodes
         for j in range(k + 1):
             cs = [(0, 0)]
-            records=(records[0], records[1],[(0,0)]*len(records[0]))
+            records = (records[0], records[1], [(0, 0)] * len(records[0]))
             for f in range(2 * self.n):  # Stage f of the network
-                old_records = (records[0], records[1],  records[2])
+                old_records = (records[0], records[1], records[2])
                 records = (SortedList(), [], [])
                 csnew = []
                 for id_record in range(len(old_records[0])):  # Step 1
@@ -51,44 +55,44 @@ class AgentComparator:
                     children = _get_children(c, 2 * self.n)  # Step 2
                     if children is not None:
                         for child in children:
-                            unew = deepcopy(u)  # Step 3
+                            unew = copy(u) # deepcopy(u)  # Step 3
                             for l in range(k + 1 - j):
                                 unew[l] = unew[l] + Rs[j + l][f + 2 * self.n * j] * (
-                                      child[1] - c[1]
+                                    child[1] - c[1]
                                 )
                             # Test if can be dropped
-                            
-                            #can_be_dropped = False
-                            #if (len(boundary)>0) and (j != k):
-                                #if np.any(unew > boundary[-1]):
-                                #    can_be_dropped = True
-                                # for l in range(k+1-j):
-                                #     test = deepcopy(unew[l])
-                                    
-                                #     rs = Rs[j + l][(f + 2 * self.n * j):(2*self.n * (j+1))]
-                                #     idx = np.argsort(rs)
-                                #     test +=  np.sum(rs[idx][:(self.n-f-1)])
-                                #     for ll in range(1,l):
-                                #         rs = Rs[j + l][( 2 * self.n * (j+ll)):(2*self.n * (j+ll+1))]
-                                #         idx = np.argsort(rs)
-                                #         test += np.sum(rs[idx][:self.n])
-                                #     if test > boundary[-1]:
-                                #         can_be_dropped = True
+
+                            # can_be_dropped = False
+                            # if (len(boundary)>0) and (j != k):
+                            # if np.any(unew > boundary[-1]):
+                            #    can_be_dropped = True
+                            # for l in range(k+1-j):
+                            #     test = deepcopy(unew[l])
+
+                            #     rs = Rs[j + l][(f + 2 * self.n * j):(2*self.n * (j+1))]
+                            #     idx = np.argsort(rs)
+                            #     test +=  np.sum(rs[idx][:(self.n-f-1)])
+                            #     for ll in range(1,l):
+                            #         rs = Rs[j + l][( 2 * self.n * (j+ll)):(2*self.n * (j+ll+1))]
+                            #         idx = np.argsort(rs)
+                            #         test += np.sum(rs[idx][:self.n])
+                            #     if test > boundary[-1]:
+                            #         can_be_dropped = True
                             if len(records[0]) > 0:
                                 is_in = unew in records[0]
                             else:
                                 is_in = False
-                            #if can_be_dropped == False:
+                            # if can_be_dropped == False:
                             if is_in:
                                 l = records[0].index(unew)
-                                
-                            if np.any(is_in) and (records[2][l]==child):  # Step 4
+
+                            if np.any(is_in) and (records[2][l] == child):  # Step 4
                                 records[1][l] += cu
                             else:
 
                                 records[0].add(unew)
                                 l = records[0].index(unew)
-                                records[1].insert(l,cu)
+                                records[1].insert(l, cu)
                                 records[2].insert(l, child)
                             # else:
                             #     if np.any(is_in):
@@ -98,22 +102,24 @@ class AgentComparator:
                             #         rec_nodes.pop(l)
                             if child not in csnew:
                                 csnew.append(child)
-                            #print(unew, records[0], child)
-                        
+                            # print(unew, records[0], child)
+
                 cs = csnew
             if j != k:
-                records = self.postprocess_records(
-                    records, boundary
-                )
-            
+                records = self.postprocess_records(records, boundary)
+
         return records
 
     def postprocess_records(self, records, boundary):
         # Pruning for conditional proba
         idxs = np.where(np.array([r[0] < boundary[-1] for r in records[0]]))[0]
-        if len(idxs)>0:
-            new_list = [ records[0][i] for i in idxs]
-            records = (new_list, list(np.array(records[1])[idxs]),list(np.array(records[2])[idxs]) )
+        if len(idxs) > 0:
+            new_list = [records[0][i] for i in idxs]
+            records = (
+                new_list,
+                list(np.array(records[1])[idxs]),
+                list(np.array(records[2])[idxs]),
+            )
 
         # Remove the first element of all the records.
         sl = SortedList()
@@ -175,14 +181,15 @@ class AgentComparator:
             probas = np.array(records[1]) / binom(2 * self.n, self.n) ** (k + 1)
             values = np.array(ranks)[idx]
 
-            cumulative_probas = np.sum(probas)-np.cumsum(probas[idx])
-            admissible_values = values[level_spent +cumulative_probas <= clevel ]
+            cumulative_probas = np.sum(probas) - np.cumsum(probas[idx])
+            admissible_values = values[level_spent + cumulative_probas <= clevel]
             bk = np.min(admissible_values)
             boundary.append(bk)
 
-            
             T = np.sum(Rs[-1] * X)
-            level_spent += cumulative_probas[level_spent + cumulative_probas <= clevel][0]
+            level_spent += cumulative_probas[level_spent + cumulative_probas <= clevel][
+                0
+            ]
 
             if T > bk:
                 self.decision = "reject"

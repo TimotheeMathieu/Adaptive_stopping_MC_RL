@@ -47,7 +47,7 @@ if __name__ == "__main__":
         parallelization="process",
         mp_context="forkserver",)
     )
-    M = 100
+    M = 1000
     res = []
     for _ in range(M):
         a = time.time()
