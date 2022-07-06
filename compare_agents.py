@@ -11,6 +11,7 @@ from sortedcontainers import SortedList
 from scipy.stats import rankdata
 from rlberry.envs.interface import Model
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -55,7 +56,7 @@ class AgentComparator:
             )
         else:
             raise RuntimeError('name not implemented')
-
+        
     def explore_graph(self, k, Rs, boundary):
         """
         Explore graph of permutations. Used to get the boundary
@@ -104,7 +105,6 @@ class AgentComparator:
                             if np.any(is_in) and (records[2][l] == child):  # Step 4
                                 records[1][l] += cu
                             else:
-
                                 records[0].add(unew)
                                 l = records[0].index(unew)
                                 records[1].insert(l, cu)
@@ -171,7 +171,6 @@ class AgentComparator:
             X = np.hstack([X, np.zeros(self.n), np.ones(self.n)])
 
             Rs = self._get_ranks(Z, k)
-
             clevel = spending_fun((k + 1) / self.K)
 
             records = self.explore_graph(k, Rs, boundary)
