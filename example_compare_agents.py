@@ -3,11 +3,12 @@ from rlberry.agents.torch import A2CAgent
 from rlberry.envs import gym_make
 from compare_agents import AgentComparator
 import time
+import numpy as np
 # GST definition
 
-K = 5  # at most 5 groups
+K = 3  # at most 5 groups
 alpha = 0.05
-n = 3 # size of a group
+n = 5 # size of a group
 
 comparator = AgentComparator(n, K, alpha)
 
@@ -17,7 +18,7 @@ env_kwargs = dict(id="CartPole-v1")
 seed = 42
 budget = 1e2
 
-
+np.random.seed(seed)
 if __name__ == "__main__":
     
     manager1 = (
@@ -47,7 +48,7 @@ if __name__ == "__main__":
         parallelization="process",
         mp_context="forkserver",)
     )
-    M = 1000
+    M = 1
     res = []
     for _ in range(M):
         a = time.time()
