@@ -1,14 +1,14 @@
 import logging
 import numpy as np
-import pandas as pd
-from scipy import stats
 from copy import copy
-from alt_agent_manager import AgentManager
 import os
+from scipy import stats
 from scipy.special import binom
+from scipy.stats import rankdata
+
 import pdb
 from sortedcontainers import SortedList
-from scipy.stats import rankdata
+from rlberry.manager import AgentManager
 from rlberry.envs.interface import Model
 
 
