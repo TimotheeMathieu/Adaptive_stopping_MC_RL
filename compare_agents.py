@@ -16,10 +16,30 @@ logger = logging.getLogger(__name__)
 
 class AgentComparator:
     """
-    TODO: make a documentation
+    Compare sequentially two agents, with possible early stopping.
+    At maximum, there can be n times K fits done.
+
+    Parameters
+    ----------
+
+    n: int, default=5
+        number of fits before each early stopping check
+
+    K: int, default=5
+        number of checks 
+
+    alpha: float, default=0.05
+        level of the test
+
+    name: str in {'PK', 'OF'}, default = "PK"
+        type of spending function to use.
+
+    n_evaluations: int, default=10
+        number of evaluations used in the function _get_rewards.
+    
     """
 
-    def __init__(self, n=10, K=5, alpha=0.05, name="PK", n_evaluations=10):
+    def __init__(self, n=10, K=5, alpha=0.05, name="PK", n_evaluations=1):
         self.n = n
         self.K = K
         self.alpha = alpha
@@ -33,8 +53,22 @@ class AgentComparator:
             return lambda p: 2 - 2 * stats.norm.cdf(
                 stats.norm.ppf(1 - self.alpha / 2) / np.sqrt(p)
             )
+        else:
+            raise RuntimeError('name not implemented')
 
     def explore_graph(self, k, Rs, boundary):
+        """
+        Explore graph of permutations. Used to get the boundary
+
+        Parameters
+        ----------
+        k: int
+            current interim in the algorithm
+        Rs: array of arrays
+            ranks of the data until now, at each interim
+        boundary: list of floats
+            boundary until now
+        """
         sl = SortedList()
         sl.add([0] * (k + 1))
         records = (
@@ -99,10 +133,13 @@ class AgentComparator:
 
     def compare(self, manager1, manager2):
         """
+        Test whether manager1 is better than manager2
+
+        Parameters
+        ----------
         manager1 : tuple of agent_class and init_kwargs for the agent.
         manager2 : tuple of agent_class and init_kwargs for the agent.
 
-        Test whether manager1 is better than manager2
         """
         X = np.array([])
         Z = np.array([])
