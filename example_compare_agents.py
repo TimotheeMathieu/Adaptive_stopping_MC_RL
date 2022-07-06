@@ -5,6 +5,9 @@ import rlberry.spaces as spaces
 from compare_agents import AgentComparator
 import time
 import numpy as np
+from tqdm import tqdm
+
+
 # GST definition
 
 K = 3  # at most 5 groups
@@ -90,7 +93,7 @@ if __name__ == "__main__":
     
     M = 1
     res = []
-    for _ in range(M):
+    for _ in tqdm(range(M)):
         a = time.time()
         comparator.compare(manager2, manager1)
         res.append(comparator.decision)
