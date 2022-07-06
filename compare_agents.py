@@ -42,12 +42,12 @@ class AgentComparator:
             [(0, 0)],
         )  # rank score, count of number of path yielding rank, nodes
         for j in range(k + 1):
-            cs = [(0, 0)]
+            #cs = [(0, 0)]
             records = (records[0], records[1], [(0, 0)] * len(records[0]))
             for f in range(2 * self.n):  # Stage f of the network
                 old_records = (records[0], records[1], records[2])
                 records = (SortedList(), [], [])
-                csnew = []
+                #csnew = []
                 for id_record in range(len(old_records[0])):  # Step 1
                     u = old_records[0][id_record]
                     cu = old_records[1][id_record]
@@ -100,11 +100,11 @@ class AgentComparator:
                             #         records[1].pop(l)
                             #         records[0].pop(l)
                             #         rec_nodes.pop(l)
-                            if child not in csnew:
-                                csnew.append(child)
+                            #if child not in csnew:
+                                #csnew.append(child)
                             # print(unew, records[0], child)
 
-                cs = csnew
+                #cs = csnew
             if j != k:
                 records = self.postprocess_records(records, boundary)
 
@@ -122,15 +122,9 @@ class AgentComparator:
             )
 
         # Remove the first element of all the records.
-        sl = SortedList()
-        r1 = []
-        r2 = []
+
         for i in range(len(records[0])):
-            sl.add(records[0][i][1:])
-            l = sl.index(records[0][i][1:])
-            r1.insert(l, records[1][i])
-            r2.insert(l, records[2][i])
-        records = (sl, r1, r2)
+            records[0][i] = records[0][i][1:]
         return records
 
     def compare(self, manager1, manager2):
@@ -183,14 +177,16 @@ class AgentComparator:
 
             cumulative_probas = np.sum(probas) - np.cumsum(probas[idx])
             admissible_values = values[level_spent + cumulative_probas <= clevel]
-            bk = np.min(admissible_values)
+            if len(admissible_values)>0:
+                bk = admissible_values[1] # the minimum admissible value
+            else:
+                bk = np.inf
             boundary.append(bk)
 
             T = np.sum(Rs[-1] * X)
             level_spent += cumulative_probas[level_spent + cumulative_probas <= clevel][
                 0
             ]
-
             if T > bk:
                 self.decision = "reject"
             else:
