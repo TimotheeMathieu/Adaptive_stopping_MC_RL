@@ -9,6 +9,7 @@ from scipy.special import binom
 import pdb
 from sortedcontainers import SortedList
 from scipy.stats import rankdata
+from rlberry.envs.interface import Model
 
 logger = logging.getLogger(__name__)
 
@@ -42,12 +43,10 @@ class AgentComparator:
             [(0, 0)],
         )  # rank score, count of number of path yielding rank, nodes
         for j in range(k + 1):
-            #cs = [(0, 0)]
             records = (records[0], records[1], [(0, 0)] * len(records[0]))
             for f in range(2 * self.n):  # Stage f of the network
                 old_records = (records[0], records[1], records[2])
                 records = (SortedList(), [], [])
-                #csnew = []
                 for id_record in range(len(old_records[0])):  # Step 1
                     u = old_records[0][id_record]
                     cu = old_records[1][id_record]
@@ -55,34 +54,16 @@ class AgentComparator:
                     children = _get_children(c, 2 * self.n)  # Step 2
                     if children is not None:
                         for child in children:
-                            unew = copy(u) # deepcopy(u)  # Step 3
+                            unew = copy(u) # Step 3
                             for l in range(k + 1 - j):
                                 unew[l] = unew[l] + Rs[j + l][f + 2 * self.n * j] * (
                                     child[1] - c[1]
                                 )
-                            # Test if can be dropped
 
-                            # can_be_dropped = False
-                            # if (len(boundary)>0) and (j != k):
-                            # if np.any(unew > boundary[-1]):
-                            #    can_be_dropped = True
-                            # for l in range(k+1-j):
-                            #     test = deepcopy(unew[l])
-
-                            #     rs = Rs[j + l][(f + 2 * self.n * j):(2*self.n * (j+1))]
-                            #     idx = np.argsort(rs)
-                            #     test +=  np.sum(rs[idx][:(self.n-f-1)])
-                            #     for ll in range(1,l):
-                            #         rs = Rs[j + l][( 2 * self.n * (j+ll)):(2*self.n * (j+ll+1))]
-                            #         idx = np.argsort(rs)
-                            #         test += np.sum(rs[idx][:self.n])
-                            #     if test > boundary[-1]:
-                            #         can_be_dropped = True
                             if len(records[0]) > 0:
                                 is_in = unew in records[0]
                             else:
                                 is_in = False
-                            # if can_be_dropped == False:
                             if is_in:
                                 l = records[0].index(unew)
 
@@ -94,17 +75,6 @@ class AgentComparator:
                                 l = records[0].index(unew)
                                 records[1].insert(l, cu)
                                 records[2].insert(l, child)
-                            # else:
-                            #     if np.any(is_in):
-                            #         l = np.where(is_in)[0][0]
-                            #         records[1].pop(l)
-                            #         records[0].pop(l)
-                            #         rec_nodes.pop(l)
-                            #if child not in csnew:
-                                #csnew.append(child)
-                            # print(unew, records[0], child)
-
-                #cs = csnew
             if j != k:
                 records = self.postprocess_records(records, boundary)
 
@@ -122,9 +92,9 @@ class AgentComparator:
             )
 
         # Remove the first element of all the records.
-
         for i in range(len(records[0])):
             records[0][i] = records[0][i][1:]
+        # returns unsorted list as we don't need sorted lists for old_records
         return records
 
     def compare(self, manager1, manager2):
@@ -154,13 +124,11 @@ class AgentComparator:
             m1 = AgentManager(agent_class1, **kwargs1)
             m2 = AgentManager(agent_class2, **kwargs2)
 
-            # m1.fit()
-            # m2.fit()
+            m1.fit()
+            m2.fit()
 
-            # Z1 = self._get_rewards(m1)
-            # Z2 = self._get_rewards(m2)
-            Z1 = np.random.normal(size=self.n)
-            Z2 = np.random.normal(size=self.n)
+            Z1 = self._get_rewards(m1)
+            Z2 = self._get_rewards(m2)
 
             Z = np.hstack([Z, Z1, Z2])
             X = np.hstack([X, np.zeros(self.n), np.ones(self.n)])
