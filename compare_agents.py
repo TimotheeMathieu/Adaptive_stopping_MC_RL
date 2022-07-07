@@ -19,6 +19,7 @@ class AgentComparator:
     Compare sequentially two agents, with possible early stopping.
     At maximum, there can be n times K fits done.
 
+    n should be >= 5 in order for the permutation test to perform well.
     Parameters
     ----------
 
@@ -44,7 +45,7 @@ class AgentComparator:
         decision of the test.
     """
 
-    def __init__(self, n=10, K=5, alpha=0.05, name="PK", n_evaluations=1):
+    def __init__(self, n=5, K=5, alpha=0.05, name="PK", n_evaluations=1):
         self.n = n
         self.K = K
         self.alpha = alpha
@@ -117,13 +118,13 @@ class AgentComparator:
                                 records[1].insert(l, cu)
                                 records[2].insert(l, child)
             if j != k:
-                records = self.postprocess_records(records, boundary)
+                records = self.postprocess_records(records, boundary, j)
 
         return records
 
-    def postprocess_records(self, records, boundary):
+    def postprocess_records(self, records, boundary, j):
         # Pruning for conditional proba
-        idxs = np.where(np.array([r[0] < boundary[-1] for r in records[0]]))[0]
+        idxs = np.where(np.array([boundary[j][0] < r[0] < boundary[j][1] for r in records[0]]))[0]
         if len(idxs) > 0:
             new_list = [records[0][i] for i in idxs]
             records = (
