@@ -2,14 +2,22 @@
 
 Adaptive stopping when evaluating RL agents with evaluation estimated through Monte-Carlo methods.
 
-TODO:
+## Quick start
+
+The main algorithm is in `compare_agents.py` and is called `AgentComparator`.
+
+In `example_compare_agent.py` the comparator is used to know whether manager1 and manager2 are deemed different on the environment.
+
+
+
+## TODO:
 - [ ] See about power and sample-size requirements.
 - [ ] See about multiple testing to test multiple agents at the same time. Use Bonferroni?
 - [ ] See about theoretical results on the permutation GST.
 - [ ] Do the simulation studies
 - [ ] Do the empirical studies.
 
-Refs:
+## Refs:
 - Permutation test https://www.jstor.org/stable/2533442?seq=1
 - Stats in RL 1: https://arxiv.org/pdf/1806.08295.pdf
 - Stats in RL 2: https://arxiv.org/pdf/1904.06979.pdf
