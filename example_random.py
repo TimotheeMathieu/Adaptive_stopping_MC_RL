@@ -11,7 +11,7 @@ from tqdm import tqdm
 
 K = 3  # at most 3 groups
 alpha = 0.05
-n = 4  # size of a group
+n = 3  # size of a group
 
 comparator = AgentComparator(n, K, alpha)
 
@@ -41,7 +41,6 @@ class DummyEnv(Model):
         return 0
 
 
-np.random.seed(seed)
 if __name__ == "__main__":
 
     manager1 = (
