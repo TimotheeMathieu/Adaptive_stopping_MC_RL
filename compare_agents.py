@@ -11,7 +11,6 @@ from sortedcontainers import SortedList
 from rlberry.manager import AgentManager
 from rlberry.envs.interface import Model
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -27,7 +26,7 @@ class AgentComparator:
         number of fits before each early stopping check
 
     K: int, default=5
-        number of checks 
+        number of checks
 
     alpha: float, default=0.05
         level of the test
@@ -37,7 +36,12 @@ class AgentComparator:
 
     n_evaluations: int, default=10
         number of evaluations used in the function _get_rewards.
-    
+
+    Attributes
+    ----------
+
+    decision: str in {"accept" , "reject"}
+        decision of the test.
     """
 
     def __init__(self, n=10, K=5, alpha=0.05, name="PK", n_evaluations=1):
@@ -46,6 +50,9 @@ class AgentComparator:
         self.alpha = alpha
         self.name = name
         self.n_evaluations = n_evaluations
+        self.boundary = []
+        self.level_spent1 = 0
+        self.level_spent2 = 0
 
     def get_spending_fun(self):
         if self.name == "PK":
@@ -55,8 +62,8 @@ class AgentComparator:
                 stats.norm.ppf(1 - self.alpha / 2) / np.sqrt(p)
             )
         else:
-            raise RuntimeError('name not implemented')
-        
+            raise RuntimeError("name not implemented")
+
     def explore_graph(self, k, Rs, boundary):
         """
         Explore graph of permutations. Used to get the boundary
@@ -89,7 +96,7 @@ class AgentComparator:
                     children = _get_children(c, 2 * self.n)  # Step 2
                     if children is not None:
                         for child in children:
-                            unew = copy(u) # Step 3
+                            unew = copy(u)  # Step 3
                             for l in range(k + 1 - j):
                                 unew[l] = unew[l] + Rs[j + l][f + 2 * self.n * j] * (
                                     child[1] - c[1]
@@ -131,9 +138,80 @@ class AgentComparator:
         # returns unsorted list as we don't need sorted lists for old_records
         return records
 
+    def partial_fit(self, Z1, Z2, k):
+        """
+        Do the test of the k^th interim.
+        The answer of the test
+
+        Parameters
+        ----------
+        Z1: array
+            All the evaluations of Agent 1 up till interim k
+        Z2: array
+            All the evaluations of Agent 2 up till interim k
+        k: int
+            index of the interim, in {0,...,K-1}
+
+        Returns
+        -------
+        decision: str in {'accept', 'reject', 'continue'}
+           decision of the test at this step.
+        T: float
+           Test statistic.
+        bk: gloat
+           threshold.
+
+        """
+        spending_fun = self.get_spending_fun()
+
+        Z = np.hstack([Z1, Z2])
+        X = np.hstack([np.zeros(len(Z1)), np.ones(len(Z2))])
+
+        Rs = self._get_ranks(Z, k)
+        clevel = spending_fun((k + 1) / self.K)
+
+        records = self.explore_graph(k, Rs, self.boundary)
+        ranks = np.array(records[0]).ravel()
+        idx = np.argsort(ranks)
+        probas = np.array(records[1]) / binom(2 * self.n, self.n) ** (k + 1)
+        values = np.array(ranks)[idx]
+
+        icumulative_probas = np.sum(probas) - np.cumsum(probas[idx])
+        admissible_values_sup = values[
+            self.level_spent1 + icumulative_probas <= clevel / 2
+        ]
+
+        bk_sup = admissible_values_sup[0]  # the minimum admissible value
+
+        cumulative_probas = np.hstack([0, np.cumsum(probas[idx])[:-1]])
+        admissible_values_inf = values[
+            self.level_spent2 + cumulative_probas <= clevel / 2
+        ]
+
+        bk_inf = admissible_values_inf[-1]  # the maximum admissible value
+
+        self.level_spent1 += icumulative_probas[
+            self.level_spent1 + icumulative_probas <= clevel / 2
+        ][0]
+        self.level_spent2 += cumulative_probas[
+            self.level_spent2 + cumulative_probas <= clevel / 2
+        ][-1]
+
+        self.boundary.append((bk_inf, bk_sup))
+
+        T = np.sum(Rs[-1] * X)
+        if (T > bk_sup) or (T < bk_inf):
+            decision = "reject"
+        elif k == self.K - 1:
+            decision = "accept"
+        else:
+            decision = "continue"
+
+        return decision, T, (bk_inf, bk_sup)
+
     def compare(self, manager1, manager2):
         """
-        Test whether manager1 is better than manager2
+        Compare manager1 and manager2 performances
 
         Parameters
         ----------
@@ -152,11 +230,12 @@ class AgentComparator:
         kwargs2 = manager2[1]
         kwargs2["n_fit"] = self.n
 
-        spending_fun = self.get_spending_fun()
+        Z1 = np.array([])
+        Z2 = np.array([])
 
-        boundary = []
-        level_spent = 0
-        T = 0
+        self.level_spent1 = 0
+        self.level_spent2 = 0
+
         for k in range(self.K):
             m1 = AgentManager(agent_class1, **kwargs1)
             m2 = AgentManager(agent_class2, **kwargs2)
@@ -164,41 +243,18 @@ class AgentComparator:
             m1.fit()
             m2.fit()
 
-            Z1 = self._get_rewards(m1)
-            Z2 = self._get_rewards(m2)
+            Z1 = np.hstack([Z1, self._get_evals(m1)])
+            Z2 = np.hstack([Z2, self._get_evals(m2)])
 
-            Z = np.hstack([Z, Z1, Z2])
-            X = np.hstack([X, np.zeros(self.n), np.ones(self.n)])
-
-            Rs = self._get_ranks(Z, k)
-            clevel = spending_fun((k + 1) / self.K)
-
-            records = self.explore_graph(k, Rs, boundary)
-            ranks = np.array(records[0]).ravel()
-            idx = np.argsort(ranks)
-            probas = np.array(records[1]) / binom(2 * self.n, self.n) ** (k + 1)
-            values = np.array(ranks)[idx]
-
-            cumulative_probas = np.sum(probas) - np.cumsum(probas[idx])
-            admissible_values = values[level_spent + cumulative_probas <= clevel]
-            if len(admissible_values)>0:
-                bk = admissible_values[1] # the minimum admissible value
-            else:
-                bk = np.inf
-            boundary.append(bk)
-
-            T = np.sum(Rs[-1] * X)
-            level_spent += cumulative_probas[level_spent + cumulative_probas <= clevel][
-                0
-            ]
-            if T > bk:
-                self.decision = "reject"
-            else:
-                self.decision = "accept"
+            self.decision, T, (bk_inf, bk_sup) = self.partial_fit(Z1, Z2, k)
 
             if self.decision == "reject":
                 logger.info("Reject the null after " + str(k + 1) + " groups")
-                logger.info(m1.agent_name + " is better than " + m2.agent_name)
+                if T < bk_inf:
+                    logger.info(m1.agent_name + " is better than " + m2.agent_name)
+                else:
+                    logger.info(m2.agent_name + " is better than " + m1.agent_name)
+
                 break
             else:
                 logger.info("Did not reject on interim " + str(k + 1))
@@ -206,8 +262,8 @@ class AgentComparator:
             logger.info(
                 "Did not reject the null hypothesis: either K, n are too small or the agents perform similarly"
             )
-        self.rewards_1 = Z[X == 0]
-        self.rewards_2 = Z[X == 1]
+        self.eval_1 = Z[X == 0]
+        self.eval_2 = Z[X == 1]
 
     def _get_ranks(self, Z, k):
         Rs = []
@@ -215,7 +271,7 @@ class AgentComparator:
             Rs.append(rankdata(Z[: (2 * self.n * (j + 1))]))
         return Rs
 
-    def _get_rewards(self, manager):
+    def _get_evals(self, manager):
         """
         Can be overwritten for alternative evaluation function.
         """
