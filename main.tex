@@ -55,7 +55,7 @@ where $e_1(A), \dots,e_N(A)$ are the evaluation of the algorithm $A$ on $N$ diff
 The goal of this article is to evaluate how high $N$ must be to have a good control on $S(A)$. In particular, when we compare two algorithms $A_1$ and $A_2$, how can we choose the value of $N$ that is large enough to compare $S(A_1)$ and $S(A_2)$? This is a trade-off between computational time and the need to assess correctly the scores of $A_1$ and $A_2$.
 
 \section{Adaptive stopping using Group Sequential Testing}
-\susection{Group sequential testing}
+\subsection{Group sequential testing}
 \todoT{Explain why must be careful when doing GST and that we can't just do several tests. Maybe also motivate using the confidence interval approach from NIPS article.}
 
 To choose $N$ adaptively, we propose to use group sequential testing (GST). GST are used in particular in clinical trials in which case an early stopping is desirable when comparing two drugs. We choose to use GST in particular and not sequential testing because the data are often naturally grouped due to the parallelization of the computation.
@@ -72,6 +72,8 @@ The presence of several modes in the distributions of the evaluations and the di
 \subsection{Proposed algorithm}
 
 The non-parametric GST that we propose is taken from ()\todo{cite} in which the authors use exact permutation tests on linear rank statistics applied to group sequential testing. This test has the advantage of being entirely non-parametric, exact and robust. On the other hand, if the sample-size is too large this test can be computationally exphensive and also there can be some bias because we compare the ranks and not the means of the distributions.
+
+If we denote by $n$ the size of a group and by $K$ the maximum number of groups (see Algorith~\ref{alg:adastop}), then the complexity of Permutation GST algorithm is ${n \choose n/2}^K$, which is reasonable for example for $n,K\le 6$. FOr higher values of $n$ and $K$, we may want to use random permutations to make an approximation of the boundary function denoted $f_i(w_i)$ in the article. 
 
 
 \begin{algorithm}[h]
