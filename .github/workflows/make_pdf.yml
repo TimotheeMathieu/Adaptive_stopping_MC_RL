@@ -16,6 +16,7 @@ jobs:
       - name: Upload pdf
         uses: softprops/action-gh-release@v1
         with:
+          tag_name: pdf
           files: main.pdf
       - name: Delete old releases
         uses: dev-drprasad/delete-older-releases@v0.2.0
