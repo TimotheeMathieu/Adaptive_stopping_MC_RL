@@ -1,5 +1,8 @@
 name: Build LaTeX document
-on: [push]
+on:
+  push:
+    paths:
+      - 'main.tex'
 jobs:
   build_latex:
     runs-on: ubuntu-latest
@@ -7,12 +10,10 @@ jobs:
       - name: Set up Git repository
         uses: actions/checkout@v2
       - name: Compile LaTeX document
-        uses: xu-cheng/latex-action@master
+        uses: dante-ev/latex-action@latest
         with:
           root_file: main.tex
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Release pdf
-        uses: softprops/action-gh-release@v1
+      - uses: actions/upload-artifact@v3
         with:
-          files: main.pdf
+          name: the pdf
+          path: main.pdf
