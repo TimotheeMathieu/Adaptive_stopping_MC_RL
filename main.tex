@@ -73,7 +73,9 @@ The presence of several modes in the distributions of the evaluations and the di
 
 The non-parametric GST that we propose is taken from ()\todo{cite} in which the authors use exact permutation tests on linear rank statistics applied to group sequential testing. This test has the advantage of being entirely non-parametric, exact and robust. On the other hand, if the sample-size is too large this test can be computationally exphensive and also there can be some bias because we compare the ranks and not the means of the distributions.
 
-If we denote by $n$ the size of a group and by $K$ the maximum number of groups (see Algorith~\ref{alg:adastop}), then the complexity of Permutation GST algorithm is ${n \choose n/2}^K$, which is reasonable for example for $n,K\le 6$. FOr higher values of $n$ and $K$, we may want to use random permutations to make an approximation of the boundary function denoted $f_i(w_i)$ in the article. 
+
+
+If we denote by $n$ the size of a group and by $K$ the maximum number of groups (see Algorith~\ref{alg:adastop}), then the complexity of Permutation GST algorithm is ${n \choose n/2}^K$, which is reasonable for example for $n,K\le 6$. For higher values of $n$ and $K$, we may want to use random permutations to make an approximation of the boundary used in the GST. 
 
 
 \begin{algorithm}[h]
@@ -102,6 +104,40 @@ If the test was never rejected, return accept. Else return reject.
 \todoT{Theoretical questions : is this test most powerfull in some class of tests ? Can we show that if the distribution is well behaved, then we really compare the means of the distributions ? Maybe using a reweighted rank statistics ? Also show some robustness properties like insensitivity to outliers as this would show that our algorithm also answers the concerns of the NIPS article ?}
 \todoT{We can use Bonferroni inequality for multiple testing. Can we do better ?}
 
+\noindent\textbf{High level description of the algorithm.}\\
+Let $x_j=(x_{1,j},\dots,x_{n, j})\in \{0,1\}^n $ be the vector of assignements at step $j$. $x_{i,j}$ is $0$ if the evaluation $i$ in the $j^{th}$ group is comming from Agent 1 and it is $0$ if the reward is comming from  Agent 2. In our setting, this means that $x_{i,j}=0$ if $i \le n/2$ and $x_{i,j}=1$ if $i > n/2$. 
+
+Let $e_j =(e_{1,j},\dots,e_{n,j}) \in \R^n$ be the vector of evaluations observed at step $j$. 
+
+Let
+$r_{j}^{(i)}=(r_{1,j}^{(i)},\dots,r_{n,j}^{(i)}) \in \N^n $ be the vector of ranks of $e_j$ after $i$ groups have been evaluated.  $r_{l,j}^{(i)}$ is the rank of the $l^{th}$ evaluation in the $j^{th}$ group among all the evaluations in the $i$ first groups. The superscript $(i)$ is necessary as the ranking changes when we add more groups in the data.
+
+Define for any $j\le i$
+$$R_j^{(i)}=(r_1^{(i)}, \dots,r_{j}^{(i)})\in \N^{nj}.$$
+We test the hypothesis $H_0:$``Agent 1 and Agent 2 have same evaluation'' against the alternative hypothesis $H_1:$``Agent1 and Agent2 have different evaluations''. 
+
+If $X_i=(x_1,\dot,x_i)\in \{0,1\}^{ni}$, we consider the linear rank test statistic
+$$w_i=R_i^{(i)}X_i.$$
+$w_i$ is in our case the sum of the ranks of the evaluations of Agent 2 after merging the evaluations on the first $i$ groups together.
+
+The data are then summarized using the $w_i$'s. The group sequential test proceed has follow:
+\begin{algorithm}[h]
+\SetAlgoLined
+\For{$k=1,\dots,K$}{
+Observe $x_k$ and $e_k$.\\
+Compute $w_k$ from $x_k$ and $e_k$.\\
+Compute $b_k^-, b_k^+$ boundary values.\\
+\If{$w_k \ge b_k^+$ or $w_k \le b_k^-$}{
+Reject $H_0$, break the loop and returns the answer
+}
+\Else{
+If $k=K$ then accept $H_0$ otherwise continue.
+}}
+\caption{Rank statistic GST}\label{alg:gst}
+\end{algorithm}
+
+The values of $b_k^-$ and $b_k^+$ such that the overall level of the group sequential test is $1-\alpha$ are computed using permutation methods.
+\todoT{Explain this}
 
 \newpage
 \section{Simulation study}
