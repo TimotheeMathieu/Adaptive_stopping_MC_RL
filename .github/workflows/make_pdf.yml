@@ -13,7 +13,13 @@ jobs:
         uses: dante-ev/latex-action@latest
         with:
           root_file: main.tex
-      - uses: actions/upload-artifact@v3
+      - name: Upload pdf
+        uses: softprops/action-gh-release@v1
         with:
-          name: the pdf
-          path: main.pdf
+          files: main.pdf
+      - name: Delete old releases
+        uses: dev-drprasad/delete-older-releases@v0.2.0
+        with:
+          keep_latest: 1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
