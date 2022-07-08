@@ -10,6 +10,7 @@ import pdb
 from sortedcontainers import SortedList
 from rlberry.manager import AgentManager
 from rlberry.envs.interface import Model
+from rlberry.seeding import Seeder
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +20,8 @@ class AgentComparator:
     Compare sequentially two agents, with possible early stopping.
     At maximum, there can be n times K fits done.
 
-    n should be >= 5 in order for the permutation test to perform well.
+    For now, implement only a two-sided test.
+
     Parameters
     ----------
 
@@ -38,6 +40,8 @@ class AgentComparator:
     n_evaluations: int, default=10
         number of evaluations used in the function _get_rewards.
 
+    seed: int or None, default = None
+
     Attributes
     ----------
 
@@ -45,7 +49,7 @@ class AgentComparator:
         decision of the test.
     """
 
-    def __init__(self, n=5, K=5, alpha=0.05, name="PK", n_evaluations=1):
+    def __init__(self, n=5, K=5, alpha=0.05, name="PK", n_evaluations=1, seed=None):
         self.n = n
         self.K = K
         self.alpha = alpha
@@ -54,6 +58,7 @@ class AgentComparator:
         self.boundary = []
         self.level_spent1 = 0
         self.level_spent2 = 0
+        self.seeder = Seeder(seed)
 
     def get_spending_fun(self):
         if self.name == "PK":
@@ -139,10 +144,9 @@ class AgentComparator:
         # returns unsorted list as we don't need sorted lists for old_records
         return records
 
-    def partial_fit(self, Z1, Z2, k):
+    def partial_compare(self, Z1, Z2, k):
         """
         Do the test of the k^th interim.
-        The answer of the test
 
         Parameters
         ----------
@@ -177,31 +181,37 @@ class AgentComparator:
         probas = np.array(records[1]) / binom(2 * self.n, self.n) ** (k + 1)
         values = np.array(ranks)[idx]
 
-        icumulative_probas = np.sum(probas) - np.cumsum(probas[idx])
+        icumulative_probas = 1 - np.cumsum(probas[idx])
         admissible_values_sup = values[
             self.level_spent1 + icumulative_probas <= clevel / 2
         ]
 
-        bk_sup = admissible_values_sup[0]  # the minimum admissible value
-
-        cumulative_probas = np.hstack([0, np.cumsum(probas[idx])[:-1]])
+        if len(admissible_values_sup)>0:
+            bk_sup = admissible_values_sup[0]  # the minimum admissible value
+            level_to_add1 = icumulative_probas[self.level_spent1 + icumulative_probas <= clevel / 2][0]
+        else:
+            bk_sup = np.inf
+            level_to_add1 = 0
+        cumulative_probas = np.cumsum(probas[idx])
         admissible_values_inf = values[
-            self.level_spent2 + cumulative_probas <= clevel / 2
-        ]
+            self.level_spent2 + cumulative_probas <= clevel / 2 ]
 
-        bk_inf = admissible_values_inf[-1]  # the maximum admissible value
+        if len(admissible_values_inf)>0:
+            bk_inf = admissible_values_inf[-1]  # the maximum admissible value
+            level_to_add2 = cumulative_probas[self.level_spent2 + cumulative_probas <= clevel / 2][-1]
+        else:
+            bk_inf = -np.inf
+            level_to_add2 = 0
 
-        self.level_spent1 += icumulative_probas[
-            self.level_spent1 + icumulative_probas <= clevel / 2
-        ][0]
-        self.level_spent2 += cumulative_probas[
-            self.level_spent2 + cumulative_probas <= clevel / 2
-        ][-1]
+        
+            
+        self.level_spent1 += level_to_add1
+        self.level_spent2 += level_to_add2
 
         self.boundary.append((bk_inf, bk_sup))
 
         T = np.sum(Rs[-1] * X)
-        if (T > bk_sup) or (T < bk_inf):
+        if (T >= bk_sup) or (T <= bk_inf):
             decision = "reject"
         elif k == self.K - 1:
             decision = "accept"
@@ -236,10 +246,12 @@ class AgentComparator:
 
         self.level_spent1 = 0
         self.level_spent2 = 0
-
+       
+        seeders = self.seeder.spawn(2*self.K)
         for k in range(self.K):
-            m1 = AgentManager(agent_class1, **kwargs1)
-            m2 = AgentManager(agent_class2, **kwargs2)
+            
+            m1 = AgentManager(agent_class1, **kwargs1, seed=seeders[2*k])
+            m2 = AgentManager(agent_class2, **kwargs2, seed=seeders[2*k+1])
 
             m1.fit()
             m2.fit()
@@ -247,7 +259,7 @@ class AgentComparator:
             Z1 = np.hstack([Z1, self._get_evals(m1)])
             Z2 = np.hstack([Z2, self._get_evals(m2)])
 
-            self.decision, T, (bk_inf, bk_sup) = self.partial_fit(Z1, Z2, k)
+            self.decision, T, (bk_inf, bk_sup) = self.partial_compare(Z1, Z2, k)
 
             if self.decision == "reject":
                 logger.info("Reject the null after " + str(k + 1) + " groups")
