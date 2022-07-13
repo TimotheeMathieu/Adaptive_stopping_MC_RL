@@ -37,6 +37,9 @@ class AgentComparator:
     name: str in {'PK', 'OF'}, default = "PK"
         type of spending function to use.
 
+    ttype: str in {'rank', 'mean'}
+        type of test used. rank is the default, it is more robust and less variable. 
+
     n_evaluations: int, default=10
         number of evaluations used in the function _get_rewards.
 
@@ -49,11 +52,12 @@ class AgentComparator:
         decision of the test.
     """
 
-    def __init__(self, n=5, K=5, alpha=0.05, name="PK", n_evaluations=1, seed=None):
+    def __init__(self, n=5, K=5, alpha=0.05, name="PK", ttype="rank", n_evaluations=1, seed=None):
         self.n = n
         self.K = K
         self.alpha = alpha
         self.name = name
+        self.ttype = ttype
         self.n_evaluations = n_evaluations
         self.boundary = []
         self.level_spent1 = 0
@@ -79,7 +83,7 @@ class AgentComparator:
         k: int
             current interim in the algorithm
         Rs: array of arrays
-            ranks of the data until now, at each interim
+            ranks or values of the data until now, at each interim
         boundary: list of floats
             boundary until now
         """
@@ -103,10 +107,16 @@ class AgentComparator:
                     if children is not None:
                         for child in children:
                             unew = copy(u)  # Step 3
-                            for l in range(k + 1 - j):
-                                unew[l] = unew[l] + Rs[j + l][f + 2 * self.n * j] * (
-                                    child[1] - c[1]
-                                )
+                            if self.ttype == 'rank':
+                                for l in range(k + 1 - j):
+                                    unew[l] = unew[l] + Rs[j + l][f + 2 * self.n * j] * (
+                                        child[1] - c[1]
+                                    )
+                            else:
+                                for l in range(k + 1 - j):
+                                    unew[l] = unew[l] + Rs[j + l][f + 2 * self.n * j] * (-1)**(
+                                        child[1] - c[1]
+                                    )
 
                             if len(records[0]) > 0:
                                 is_in = unew in records[0]
@@ -127,6 +137,8 @@ class AgentComparator:
 
         return records
 
+
+
     def postprocess_records(self, records, boundary, j):
         # Pruning for conditional proba
         idxs = np.where(np.array([boundary[j][0] < r[0] < boundary[j][1] for r in records[0]]))[0]
@@ -137,6 +149,8 @@ class AgentComparator:
                 list(np.array(records[1])[idxs]),
                 list(np.array(records[2])[idxs]),
             )
+        else:
+            records = (list(records[0]), records[1], records[2])
 
         # Remove the first element of all the records.
         for i in range(len(records[0])):
@@ -171,15 +185,21 @@ class AgentComparator:
 
         Z = np.hstack([Z1, Z2])
         X = np.hstack([np.zeros(len(Z1)), np.ones(len(Z2))])
-
-        Rs = self._get_ranks(Z, k)
         clevel = spending_fun((k + 1) / self.K)
 
+
+        if self.ttype == "rank":
+            Rs = self._get_ranks(Z, k)
+        else:
+            Rs = []
+            for j in range(k + 1):
+                Rs.append(Z[: (2 * self.n * (j + 1))])
+
         records = self.explore_graph(k, Rs, self.boundary)
-        ranks = np.array(records[0]).ravel()
-        idx = np.argsort(ranks)
+        rs = np.array(records[0]).ravel()
+        idx = np.argsort(rs)
         probas = np.array(records[1]) / binom(2 * self.n, self.n) ** (k + 1)
-        values = np.array(ranks)[idx]
+        values = np.array(rs)[idx]
 
         icumulative_probas = 1 - np.cumsum(probas[idx])
         admissible_values_sup = values[
@@ -209,8 +229,12 @@ class AgentComparator:
         self.level_spent2 += level_to_add2
 
         self.boundary.append((bk_inf, bk_sup))
+        
+        if self.ttype =='rank':
+            T = np.sum(Rs[-1] * X)
+        else:
+            T = np.sum(Rs[-1]*(-1)**X)
 
-        T = np.sum(Rs[-1] * X)
         if (T >= bk_sup) or (T <= bk_inf):
             decision = "reject"
         elif k == self.K - 1:
