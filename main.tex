@@ -62,7 +62,7 @@ To choose $N$ adaptively, we propose to use group sequential testing (GST). GST 
 
 GST often suppose strong models on the data, in particular it is often supposed that the data are i.i.d. from a Gaussian distribution. This assumption is often not verified in the case of $e_i(A)$ being evaluations from a RL algorithm. In particular, the distribution of $e_i(A)$ often presents several modes and it can sometimes contain outliers. 
 
-\todoT{Explain why several modes and give examples of distributions of DeepRL algos on classical environments}
+\todoT{Explain why several modes and give examples of distributions of DeepRL algos on classical environments. Ref https://arxiv.org/pdf/1806.08295.pdf on this also.}
 
 The presence of several modes in the distributions of the evaluations and the difficulty to make any distributional assumption justify a non-parametric approach of the problem, but to further justify this approach we did a study of the effect of model misspecification on simulated data when using Gaussian GST algorithm. 
 
@@ -101,8 +101,13 @@ If the test was never rejected, return accept. Else return reject.
 
 \todoT{Give several other proposition of GST algorithms. For now, I put the ``naive'' permutation GST in a different section.}
 \todoT{Explain the algorithm from the exact permutation GST article}
-\todoT{Theoretical questions : is this test most powerfull in some class of tests ? Can we show that if the distribution is well behaved, then we really compare the means of the distributions ? Maybe using a reweighted rank statistics ? Also show some robustness properties like insensitivity to outliers as this would show that our algorithm also answers the concerns of the NIPS article ?}
-\todoT{We can use Bonferroni inequality for multiple testing. Can we do better ?}
+\todoT{Theoretical concerns : \\
+- is this test most powerfull in some class of tests ?\\
+- Can we show that if the distribution is well behaved, then we really compare the means of the distributions ? Even with rank test.\\
+- Explain the empirical mean permutation test and finish explaining the rank permutation test.\\
+- Also show some robustness properties like insensitivity to outliers as this would show that our algorithm also answers the concerns of the NIPS article ?\\
+- Can we show that when using uniform permutation to approximate the test, we are still efficient ? How many random permutation should be used ?
+}
 
 \noindent\textbf{High level description of the algorithm.}\\
 Let $x_j=(x_{1,j},\dots,x_{n, j})\in \{0,1\}^n $ be the vector of assignements at step $j$. $x_{i,j}$ is $0$ if the evaluation $i$ in the $j^{th}$ group is comming from Agent 1 and it is $0$ if the reward is comming from  Agent 2. In our setting, this means that $x_{i,j}=0$ if $i \le n/2$ and $x_{i,j}=1$ if $i > n/2$. 
@@ -120,7 +125,7 @@ If $X_i=(x_1,\dot,x_i)\in \{0,1\}^{ni}$, we consider the linear rank test statis
 $$w_i=R_i^{(i)}X_i.$$
 $w_i$ is in our case the sum of the ranks of the evaluations of Agent 2 after merging the evaluations on the first $i$ groups together.
 
-The data are then summarized using the $w_i$'s. The group sequential test proceed has follow:
+The data are then summarized using the $w_i$'s. The group sequential test proceed is described in Algorithm \ref{alg:gst}.
 \begin{algorithm}[h]
 \SetAlgoLined
 \For{$k=1,\dots,K$}{
@@ -146,23 +151,24 @@ The values of $b_k^-$ and $b_k^+$ such that the overall level of the group seque
 \section{Experimental results}
 \todoT{Apply to some classical algorithms on classical environments. Maybe also try to 
 replicate adaptively the results of the NIPS article : do we also stop around 20 iterations when comparing two agents on an Atari environment?}
-\section{Other possible algorithms}
-\begin{algorithm}[h]
-\SetAlgoLined
-\SetKwInput{KwParameter}{Parameters}
-\KwParameter{Evaluations $e_1(A_i),\dots,e_t(A_i)$ for $i \in \{1,2\}$, level of the test $\alpha$, number of blocks $K$, number of permutations $B$.}
-Compute $t_0=S_t(A_1)-S_t(A_2)$.\\
-Define $Z_1,\dots,Z_{2t}$ with 
-$$Z_i = \begin{cases}e_i(A_1) & \text{ if }1\le i\le t\\ e_{i-t}(A) & \text{ if }t+1\le i\le 2t \end{cases} $$ 
-\For{$b=1,\dots,B$}{
-Draw a permutation $\sigma$ uniformly at random in $\mathcal{S}_{2t}$.\\
-Compute 
-$$t_b = \frac{1}{t}\sum_{i=1}^t Z_{\sigma(i)}-\frac{1}{t}\sum_{i=t+1}^{2t} Z_{\sigma(i)}$$
-}
-Let $q_1$ be the empirical quantile of level $\frac{\alpha}{2K}$ of $t_1,\dots,t_B$ and $q_2$ the empirical quantile of level $1-\frac{\alpha}{2K}$.\\
-If $t_0\le q_1$ or $t_0 \ge q_2$  then reject $H_0$. Else, do not reject $H_0$.
-\caption{Step $t$ of Union Bound Permutation GST.}\label{alg:gst}
-\end{algorithm}
+\todoT{Compare with article https://arxiv.org/pdf/1806.08295.pdf on environments that are simpler than Atari. Maybe show that depending on the environment the number of seeds needed can vary a lot.}
+% \section{Other possible algorithms}
+% \begin{algorithm}[h]
+% \SetAlgoLined
+% \SetKwInput{KwParameter}{Parameters}
+% \KwParameter{Evaluations $e_1(A_i),\dots,e_t(A_i)$ for $i \in \{1,2\}$, level of the test $\alpha$, number of blocks $K$, number of permutations $B$.}
+% Compute $t_0=S_t(A_1)-S_t(A_2)$.\\
+% Define $Z_1,\dots,Z_{2t}$ with 
+% $$Z_i = \begin{cases}e_i(A_1) & \text{ if }1\le i\le t\\ e_{i-t}(A) & \text{ if }t+1\le i\le 2t \end{cases} $$ 
+% \For{$b=1,\dots,B$}{
+% Draw a permutation $\sigma$ uniformly at random in $\mathcal{S}_{2t}$.\\
+% Compute 
+% $$t_b = \frac{1}{t}\sum_{i=1}^t Z_{\sigma(i)}-\frac{1}{t}\sum_{i=t+1}^{2t} Z_{\sigma(i)}$$
+% }
+% Let $q_1$ be the empirical quantile of level $\frac{\alpha}{2K}$ of $t_1,\dots,t_B$ and $q_2$ the empirical quantile of level $1-\frac{\alpha}{2K}$.\\
+% If $t_0\le q_1$ or $t_0 \ge q_2$  then reject $H_0$. Else, do not reject $H_0$.
+% \caption{Step $t$ of Union Bound Permutation GST.}\label{alg:gst}
+% \end{algorithm}
 
 \bibliographystyle{plain}
 \bibliography{biblio_file}
