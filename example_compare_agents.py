@@ -1,6 +1,6 @@
 from rlberry.agents.torch import A2CAgent, PPOAgent
 from rlberry.envs import gym_make
-from compare_agents import AgentComparator
+from compare_agents import Two_AgentsComparator
 import numpy as np
 
 
@@ -10,7 +10,7 @@ K = 5  # at most 5 groups
 alpha = 0.05
 n = 4  # size of a group. i.e. 4 fits at a time.
 
-comparator = AgentComparator(n, K, alpha, n_evaluations=10)
+comparator = Two_AgentsComparator(n, K, alpha, n_evaluations=10)
 
 # DeepRL agent definition
 env_ctor = gym_make

@@ -12,8 +12,11 @@ In `example_compare_agent.py` the comparator is used to know whether manager1 an
 
 ## TODO:
 - [ ] See about power and sample-size requirements.
-- [ ] See about multiple testing to test multiple agents at the same time. Use Bonferroni?
-- [ ] See about theoretical results on the permutation GST.
+- [ ] See about multiple testing to test multiple agents at the same time. Use [FWE control procedures](https://en.wikipedia.org/wiki/Family-wise_error_rate). Use Bonferroni? Holm's ? Hochberg's ? Or more powerful methods like https://www.jstor.org/stable/27590521#metadata_info_tab_contents (bootstrap) ?
+Remarks: 
+    - There is not really a reason to use Bonferroni as Holm's is proven to be better without any disadvantage. 
+    - The Bootstrap method may be not conservative enough. In particular with small sample size.
+- [ ] Do parallelization for multilple testing ?
 - [ ] Do the simulation studies
 - [ ] Do the empirical studies.
 
