@@ -16,6 +16,7 @@ In `example_compare_agent.py` the comparator is used to know whether manager1 an
 Remarks: 
     - There is not really a reason to use Bonferroni as Holm's is proven to be better without any disadvantage. 
     - The Bootstrap method may be not conservative enough. In particular with small sample size.
+    - Maybe we want to bypass the multiple testing. For instance by testing $H_0: \min_{i \neq j}|\mu_i - \mu_j|=0$ vs $H_1: \forall i\neq j, \, \mu_i \neq \mu_j$.
 - [ ] Do parallelization for multilple testing ?
 - [ ] Do the simulation studies
 - [ ] Do the empirical studies.
