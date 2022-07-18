@@ -12,10 +12,81 @@ from rlberry.manager import AgentManager
 from rlberry.envs.interface import Model
 from rlberry.seeding import Seeder
 
+import itertools
+
 logger = logging.getLogger(__name__)
 
 
-class AgentComparator:
+
+class MultipleAgentsComparator:
+    """
+    Compare sequentially two agents, with possible early stopping.
+    At maximum, there can be n times K fits done.
+
+    For now, implement only a two-sided test.
+
+    Parameters
+    ----------
+
+    n: int, default=5
+        number of fits before each early stopping check
+
+    K: int, default=5
+        number of checks
+
+    alpha: float, default=0.05
+        level of the test
+
+    name: str in {'PK', 'OF'}, default = "PK"
+        type of spending function to use.
+
+    ttype: str in {'rank', 'mean'}
+        type of test used. rank is the default, it is more robust and less variable. 
+
+    n_evaluations: int, default=10
+        number of evaluations used in the function _get_rewards.
+
+    seed: int or None, default = None
+
+    Attributes
+    ----------
+
+    decision: str in {"accept" , "reject"}
+        decision of the test.
+    """
+
+    def __init__(self, n=5, K=5, alpha=0.05, name="PK", ttype="rank", n_evaluations=1, seed=None):
+        self.n = n
+        self.K = K
+        self.alpha = alpha
+        self.name = name
+        self.ttype = ttype
+        self.n_evaluations = n_evaluations
+        self.seed = seed
+
+    def compare(self, managers):
+        """
+        Compare the managers pair by pair using Bonferroni correction.
+
+        Parameters
+        ----------
+        managers : list of tuple of agent_class and init_kwargs for the agent.
+
+        """
+        pairs = list(itertools.combinations(managers),2)
+
+        level = self.alpha / len(pairs)
+
+        decisions = []
+        for pair in pairs:
+            Comparator = Two_AgentsComparator(self.n, self.K, self.alpha, self.name, self.ttype, self.n_evaluations, self.seed)
+            comparator.compate(pair[0], pair[1])
+            decisions.append((comparator.agent1_name, comparator.agent2_name), comparator.decision))
+        
+        return decisions
+
+
+class Two_AgentsComparator:
     """
     Compare sequentially two agents, with possible early stopping.
     At maximum, there can be n times K fits done.
@@ -301,6 +372,8 @@ class AgentComparator:
             )
         self.eval_1 = Z[X == 0]
         self.eval_2 = Z[X == 1]
+        self.agent1_name = m1.agent_name
+        self.agent2_name = m2.agent_name
 
     def _get_ranks(self, Z, k):
         Rs = []

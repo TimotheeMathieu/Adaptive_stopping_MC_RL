@@ -1,7 +1,7 @@
 from rlberry.agents import Agent
 from rlberry.envs import Model
 import rlberry.spaces as spaces
-from compare_agents import AgentComparator
+from compare_agents import Two_AgentsComparator
 import time
 import numpy as np
 from tqdm import tqdm
@@ -14,7 +14,7 @@ K = 3  # at most 3 groups
 alpha = 0.05
 n = 4  # size of a group
 
-comparator = AgentComparator(n, K, alpha)
+comparator = Two_AgentsComparator(n, K, alpha)
 
 
 class RandomAgent(Agent):

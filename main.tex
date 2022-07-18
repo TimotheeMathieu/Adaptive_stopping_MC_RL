@@ -119,7 +119,7 @@ $r_{j}^{(i)}=(r_{1,j}^{(i)},\dots,r_{n,j}^{(i)}) \in \N^n $ be the vector of ran
 
 Define for any $j\le i$
 $$R_j^{(i)}=(r_1^{(i)}, \dots,r_{j}^{(i)})\in \N^{nj}.$$
-We test the hypothesis $H_0:$``Agent 1 and Agent 2 have same evaluation'' against the alternative hypothesis $H_1:$``Agent1 and Agent2 have different evaluations''. 
+We test the hypothesis $H_0:$``Agent 1 and Agent 2 have same evaluation'' against the alternative hypothesis $H_1:$``Agent1 and Agent2 have different evaluations''. More precisely, we use a sum-rank test (usually called the Wilcoxon rank sum statistic which is equivalent to Mann–Whitney U test) to test if the probability of $X$ (Agent 1) being greater than $Y$ (Agent 2) is equal to the probability of $Y$ being greater than $X$.
 
 If $X_i=(x_1,\dot,x_i)\in \{0,1\}^{ni}$, we consider the linear rank test statistic
 $$w_i=R_i^{(i)}X_i.$$
@@ -142,7 +142,16 @@ If $k=K$ then accept $H_0$ otherwise continue.
 \end{algorithm}
 
 The values of $b_k^-$ and $b_k^+$ such that the overall level of the group sequential test is $1-\alpha$ are computed using permutation methods.
-\todoT{Explain this more}
+
+Define the boundary generating function $f_i$ by 
+$$f_i(w_i)=\P\left(b_1^-\le W_1\le b_1^+, \dots, b_{i-1}^-\le W_{i-1}\le b_{i-1}^+, W_i = w_i  \right)$$
+if we know how to compute $f_i$, it it then possible to find $b_i^-$ and $b_i^+$ such that 
+$$\P\left(W_1 \notin (b_1^-, b_1^+) \right)=q_1 \le \alpha\left(\frac{1}{K} \right) $$
+and for any $i$, we have 
+$$q_{i-1}+\P\left(b_1^-\le W_1\le b_1^+, \dots, b_{i-1}^-\le W_{i-1}\le b_{i-1}^+, W_i  \notin(b_i^-, b_i^+) \right)=q_i \le \alpha\left(\frac{i}{K} \right).$$
+where $\alpha(p)$ is the so-called level spending function, a parameter of the test, it must verify $\alpha(0)=0$, $\alpha(1)=\alpha$ and be non-decreasing.
+
+The main computational burden of the algorithm is in computing $f_i(w_i)$.
 
 \newpage
 \section{Simulation study}
