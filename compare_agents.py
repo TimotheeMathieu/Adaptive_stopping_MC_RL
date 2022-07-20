@@ -56,6 +56,9 @@ class MultipleAgentsComparator:
 
     decision: str in {"accept" , "reject"}
         decision of the test.
+
+    p_val: float
+        p-value of the test
     """
 
     def __init__(self, n=5, K=5, alpha=0.05, name="PK", ttype="rank", n_evaluations=1, seed=None):
@@ -302,7 +305,7 @@ class Two_AgentsComparator:
             T = np.sum(Rs[-1] * X)
         else:
             T = np.sum(Rs[-1]*(-1)**X)
-        assert T in values
+        #assert T in values
 
         p_value = 2*min(self.level_spent1 + icumulative_probas[values >= T][0] ,
                         self.level_spent2 + cumulative_probas[values <= T][-1])
@@ -392,6 +395,7 @@ class Two_AgentsComparator:
         self.agent2_name = m2.agent_name
 
         self.p_val = p_val
+        logger.info('p value is '+str(p_val))
 
     def _get_ranks(self, Z, k):
         Rs = []
