@@ -226,7 +226,7 @@ class MultipleManagers:
             type_II = compute_beta(np.abs(np.mean(eval_a)-np.mean(eval_b)), candidate_n_seeds,
                                    alpha/(n_agents*(n_agents-1)/2),  s1=np.std(eval_a, ddof=1), s2 = np.std(eval_b, ddof=1))
             if np.any(type_II<beta):
-                needed_sample_size = max(needed_sample_size, np.min(candidate_n_seeds[type_II < beta]))
+                needed_sample_size = max(needed_sample_size, np.min(candidate_n_seeds[type_II < beta/(n_agents*(n_agents-1)/2)]))
             else:
                 needed_sample_size = np.nan
         logger.info('The sample size needed is '+str(needed_sample_size))
