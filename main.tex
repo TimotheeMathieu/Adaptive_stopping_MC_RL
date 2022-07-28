@@ -151,7 +151,16 @@ and for any $i$, we have
 $$q_{i-1}+\P\left(b_1^-\le W_1\le b_1^+, \dots, b_{i-1}^-\le W_{i-1}\le b_{i-1}^+, W_i  \notin(b_i^-, b_i^+) \right)=q_i \le \alpha\left(\frac{i}{K} \right).$$
 where $\alpha(p)$ is the so-called level spending function, a parameter of the test, it must verify $\alpha(0)=0$, $\alpha(1)=\alpha$ and be non-decreasing.
 
-The main computational burden of the algorithm is in computing $f_i(w_i)$.
+The main computational burden of the algorithm is in computing $f_i(w_i)$, to compute $f_i$ we need to enumerate all the possible values $f_i(w_i)$ can take for the possible choices of affectation $X$, i.e. we must enumerate $\Gamma_1 \times \dots \times \Gamma_i$ where
+$$\Gamma_j= \left\{x_j: \sum_{l=1}^{2n}x_{j,l} = n,\quad x_{j,l}\in \{0,1 \}\right\}.$$
+one element of $\Gamma_1 \times \dots \times \Gamma_i$ is equivalent to the path in a graph. The graph of $\Gamma_j$ is composed of nodes labelled by a couple $(a,b)$ where $(a,b)$ implies that of the first $a$ samples, exactly $b$ have been assigned to Agent 2.
+\begin{figure}[ht]
+\begin{center}
+\includegraphics[scale=0.7]{graph_gamma.pdf}
+\caption{Graph representation of $\Gamma_1$ and $\Gamma_2$. The thick path represent $x_i=(1,0,1,0,0,0,1,1)$}
+\end{center}
+\end{figure}
+
 
 \newpage
 \section{Simulation study}
@@ -159,8 +168,7 @@ The main computational burden of the algorithm is in computing $f_i(w_i)$.
 \todoT{Comparison of GST algorithms on gaussian Data.}
 \section{Experimental results}
 \todoT{Apply to some classical algorithms on classical environments. Maybe also try to 
-replicate adaptively the results of the NIPS article : do we also stop around 20 iterations when comparing two agents on an Atari environment?}
-\todoT{Compare with article https://arxiv.org/pdf/1806.08295.pdf on environments that are simpler than Atari. Maybe show that depending on the environment the number of seeds needed can vary a lot.}
+replicate adaptively the results of the NIPS article : do we also stop around 20 iterations when comparing two agents on an Atari environment? Or on the pybullets environments like in the article}
 % \section{Other possible algorithms}
 % \begin{algorithm}[h]
 % \SetAlgoLined
