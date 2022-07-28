@@ -85,7 +85,7 @@ class MultipleAgentsComparator:
 
         decisions = []
         for pair in pairs:
-            Comparator = Two_AgentsComparator(self.n, self.K, self.alpha, self.name, self.ttype, self.n_evaluations, self.seed)
+            comparator = Two_AgentsComparator(self.n, self.K, self.alpha, self.name, self.ttype, self.n_evaluations, self.seed)
             comparator.compate(pair[0], pair[1])
             decisions.append((comparator.agent1_name, comparator.agent2_name), comparator.decision)
         
@@ -137,6 +137,7 @@ class Two_AgentsComparator:
         self.ttype = ttype
         self.n_evaluations = n_evaluations
         self.boundary = []
+        self.test_stats = []
         self.level_spent1 = 0
         self.level_spent2 = 0
         self.seeder = Seeder(seed)
@@ -278,7 +279,7 @@ class Two_AgentsComparator:
         probas = np.array(records[1]) / binom(2 * self.n, self.n) ** (k + 1)
         values = np.array(rs)[idx]
 
-        icumulative_probas = 1 - np.cumsum(probas[idx])
+        icumulative_probas = np.sum(probas) - np.cumsum(probas[idx])
         admissible_values_sup = values[
             self.level_spent1 + icumulative_probas <= clevel / 2
         ]
@@ -289,16 +290,18 @@ class Two_AgentsComparator:
         else:
             bk_sup = np.inf
             level_to_add1 = 0
-        cumulative_probas = np.cumsum(probas[idx])
+        cumulative_probas = np.hstack([[0], np.cumsum(probas[idx])[:-1]])
         admissible_values_inf = values[
             self.level_spent2 + cumulative_probas <= clevel / 2 ]
-
+        
         if len(admissible_values_inf)>0:
             bk_inf = admissible_values_inf[-1]  # the maximum admissible value
             level_to_add2 = cumulative_probas[self.level_spent2 + cumulative_probas <= clevel / 2][-1]
         else:
             bk_inf = -np.inf
             level_to_add2 = 0
+        import pdb; breakpoint()
+        assert bk_inf <= bk_sup
 
             
         if self.ttype =='rank':
@@ -306,6 +309,7 @@ class Two_AgentsComparator:
         else:
             T = np.sum(Rs[-1]*(-1)**X)
         #assert T in values
+        self.test_stats.append(T)
 
         p_value = 2*min(self.level_spent1 + icumulative_probas[values >= T][0] ,
                         self.level_spent2 + cumulative_probas[values <= T][-1])
