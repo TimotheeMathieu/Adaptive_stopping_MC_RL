@@ -177,7 +177,7 @@ class MultipleManagers:
         results['decisions']=decisions
         self.stat_test_results = results
         
-    def pilot_study(self, alpha=0.05, beta=0.1, n_eval=50, maximum_n_seed=100):
+    def pilot_study(self, alpha=0.05, beta=0.1, n_eval=50, maximum_n_seed=100, using_fits = "all"):
         """
         Run a pilot study to estimate sample size needed.
         The multimanager must have been run once with a sufficient amount of seed to estimate the parameters of the problems (typically 5 seeds).
@@ -194,20 +194,28 @@ class MultipleManagers:
             Number of evaluations that we run to evaluate the effective mean reward of the trained agents.
         maximum_n_seed: int, default=100
             Maximum number of seeds to consider.
+        usind_fits: str or list of int
+            Fits used to perform the study
         """
+
+        
         eval_values = pd.DataFrame()
         managers = self.instances
+        
+        if type(using_fits) == str:
+            using_fits = np.arange(0,managers[0].n_fit)
+        
         for manager in managers:
             logger.info("Evaluating Agent " + manager.agent_name)
-            for idx in range(manager.n_fit):
-                evaluation = np.mean(manager.eval_agents(n_eval, agent_id=idx))
+            for idx in range(len(using_fits)):
+                evaluation = np.mean(manager.eval_agents(n_eval, agent_id=using_fits[idx]))
                 eval_values = pd.concat(
                     [
                         eval_values,
                         pd.DataFrame(
                             {
                                 "agent_name": [manager.agent_name],
-                                "n_simu": [idx],
+                                "id_fit": [using_fits[idx]],
                                 "eval_value": [evaluation],
                             }
                         ),
