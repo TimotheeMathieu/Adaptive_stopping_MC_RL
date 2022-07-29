@@ -1,11 +1,12 @@
 from rlberry.envs import gym_make
 from rlberry.agents.stable_baselines import StableBaselinesAgent
 import yaml
-from rlberry.manager import AgentManager
+from rlberry.manager import AgentManager, MultipleManagers, evaluate_agents
 from torch import nn
-from multiple_managers import MultipleManagers
 from stable_baselines3 import PPO, DQN
 import numpy as np
+from compare_agents import Two_AgentsComparator
+
 
 env_ctor, env_kwargs = gym_make, dict(id="CartPole-v1")
 
@@ -31,44 +32,35 @@ def linear_cr_schedule_ppo(progress_remaining: float) -> float:
 
 hyperparams['PPO']['clip_range'] = linear_cr_schedule_ppo
 
-hyperparams['PPO']['device']='cpu'
-hyperparams['DQN']['device']="cpu"
+# hyperparams['PPO']['device']='cpu'
+# hyperparams['DQN']['device']="cpu"
 
-# Comparison
+n = 4
+K = 5
+alpha = 0.05
 
-dirnames = ["rlberry_data/PPO_sb", "rlberry_data/DQN_sb"]
+comparator = Two_AgentsComparator(n, K, alpha, n_evaluations=30)
+
 if __name__ == "__main__":
     
-    manager1 = AgentManager(
+    manager1 = (
         StableBaselinesAgent,
-        (env_ctor, env_kwargs),
+        dict(
+        train_env = (env_ctor, env_kwargs),
         agent_name="PPO",
         init_kwargs=dict(algo_cls=PPO, **hyperparams['PPO']),
         fit_budget=n_steps_ppo,
         n_fit=15,
         parallelization="process",
-        output_dir=dirnames[0],
-    )
-    manager2 = AgentManager(
+    ))
+    manager2 = (
         StableBaselinesAgent,
-        (env_ctor, env_kwargs),
+        dict(
+        train_env=(env_ctor, env_kwargs),
         agent_name="DQN",
         init_kwargs=dict(algo_cls=DQN, **hyperparams['DQN']),
         fit_budget=n_steps_a2c,
         n_fit=15,
         parallelization="process",
-        output_dir=dirnames[1],
-    )
-    # manager1.fit()
-    # manager1.save()
-    # manager2.fit()
-    # manager2.save()
-    multimanager = MultipleManagers()
-
-    multimanager.append(manager1)
-    multimanager.append(manager2)
-    multimanager.load(dirnames)
-    multimanager.pilot_study(using_fits=np.arange(5))
-
-
-# On 5 fits for each agent, I got that the necessary number of seeds is 18.
+    ))
+    comparator.compare(manager1, manager2)
