@@ -11,11 +11,14 @@ from sortedcontainers import SortedList
 from rlberry.manager import AgentManager
 from rlberry.envs.interface import Model
 from rlberry.seeding import Seeder
+from rlberry.utils.writers import DefaultWriter
 
 import itertools
 
-logger = logging.getLogger(__name__)
+import rlberry
 
+#logger = rlberry.logger
+logger = logging.getLogger()
 
 
 class MultipleAgentsComparator:
@@ -53,6 +56,9 @@ class MultipleAgentsComparator:
 
     decision: str in {"accept" , "reject"}
         decision of the test.
+
+    p_val: float
+        p-value of the test
     """
 
     def __init__(self, n=5, K=5, alpha=0.05, name="PK", ttype="rank", n_evaluations=1, seed=None):
@@ -79,9 +85,9 @@ class MultipleAgentsComparator:
 
         decisions = []
         for pair in pairs:
-            Comparator = Two_AgentsComparator(self.n, self.K, self.alpha, self.name, self.ttype, self.n_evaluations, self.seed)
+            comparator = Two_AgentsComparator(self.n, self.K, self.alpha, self.name, self.ttype, self.n_evaluations, self.seed)
             comparator.compate(pair[0], pair[1])
-            decisions.append((comparator.agent1_name, comparator.agent2_name), comparator.decision))
+            decisions.append((comparator.agent1_name, comparator.agent2_name), comparator.decision)
         
         return decisions
 
@@ -131,9 +137,11 @@ class Two_AgentsComparator:
         self.ttype = ttype
         self.n_evaluations = n_evaluations
         self.boundary = []
+        self.test_stats = []
         self.level_spent1 = 0
         self.level_spent2 = 0
         self.seeder = Seeder(seed)
+        self._writer = DefaultWriter("Comparator")
 
     def get_spending_fun(self):
         if self.name == "PK":
@@ -229,16 +237,16 @@ class Two_AgentsComparator:
         # returns unsorted list as we don't need sorted lists for old_records
         return records
 
-    def partial_compare(self, Z1, Z2, k):
+    def partial_compare(self, Z, X, k):
         """
         Do the test of the k^th interim.
 
         Parameters
         ----------
-        Z1: array
-            All the evaluations of Agent 1 up till interim k
-        Z2: array
-            All the evaluations of Agent 2 up till interim k
+        Z: array of size 2*self.n*(k+1)
+            Concatenation All the evaluations of Agent 1 and Agent2 up till interim k
+        X: array of size 2*self.n*(k+1)
+            {0,1} array with the affectation of each value of Z to either Agent 1 (0) or Agent 2 (1)
         k: int
             index of the interim, in {0,...,K-1}
 
@@ -254,8 +262,7 @@ class Two_AgentsComparator:
         """
         spending_fun = self.get_spending_fun()
 
-        Z = np.hstack([Z1, Z2])
-        X = np.hstack([np.zeros(len(Z1)), np.ones(len(Z2))])
+
         clevel = spending_fun((k + 1) / self.K)
 
 
@@ -272,7 +279,7 @@ class Two_AgentsComparator:
         probas = np.array(records[1]) / binom(2 * self.n, self.n) ** (k + 1)
         values = np.array(rs)[idx]
 
-        icumulative_probas = 1 - np.cumsum(probas[idx])
+        icumulative_probas = np.sum(probas) - np.cumsum(probas[idx])
         admissible_values_sup = values[
             self.level_spent1 + icumulative_probas <= clevel / 2
         ]
@@ -283,28 +290,43 @@ class Two_AgentsComparator:
         else:
             bk_sup = np.inf
             level_to_add1 = 0
-        cumulative_probas = np.cumsum(probas[idx])
+        cumulative_probas = np.hstack([[0], np.cumsum(probas[idx])[:-1]])
         admissible_values_inf = values[
             self.level_spent2 + cumulative_probas <= clevel / 2 ]
-
+        
         if len(admissible_values_inf)>0:
             bk_inf = admissible_values_inf[-1]  # the maximum admissible value
             level_to_add2 = cumulative_probas[self.level_spent2 + cumulative_probas <= clevel / 2][-1]
         else:
             bk_inf = -np.inf
             level_to_add2 = 0
+        import pdb; breakpoint()
+        assert bk_inf <= bk_sup
 
-        
+            
+        if self.ttype =='rank':
+            T = np.sum(Rs[-1] * X)
+        else:
+            T = np.sum(Rs[-1]*(-1)**X)
+        #assert T in values
+        self.test_stats.append(T)
+
+        p_value = 2*min(self.level_spent1 + icumulative_probas[values >= T][0] ,
+                        self.level_spent2 + cumulative_probas[values <= T][-1])
+
             
         self.level_spent1 += level_to_add1
         self.level_spent2 += level_to_add2
 
         self.boundary.append((bk_inf, bk_sup))
-        
-        if self.ttype =='rank':
-            T = np.sum(Rs[-1] * X)
-        else:
-            T = np.sum(Rs[-1]*(-1)**X)
+
+        self._writer.add_scalar("inf_bound", bk_inf, k)
+
+        self._writer.add_scalar("Stat_val", T, k)
+
+        self._writer.add_scalar("sup_bound", bk_sup, k)
+
+        logger.info(' value of T: '+str(T)+' and boundary: ['+str(bk_inf)+ ','+str( bk_sup)+']')
 
         if (T >= bk_sup) or (T <= bk_inf):
             decision = "reject"
@@ -313,7 +335,7 @@ class Two_AgentsComparator:
         else:
             decision = "continue"
 
-        return decision, T, (bk_inf, bk_sup)
+        return decision, T, (bk_inf, bk_sup), p_value
 
     def compare(self, manager1, manager2):
         """
@@ -336,8 +358,8 @@ class Two_AgentsComparator:
         kwargs2 = manager2[1]
         kwargs2["n_fit"] = self.n
 
-        Z1 = np.array([])
-        Z2 = np.array([])
+        Z = np.array([])
+        X = np.array([])
 
         self.level_spent1 = 0
         self.level_spent2 = 0
@@ -351,10 +373,11 @@ class Two_AgentsComparator:
             m1.fit()
             m2.fit()
 
-            Z1 = np.hstack([Z1, self._get_evals(m1)])
-            Z2 = np.hstack([Z2, self._get_evals(m2)])
+            Z = np.hstack([Z, self._get_evals(m1), self._get_evals(m2)])
+            X = np.hstack([X, np.zeros(self.n), np.ones(self.n)])
 
-            self.decision, T, (bk_inf, bk_sup) = self.partial_compare(Z1, Z2, k)
+
+            self.decision, T, (bk_inf, bk_sup), p_val = self.partial_compare(Z, X, k)
 
             if self.decision == "reject":
                 logger.info("Reject the null after " + str(k + 1) + " groups")
@@ -374,6 +397,9 @@ class Two_AgentsComparator:
         self.eval_2 = Z[X == 1]
         self.agent1_name = m1.agent_name
         self.agent2_name = m2.agent_name
+
+        self.p_val = p_val
+        logger.info('p value is '+str(p_val))
 
     def _get_ranks(self, Z, k):
         Rs = []
@@ -405,7 +431,7 @@ def _get_children(c, nmax):
         return None
     if c[1] == nmax // 2:
         return [(c[0] + 1, c[1])]
-    elif c[0] - c[1] == nmax / 2:
+    elif c[0] - c[1] == nmax // 2:
         return [(c[0] + 1, c[1] + 1)]
     elif c[0] < nmax:
         return [(c[0] + 1, c[1]), (c[0] + 1, c[1] + 1)]
