@@ -1,6 +1,5 @@
 import numpy as np
 
-
 def get_children(c, nmax):
     """
     c is a couple (total size, size of assigned to 1)

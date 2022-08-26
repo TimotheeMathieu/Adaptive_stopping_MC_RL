@@ -37,6 +37,7 @@
 \newcommand{\argmin}{\arg\min}
 
 \usepackage{color}
+\usepackage{array}
 \usepackage{todonotes}
 \newcommand{\todoT}[1]{\todo[inline,color=blue!40]{{\textbf{T:}~}#1}}
 
@@ -69,7 +70,7 @@ The presence of several modes in the distributions of the evaluations and the di
 
 
 
-\subsection{Proposed algorithm}
+\subsection{Proposed algorithms}
 
 The non-parametric GST that we propose is taken from ()\todo{cite} in which the authors use exact permutation tests on linear rank statistics applied to group sequential testing. This test has the advantage of being entirely non-parametric, exact and robust. On the other hand, if the sample-size is too large this test can be computationally exphensive and also there can be some bias because we compare the ranks and not the means of the distributions.
 
@@ -108,8 +109,24 @@ If the test was never rejected, return accept. Else return reject.
 - Also show some robustness properties like insensitivity to outliers as this would show that our algorithm also answers the concerns of the NIPS article ?\\
 - Can we show that when using uniform permutation to approximate the test, we are still efficient ? How many random permutation should be used ?
 }
+\begin{figure}[h]
+\begin{center}
+\begin{tabular}{ | c |c | c | } 
+\hline
+Test & Computational tractability & Robustness \\
+\hline
+Rank sum &  & \\
+\hline
+Empical mean difference &  &  \\
+\hline
+\end{tabular}
+\end{center}
+\caption{Comparison of the two main test used in this article}
+\end{figure}
 
-\noindent\textbf{High level description of the algorithm.}\\
+\subsection{Rank sum statistic}
+
+\subsubsection{High level description of the algorithm}
 Let $x_j=(x_{1,j},\dots,x_{n, j})\in \{0,1\}^n $ be the vector of assignements at step $j$. $x_{i,j}$ is $0$ if the evaluation $i$ in the $j^{th}$ group is comming from Agent 1 and it is $0$ if the reward is comming from  Agent 2. In our setting, this means that $x_{i,j}=0$ if $i \le n/2$ and $x_{i,j}=1$ if $i > n/2$. 
 
 Let $e_j =(e_{1,j},\dots,e_{n,j}) \in \R^n$ be the vector of evaluations observed at step $j$. 
@@ -142,7 +159,7 @@ If $k=K$ then accept $H_0$ otherwise continue.
 \end{algorithm}
 
 The values of $b_k^-$ and $b_k^+$ such that the overall level of the group sequential test is $1-\alpha$ are computed using permutation methods.
-
+`
 Define the boundary generating function $f_i$ by 
 $$f_i(w_i)=\P\left(b_1^-\le W_1\le b_1^+, \dots, b_{i-1}^-\le W_{i-1}\le b_{i-1}^+, W_i = w_i  \right)$$
 if we know how to compute $f_i$, it it then possible to find $b_i^-$ and $b_i^+$ such that 
@@ -153,6 +170,13 @@ where $\alpha(p)$ is the so-called level spending function, a parameter of the t
 
 The main computational burden of the algorithm is in computing $f_i(w_i)$.
 
+\subsubsection{Breaking Ties}
+
+
+\subsection{Difference of empirical mean}
+
+
+\subsubsection{High level description of the algorithm}
 \newpage
 \section{Simulation study}
 \todoT{Misspecification study of Gaussian GST on uniform and maybe on multi-modal distributions}
