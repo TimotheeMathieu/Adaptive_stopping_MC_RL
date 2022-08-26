@@ -10,11 +10,7 @@ from joblib import Parallel, delayed
 
 # GST definition
 
-K = 3  # at most 3 groups
-alpha = 0.05
-n = 4  # size of a group
 
-comparator = Two_AgentsComparator(n, K, alpha)
 
 
 class RandomAgent(Agent):
@@ -41,44 +37,56 @@ class DummyEnv(Model):
     def reset(self):
         return 0
 
+M = 100
 
+alpha = 0.05
+
+K = 3  # at most 3 groups
+n = 4  # size of a group
+
+df = pd.DataFrame()
 if __name__ == "__main__":
+    for K in [2,3,4,5,6]:
+        for n in [2,3,4,5,6]:
+            comparator = Two_AgentsComparator(n, K, alpha)
 
-    manager1 = (
-        RandomAgent,
-        dict(
-            train_env=(DummyEnv, {}),
-            init_kwargs={"drift": 0},
-            fit_budget=1,
-            agent_name="Agent1",
-        ),
-    )
+            manager1 = (
+                RandomAgent,
+                dict(
+                    train_env=(DummyEnv, {}),
+                    init_kwargs={"drift": 0},
+                    fit_budget=1,
+                    agent_name="Agent1",
+                ),
+            )
 
-    manager2 = (
-        RandomAgent,
-        dict(
-            train_env=(DummyEnv, {}),
-            init_kwargs={"drift": 0},
-            fit_budget=1,
-            agent_name="Agent2",
-        ),
-    )
+            manager2 = (
+                RandomAgent,
+                dict(
+                    train_env=(DummyEnv, {}),
+                    init_kwargs={"drift": 0},
+                    fit_budget=1,
+                    agent_name="Agent2",
+                ),
+            )
 
-    M = 500
-    res = []
-    restime = []
-    #Parallel(n_jobs=1)(delayed(sqrt)(i**2) for i in range(10))
+            res = []
+            restime = []
+            #Parallel(n_jobs=1)(delayed(sqrt)(i**2) for i in range(10))
 
 
-    def decision(seed):
-        comparator.compare(manager2, manager1)
-        return comparator.decision
-    
-    # for _ in tqdm(range(M)):
-    #     a = time.time()
-    #     res.append(decision(None))
-    #     restime += [time.time() - a]
-    res = Parallel(n_jobs=14, backend="multiprocessing")(delayed(decision)(i) for i in tqdm(range(500)))
-    idxs = np.array(res) == "accept"
-    #print("mean running time", np.mean(np.array(restime)[idxs]))
-    print("proba to reject", np.mean(1 - idxs))
+            def decision(seed):
+                comparator.compare(manager2, manager1)
+                return comparator.decision
+
+            for _ in tqdm(range(M)):
+                a = time.time()
+                res.append(decision(None))
+                restime += [time.time() - a]
+            #res = Parallel(n_jobs=14, backend="multiprocessing")(delayed(decision)(i) for i in tqdm(range(500)))
+            idxs = np.array(res) == "accept"
+            #print("mean running time", np.mean(np.array(restime)[idxs]))
+            print("proba to reject", np.mean(1 - idxs))
+
+            df = pd.concat([df, pd.DataFrame({'K':[K], 'n':[n], 'time':[np.mean(np.array(restime)[idxs])]})], ignore_index = True)
+df.to_csv('times.csv')
