@@ -10,9 +10,9 @@ from joblib import Parallel, delayed
 
 # GST definition
 
-K = 5  # at most 3 groups
+K = 4  # at most 3 groups
 alpha = 0.05
-n = 4  # size of a group
+n = 3  # size of a group
 
 
 
@@ -75,7 +75,7 @@ if __name__ == "__main__":
         return comparator.decision
     for _ in tqdm(range(M)):
         a = time.time()
-        comparator = Two_AgentsComparator(n, K, alpha)
+        comparator = Two_AgentsComparator(n, K, alpha, ttype="mean")
         comparator.compare(manager2, manager1)
         res.append(comparator.decision)
         p_vals.append(comparator.p_val)
