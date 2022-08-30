@@ -154,16 +154,31 @@ class Two_AgentsComparator:
             raise RuntimeError("name not implemented")
 
 
-    def compute_means_diffs(self, k, Z, boundary):
-        Zk = Z[(k*2*n):((k+1)*2*n)]
-        ids_pos = combinations(2*n, n)
-        id_md = 2*k*n
+    def compute_means_diffs(self,  k, Z, boundary):
+        Zk = Z[(k*2*self.n):((k+1)*2*self.n)]
+        ids_pos = itertools.combinations(np.arange(2*self.n), self.n)
+        id_md = 0
+
+        # Pruning for conditional proba
+        if k >0:
+            idxs = np.where(np.array([boundary[k-1][0] <= r <= boundary[k-1][1] for r in self.mean_diffs]))[0]
+            self.mean_diffs = [self.mean_diffs[i] for i in idxs]
+
+        mean_diffs_k = []
         for id_pos in ids_pos:
-            mask = np.zeros(2*n)
-            mask[id_pos] = 1
+            mask = np.zeros(2*self.n)
+            mask[list(id_pos)] = 1
             mask = mask == 1
-            self.mean_diffs[id_md] = Zk[mask]-Zk[~mask]
+            mean_diffs_k.append(np.sum(Zk[mask]-Zk[~mask]))
             id_md += 1
+
+
+        choices = np.arange(int(binom(2*self.n, self.n)))
+
+        self.mean_diffs = np.array([ r + mean_diffs_k[choice] for r in self.mean_diffs  for choice in choices])
+        # very inefficient. To do : improve computation.
+            
+        return self.mean_diffs
         
     def explore_graph_ranks(self, k, Rs, boundary):
         """
@@ -226,7 +241,7 @@ class Two_AgentsComparator:
 
     def postprocess_records(self, records, boundary, j):
         # Pruning for conditional proba
-        idxs = np.where(np.array([boundary[j][0] < r[0] < boundary[j][1] for r in records[0]]))[0]
+        idxs = np.where(np.array([boundary[j][0] <= r[0] <= boundary[j][1] for r in records[0]]))[0]
         if len(idxs) > 0:
             new_list = [records[0][i] for i in idxs]
             records = (
@@ -280,9 +295,8 @@ class Two_AgentsComparator:
             probas = np.array(records[1]) / binom(2 * self.n, self.n) ** (k + 1)
 
         else:
-            self.compute_means_diffs(k, Z, self.boundary)
-            rs = self.mean_diffs[:(2*self.n*(k+1))]
-            probas = np.ones(len(rs)) / binom(2 * self.n, self.n) ** (k + 1)
+            rs = self.compute_means_diffs( k, Z, self.boundary)
+            probas = np.ones(len(rs)) / len(rs)
             
         idx = np.argsort(rs)
         values = np.array(rs)[idx]
@@ -316,9 +330,9 @@ class Two_AgentsComparator:
             T = np.sum(Z*(-1)**X)
             
         self.test_stats.append(T)
-
-        p_value = 2*min(self.level_spent1 + icumulative_probas[values >= T][0] ,
-                        self.level_spent2 + cumulative_probas[values <= T][-1])
+        
+        p_value = 2*min(self.level_spent1 + icumulative_probas[values >= T-1e-12][0] ,
+                        self.level_spent2 + cumulative_probas[values <= T+1e-12][-1])
 
             
         self.level_spent1 += level_to_add1
@@ -371,7 +385,7 @@ class Two_AgentsComparator:
         self.level_spent2 = 0
 
         if self.ttype != "rank":
-            self.mean_diffs = np.nan*np.ones(self.K, binom(2 * self.n, self.n))
+            self.mean_diffs = [0]
        
         seeders = self.seeder.spawn(2*self.K)
         for k in range(self.K):
@@ -388,6 +402,7 @@ class Two_AgentsComparator:
 
             self.decision, T, (bk_inf, bk_sup), p_val = self.partial_compare(Z, X, k)
 
+            
             if self.decision == "reject":
                 logger.info("Reject the null after " + str(k + 1) + " groups")
                 if T <= bk_inf:
