@@ -86,7 +86,7 @@ class MultipleAgentsComparator:
         decisions = []
         for pair in pairs:
             comparator = Two_AgentsComparator(self.n, self.K, self.alpha, self.name, self.ttype, self.n_evaluations, self.seed)
-            comparator.compate(pair[0], pair[1])
+            comparator.compare(pair[0], pair[1])
             decisions.append((comparator.agent1_name, comparator.agent2_name), comparator.decision)
         
         return decisions
@@ -153,7 +153,19 @@ class Two_AgentsComparator:
         else:
             raise RuntimeError("name not implemented")
 
-    def explore_graph(self, k, Rs, boundary):
+
+    def compute_means_diffs(self, k, Z, boundary):
+        Zk = Z[(k*2*n):((k+1)*2*n)]
+        ids_pos = combinations(2*n, n)
+        id_md = 2*k*n
+        for id_pos in ids_pos:
+            mask = np.zeros(2*n)
+            mask[id_pos] = 1
+            mask = mask == 1
+            self.mean_diffs[id_md] = Zk[mask]-Zk[~mask]
+            id_md += 1
+        
+    def explore_graph_ranks(self, k, Rs, boundary):
         """
         Explore graph of permutations. Used to get the boundary
 
@@ -186,16 +198,10 @@ class Two_AgentsComparator:
                     if children is not None:
                         for child in children:
                             unew = copy(u)  # Step 3
-                            if self.ttype == 'rank':
-                                for l in range(k + 1 - j):
-                                    unew[l] = unew[l] + Rs[j + l][f + 2 * self.n * j] * (
-                                        child[1] - c[1]
-                                    )
-                            else:
-                                for l in range(k + 1 - j):
-                                    unew[l] = unew[l] + Rs[j + l][f + 2 * self.n * j] * (-1)**(
-                                        child[1] - c[1]
-                                    )
+                            for l in range(k + 1 - j):
+                                unew[l] = unew[l] + Rs[j + l][f + 2 * self.n * j] * (
+                                    child[1] - c[1]
+                                )
 
                             if len(records[0]) > 0:
                                 is_in = unew in records[0]
@@ -268,15 +274,17 @@ class Two_AgentsComparator:
 
         if self.ttype == "rank":
             Rs = self._get_ranks(Z, k)
-        else:
-            Rs = []
-            for j in range(k + 1):
-                Rs.append(Z[: (2 * self.n * (j + 1))])
+        if self.ttype == "rank":
+            records = self.explore_graph_ranks(k, Rs, self.boundary)
+            rs = np.array(records[0]).ravel()
+            probas = np.array(records[1]) / binom(2 * self.n, self.n) ** (k + 1)
 
-        records = self.explore_graph(k, Rs, self.boundary)
-        rs = np.array(records[0]).ravel()
+        else:
+            self.compute_means_diffs(k, Z, self.boundary)
+            rs = self.mean_diffs[:(2*self.n*(k+1))]
+            probas = np.ones(len(rs)) / binom(2 * self.n, self.n) ** (k + 1)
+            
         idx = np.argsort(rs)
-        probas = np.array(records[1]) / binom(2 * self.n, self.n) ** (k + 1)
         values = np.array(rs)[idx]
 
         icumulative_probas = np.sum(probas) - np.cumsum(probas[idx])
@@ -300,15 +308,13 @@ class Two_AgentsComparator:
         else:
             bk_inf = -np.inf
             level_to_add2 = 0
-        import pdb; breakpoint()
         assert bk_inf <= bk_sup
-
             
         if self.ttype =='rank':
             T = np.sum(Rs[-1] * X)
         else:
-            T = np.sum(Rs[-1]*(-1)**X)
-        #assert T in values
+            T = np.sum(Z*(-1)**X)
+            
         self.test_stats.append(T)
 
         p_value = 2*min(self.level_spent1 + icumulative_probas[values >= T][0] ,
@@ -328,7 +334,7 @@ class Two_AgentsComparator:
 
         logger.info(' value of T: '+str(T)+' and boundary: ['+str(bk_inf)+ ','+str( bk_sup)+']')
 
-        if (T >= bk_sup) or (T <= bk_inf):
+        if (T > bk_sup) or (T < bk_inf):
             decision = "reject"
         elif k == self.K - 1:
             decision = "accept"
@@ -363,6 +369,9 @@ class Two_AgentsComparator:
 
         self.level_spent1 = 0
         self.level_spent2 = 0
+
+        if self.ttype != "rank":
+            self.mean_diffs = np.nan*np.ones(self.K, binom(2 * self.n, self.n))
        
         seeders = self.seeder.spawn(2*self.K)
         for k in range(self.K):
@@ -381,7 +390,7 @@ class Two_AgentsComparator:
 
             if self.decision == "reject":
                 logger.info("Reject the null after " + str(k + 1) + " groups")
-                if T < bk_inf:
+                if T <= bk_inf:
                     logger.info(m1.agent_name + " is better than " + m2.agent_name)
                 else:
                     logger.info(m2.agent_name + " is better than " + m1.agent_name)
@@ -416,7 +425,7 @@ class Two_AgentsComparator:
             logger.info("Evaluating agent " + str(idx))
             eval_values.append(
                 np.mean(
-                    manager.eval_agents(self.n_evaluations, agent_id=idx, verbose=False)
+                    manager.eval_agents(self.n_evaluations, agent_id=idx)
                 )
             )
         return eval_values

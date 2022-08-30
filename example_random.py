@@ -10,7 +10,7 @@ from joblib import Parallel, delayed
 
 # GST definition
 
-K = 3  # at most 3 groups
+K = 5  # at most 3 groups
 alpha = 0.05
 n = 4  # size of a group
 
@@ -63,15 +63,14 @@ if __name__ == "__main__":
         ),
     )
 
-    M = 500
+    M = 200
     res = []
-    
+    restime = []
     p_vals = []
-    #Parallel(n_jobs=1)(delayed(sqrt)(i**2) for i in range(10))
 
 
     def decision(seed):
-        comparator = Two_AgentsComparator(n, K, alpha, seed=seed)
+        comparator = Two_AgentsComparator(n, K, alpha, seed=seed, ttype = "mean")
         comparator.compare(manager2, manager1)
         return comparator.decision
     for _ in tqdm(range(M)):
@@ -80,7 +79,8 @@ if __name__ == "__main__":
         comparator.compare(manager2, manager1)
         res.append(comparator.decision)
         p_vals.append(comparator.p_val)
+        restime.append(time.time()-a)
     # res = Parallel(n_jobs=14, backend="multiprocessing")(delayed(decision)(i) for i in tqdm(range(500)))
     idxs = np.array(res) == "accept"
-    #print("mean running time", np.mean(np.array(restime)[idxs]))
+    print("mean running time", np.mean(np.array(restime)[idxs]))
     print("proba to reject", np.mean(1 - idxs))

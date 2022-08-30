@@ -10,7 +10,7 @@ K = 5  # at most 5 groups
 alpha = 0.05
 n = 4  # size of a group. i.e. 4 fits at a time.
 
-comparator = Two_AgentsComparator(n, K, alpha, n_evaluations=10)
+comparator = Two_AgentsComparator(n, K, alpha, n_evaluations=10, ttype = "mean")
 
 # DeepRL agent definition
 env_ctor = gym_make
