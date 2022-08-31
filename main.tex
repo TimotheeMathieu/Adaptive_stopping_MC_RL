@@ -40,6 +40,7 @@
 
 \usepackage{color}
 \usepackage{array}
+\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
 \usepackage{todonotes}
 \newcommand{\todoT}[1]{\todo[inline,color=blue!40]{{\textbf{T:}~}#1}}
 
@@ -74,16 +75,15 @@ The presence of several modes in the distributions of the evaluations and the di
 
 
 
-% \subsection{Proposed algorithm}
+\subsection{Proposed algorithm}
 
-% The non-parametric GST that we propose is taken from ()\todo{cite} in which the authors use exact permutation tests on linear rank statistics applied to group sequential testing. This test has the advantage of being entirely non-parametric, exact and robust. On the other hand, if the sample-size is too large this test can be computationally untractable and also there can be some bias because we compare the ranks and not the means of the distributions.
+The non-parametric GST that we propose is taken from \cite{Mehta_1994} in which the authors use exact permutation tests on linear rank statistics applied to group sequential testing. This test has the advantage of being entirely non-parametric, exact and robust. On the other hand, if the sample-size is too large this test can be computationally untractable and also there can be some bias because we compare the ranks and not the means of the distributions.
 
-% We describe an algorithm aiming at testing the hypothesis $H_0:$``Agent 1 and Agent 2 have same evaluation'' against the alternative hypothesis $H_1:$``Agent 1 and Agent 2 have different evaluations''. More precisely, we use a sum-rank test (usually called the Wilcoxon rank sum statistic which is equivalent to Mann–Whitney U test) to test 
-% $$H_0: \P\left( S(A_1)>S(A_2)\right) =\P\left( S(A_1)<S(A_2)\right) \quad \text{Vs} \quad H_1:   \P\left( S(A_1)>S(A_2)\right)\neq \P\left( S(A_1)<S(A_2)\right).$$
+We describe an algorithm aiming at testing the hypothesis $H_0:$``Agent 1 and Agent 2 have same evaluation'' against the alternative hypothesis $H_1:$``Agent 1 and Agent 2 have different evaluations''. The formal transcriptions of $H_0$ and $H_1$ will vary according to which test we use.
 
 
 \subsection{High level description of the algorithm}
-If we denote by $n$ the size of a group and by $K$ the maximum number of groups (see Algorith~\ref{alg:adastop}), then the complexity of Permutation GST algorithm is ${n \choose n/2}^K$, which is reasonable for example for $n,K\le 6$. For higher values of $n$ and $K$, we may want to use random permutations to make an approximation of the boundary used in the GST. 
+If we denote by $n$ the size of a group and by $K$ the maximum number of groups (see Algorithm~\ref{alg:adastop}), then the complexity of Permutation GST algorithm is ${n \choose n/2}^K$, which is reasonable for example for $n,K\le 6$. For higher values of $n$ and $K$, we may want to use random permutations to make an approximation of the boundary used in the GST. 
 
 
 \begin{algorithm}[h]
@@ -132,13 +132,15 @@ An illustration of the group sequential test is given in figure~\ref{fig:gst}. T
 }
 \begin{figure}[h]
 \begin{center}
-\begin{tabular}{ | m{5em} | m{7em} |  m{5em}| l | m{9em} | } 
+\begin{tabular}{ | L{4em} | L{7em} |  L{5em}| l | L{9em} | } 
 \hline
-Test & Computational tractability & Specific difficulty &  Hypothesis tested & Optimality condition  \\
+Test & guarentees & Specific difficulty &  Hypothesis tested & Optimality guarentees \\
 \hline
-Rank sum & ?  & Ties  &  $\P(X>Y) = \P(X<Y)$& most powerful when distribution are Logistic and $\frac{|\mu_1-\mu2|}{\sigma}\le \varepsilon$ \\
+Rank sum & Exact if $H_0:P=Q$ and Asymptotic test in general \cite{Janssen_1999,Chung_2013}  & Ties  &  $\P(X>Y) = \P(X<Y)$ & most powerful rank test \cite{Pratt_1981}\\
 \hline
-Empical mean diff. & ? & Non robust &  $\E[X]=\E[Y] $&most powerful among translation equivariants randomization tests \\
+Empical mean diff. & Exact if  $H_0:P=Q$ and Asymptotic test when $\E[X^2]$ is finite \cite{Romano_1990,Chung_2013} & Non robust &  $\E[X]=\E[Y] $&most powerful among translation equivariants randomization tests \cite{Pratt_1981}\\
+\hline
+IQ mean diff. & Exact if  $H_0:P=Q$ and ? in general (general case could be proved from \cite{lehmann2005testing,Chung_2013})& Ties  &  $IQM[X]=IQM[Y] $& ?\\
 \hline
 \end{tabular}
 \end{center}
@@ -236,5 +238,5 @@ replicate adaptively the results of the NIPS article : do we also stop around 20
 % \end{algorithm}
 
 \bibliographystyle{plain}
-\bibliography{biblio_file}
+\bibliography{Adastop}
 \end{document}
