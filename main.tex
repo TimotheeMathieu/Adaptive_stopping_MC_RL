@@ -123,14 +123,14 @@ An illustration of the group sequential test is given in figure~\ref{fig:gst}. T
 \caption{Illustration of the boundary $b_k^+, b_k^-$ and the observed values $w_k$, $K=5$ and $n=5$, $\alpha=0.05$ using Permutation GST on linear rank tests. In this example we reject at the last step $k=5$. \label{fig:gst}}
 \end{center}
 \end{figure}
-\todoT{Theoretical concerns : \\
-- is this test most powerfull in some class of tests ?\\
-- What is the expected stopping time if the Agents are indeed different ?\\
-- Can we show that if the distribution is well behaved, then we really compare the means of the distributions ? Even with rank test.\\
-- Explain the empirical mean permutation test and finish explaining the rank permutation test.\\
-- Also show some robustness properties like insensitivity to outliers as this would show that our algorithm also answers the concerns of the NIPS article ?\\
-- Can we show that when using uniform permutation to approximate the test, we are still efficient ? How many random permutation should be used ?
-}
+% \todoT{Theoretical concerns : \\
+% - is this test most powerfull in some class of tests ?\\
+% - What is the expected stopping time if the Agents are indeed different ?\\
+% - Can we show that if the distribution is well behaved, then we really compare the means of the distributions ? Even with rank test.\\
+% - Explain the empirical mean permutation test and finish explaining the rank permutation test.\\
+% - Also show some robustness properties like insensitivity to outliers as this would show that our algorithm also answers the concerns of the NIPS article ?\\
+% - Can we show that when using uniform permutation to approximate the test, we are still efficient ? How many random permutation should be used ?
+% }
 \begin{figure}[h]
 \begin{center}
 \begin{tabular}{ | L{4em} | L{7em} |  L{5em}| l | L{9em} | } 
@@ -214,12 +214,8 @@ The advantage of the random permutations is that it is very well known in theory
 
 \subsection{Asymptotic study}
 \subsection{Case of a non-sequential permutation test}
-Denote $E_{i}^{i+j}=(E_i, E_{i+1},\dots, E_{i+j})$ and let $T_n$ be a statistic on $\R^{2n}$ (typically $T_n(Z_1,\dots,Z_{2n})=\frac{1}{n}\sum_{i=1}^n Z_i -\frac{1}{n}\sum_{i=n+1}^{2n} Z_i$). Denote by 
-$$\widehat{R}_{n,k}(t)=\frac{1}{n!}\sum_{\sigma \in S_n} \1\{T_n(\sigma E_{2nk}^{2n(k+1)}) \le t\} $$
-the randomization distribution of $T_n$ where for any permutation $\sigma \in S_n$, 
-$$\sigma E_{2nk}^{2n(k+1)}=(E_{\sigma(2nk)},E_{\sigma(2nk+1)},\dots,E_{\sigma(2n(k+1))})$$
-is the sample permuted using $ \sigma$. 
 
+Foor a sample $Z_1^n=(Z_1,\dots,Z_n)$, denote $\sigma Z_1^n$ the permuted sample using the permutation $\sigma$: $\sigma Z_1^n=(Z_{\sigma(1)},\dots,Z_{\sigma(n)})$.\\
 For $T_n$ the difference of empirical mean, we have the following property.
 
 \begin{Proposition}\label{prop:asym_perm_test}
@@ -246,6 +242,44 @@ On the other hand, if $\mu_P > \mu_Q$, then $T_n \simeq \mathcal{N}(\sqrt{n}(\mu
 &\simeq  1-\Phi\left(\Phi^{-1}(1-\alpha)\left(1+\frac{(\mu_P-\mu_Q)^2}{\sigma_P^2+\sigma_Q^2 }\right)-  \sqrt{n}\frac{\mu_P-\mu_Q}{\sqrt{\sigma_P^2+\sigma_Q^2}} \right)
 \end{align*}
 For a given drift $\mu_P-\mu_Q$, we can solve for $n$ to get a sample size required in order to converge to a given power.
+
+Example: suppose we want to detect a drift $\mu_P-\mu_Q=\sqrt{\sigma_P^2+\sigma_Q^2}$ in with probability $0.9$. Then we solve $1-\Phi\left(\Phi^{-1}(1-\alpha)\left(1+\frac{(\mu_P-\mu_Q)^2}{\sigma_P^2+\sigma_Q^2 }\right)-  \sqrt{n}\frac{\mu_P-\mu_Q}{\sqrt{\sigma_P^2+\sigma_Q^2}} \right) = 0.9$ and get that $n$ must be larger than $21$.
+
+\subsection{Permutation Group Sequential tests}
+
+
+
+Denote $E_{i}^{i+j}=(E_i, E_{i+1},\dots, E_{i+j})$ and let $T_n(Z_1,\dots,Z_{2n})=\frac{1}{n}\sum_{i=1}^n Z_i -\frac{1}{n}\sum_{i=n+1}^{2n} Z_i$. Denote by 
+$$\widehat{R}_{n,k}(t)=\frac{1}{n!}\sum_{\sigma \in S_{2n}} \1\{T_n(\sigma E_{2nk}^{2n(k+1)}) \le t\} $$
+the randomization distribution of $T_n$ where for any permutation $\sigma \in S_n$, 
+$$\sigma E_{2nk}^{2n(k+1)}=(E_{\sigma(2nk)},E_{\sigma(2nk+1)},\dots,E_{\sigma(2n(k+1))})$$
+is the sample permuted using $ \sigma$. 
+
+
+We have 
+\begin{align*}
+\prod_{k=1}^K \widehat{R}_{n,k}(t) &=\frac{1}{(n!)^K}\sum_{\sigma_1,\dots,\sigma_K \in S_{2n}} \prod_{k=1}^K \1\{T_n(\sigma E_{2nk}^{2n(k+1)}) \le t\} \\
+&=\frac{1}{(n!)^K}\sum_{\sigma_1,\dots,\sigma_K \in S_{2n}}  \1\{ \forall 1\le k\le K, \quad T_n(\sigma E_{2nk}^{2n(k+1)}) \le t\}
+\end{align*}
+We have
+\begin{align*}
+\sup_{t}&\left|\prod_{k=1}^K \widehat{R}_{n,k}(t) - \Phi\left( \frac{t}{\tau(P,Q)}\right)^{K} \right| \\
+&= \sup_t \left| \widehat{R}_{n,K}(t)\left(\prod_{k=1}^{K-1} \widehat{R}_{n,k}(t) - \Phi\left( \frac{t}{\tau(P,Q)}\right)^{K-1}\right) + (\widehat{R}_{n,K}(t)-\Phi(t/\tau(P,Q))) \Phi(t/\tau(P,Q))^{K-1} \right|\\
+&\le \sup_t \left| \widehat{R}_{n,K}(t)\left(\prod_{k=1}^{K-1} \widehat{R}_{n,k}(t) - \Phi\left( \frac{t}{\tau(P,Q)}\right)^{K-1}\right)\right| + \sup_t\left|(\widehat{R}_{n,K}(t)-\Phi(t/\tau(P,Q))) \Phi(t/\tau(P,Q))^{K-1} \right|\\
+&\le \sup_t \left|\prod_{k=1}^{K-1} \widehat{R}_{n,k}(t) - \Phi\left( \frac{t}{\tau(P,Q)}\right)^{K-1}\right| + \sup_t\left|\widehat{R}_{n,K}(t)-\Phi(t/\tau(P,Q)) \right|
+\end{align*}
+Hence, reasoning by induction, we have from Proposition~\ref{prop:asym_perm_test}
+$$\sup_{t}\left|\prod_{k=1}^K \widehat{R}_{n,k}(t) - \Phi\left( \frac{t}{\tau(P,Q)}\right)^{K} \right|\xrightarrow[n \to \infty]{P} 0$$
+
+\textbf{Convergence of the boundary}
+
+The boundary is defined by $b_1^{-},b_1^{+},\dots, b_K^{-}, b_K^{+}$ such that 
+$$\P_\sigma(nT_n(\sigma E_1^{2n})\le b_1^{-}) = q_1^{-} \le \frac{1}{2} \alpha\left(\frac{1}{K}\right) $$
+$$\P_\sigma(nT_n(\sigma E_1^{2n})\ge b_1^{+}) = q_1^{+} \le \frac{1}{2} \alpha\left(\frac{1}{K}\right) $$
+
+$$\P_\sigma(nT_n(\sigma E_{2n}^{4n})+nT_n(\sigma E_1^{2n})\le b_2_{-}, b_1^{+}\le nT_n(\sigma E_1^{2n})\le b_1^{-}  ) = q_2^{-} \le \frac{1}{2}\alpha\left(\frac{2}{K}\right) $$
+$$\P_\sigma(nT_n(\sigma E_{2n}^{4n})+nT_n(\sigma E_1^{2n})\ge b_2_{+}, b_1^{+}\le nT_n(\sigma E_1^{2n})\le b_1^{-}  ) = q_2^{+} \le \frac{1}{2}\alpha\left(\frac{2}{K}\right) $$
+
 
 \newpage
 \section{Simulation study}
