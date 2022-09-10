@@ -26,7 +26,7 @@
 
 \theoremstyle{remark}
 \newtheorem{Definition}{Definition}
-\newtheorem{Assumptions}{Assumptions}
+\newtheorem{Assumption}{Assumption}
 
 \renewcommand{\P}{\mathbb{P}}
 \newcommand{\E}{\mathbb{E}}
@@ -40,6 +40,7 @@
 
 \usepackage{color}
 \usepackage{array}
+\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
 \usepackage{todonotes}
 \newcommand{\todoT}[1]{\todo[inline,color=blue!40]{{\textbf{T:}~}#1}}
 
@@ -73,17 +74,17 @@ The presence of several modes in the distributions of the evaluations and the di
 
 
 
+\subsection{Proposed algorithm}
 
-% \subsection{Proposed algorithm}
+The non-parametric GST that we propose is taken from \cite{Mehta_1994} in which the authors use exact permutation tests on linear rank statistics applied to group sequential testing. This test has the advantage of being entirely non-parametric, exact and robust. On the other hand, if the sample-size is too large this test can be computationally untractable and also there can be some bias because we compare the ranks and not the means of the distributions.
 
-% The non-parametric GST that we propose is taken from ()\todo{cite} in which the authors use exact permutation tests on linear rank statistics applied to group sequential testing. This test has the advantage of being entirely non-parametric, exact and robust. On the other hand, if the sample-size is too large this test can be computationally untractable and also there can be some bias because we compare the ranks and not the means of the distributions.
+We describe an algorithm aiming at testing the hypothesis $H_0:$``Agent 1 and Agent 2 have same evaluation'' against the alternative hypothesis $H_1:$``Agent 1 and Agent 2 have different evaluations''. The formal transcriptions of $H_0$ and $H_1$ will vary according to which test we use.
 
-% We describe an algorithm aiming at testing the hypothesis $H_0:$``Agent 1 and Agent 2 have same evaluation'' against the alternative hypothesis $H_1:$``Agent 1 and Agent 2 have different evaluations''. More precisely, we use a sum-rank test (usually called the Wilcoxon rank sum statistic which is equivalent to Mann–Whitney U test) to test 
-% $$H_0: \P\left( S(A_1)>S(A_2)\right) =\P\left( S(A_1)<S(A_2)\right) \quad \text{Vs} \quad H_1:   \P\left( S(A_1)>S(A_2)\right)\neq \P\left( S(A_1)<S(A_2)\right).$$
-
+\todoT{For now, I found only two articles with permutation group sequential testing. \cite{Mehta_1994} and \cite{Zhang_2007}. In only read \cite{Mehta_1994}. There are however papers on other nonparametric GST that may be relevant to us.}
 
 \subsection{High level description of the algorithm}
-If we denote by $n$ the size of a group and by $K$ the maximum number of groups (see Algorith~\ref{alg:adastop}), then the complexity of Permutation GST algorithm is ${n \choose n/2}^K$, which is reasonable for example for $n,K\le 6$. For higher values of $n$ and $K$, we may want to use random permutations to make an approximation of the boundary used in the GST. 
+\todoT{Rewrite this section, notation are not good}
+If we denote by $n$ the size of a group and by $K$ the maximum number of groups (see Algorithm~\ref{alg:adastop}), then the complexity of Permutation GST algorithm is ${n \choose n/2}^K$, which is reasonable for example for $n,K\le 6$. For higher values of $n$ and $K$, we may want to use random permutations to make an approximation of the boundary used in the GST. 
 
 
 \begin{algorithm}[h]
@@ -99,8 +100,8 @@ Compute $S_t(A_i)=\frac{1}{nt}\sum_{j=1}^{nt}e_{j}(A_i)$.
 }
 Test  $H_0: S_t(A_1)=S_t(A_2)$ versus $H_1: S_t(A_1)\neq S_t(A_2)$ using GST Algorithm as follows:
 \For{$k=1,\dots,K$}{
-Observe $x_k$ and $e_k$.\\
-Compute $w_k$ the linear rank statistic from $x_1,\dots,x_k$ and $e_1,\dots,e_k$.\\
+Observe $a_k$ and $e_k$.\\
+Compute $w_k$ the linear rank statistic from $a_1,\dots,a_k$ and $e_1,\dots,e_k$.\\
 Compute $b_k^-, b_k^+$ boundary values.\\
 \If{$w_k \ge b_k^+$ or $w_k \le b_k^-$}{
 Reject $H_0$, break the loop and returns the answer
@@ -122,23 +123,25 @@ An illustration of the group sequential test is given in figure~\ref{fig:gst}. T
 \caption{Illustration of the boundary $b_k^+, b_k^-$ and the observed values $w_k$, $K=5$ and $n=5$, $\alpha=0.05$ using Permutation GST on linear rank tests. In this example we reject at the last step $k=5$. \label{fig:gst}}
 \end{center}
 \end{figure}
-\todoT{Theoretical concerns : \\
-- is this test most powerfull in some class of tests ?\\
-- What is the expected stopping time if the Agents are indeed different ?\\
-- Can we show that if the distribution is well behaved, then we really compare the means of the distributions ? Even with rank test.\\
-- Explain the empirical mean permutation test and finish explaining the rank permutation test.\\
-- Also show some robustness properties like insensitivity to outliers as this would show that our algorithm also answers the concerns of the NIPS article ?\\
-- Can we show that when using uniform permutation to approximate the test, we are still efficient ? How many random permutation should be used ?
-}
+% \todoT{Theoretical concerns : \\
+% - is this test most powerfull in some class of tests ?\\
+% - What is the expected stopping time if the Agents are indeed different ?\\
+% - Can we show that if the distribution is well behaved, then we really compare the means of the distributions ? Even with rank test.\\
+% - Explain the empirical mean permutation test and finish explaining the rank permutation test.\\
+% - Also show some robustness properties like insensitivity to outliers as this would show that our algorithm also answers the concerns of the NIPS article ?\\
+% - Can we show that when using uniform permutation to approximate the test, we are still efficient ? How many random permutation should be used ?
+% }
 \begin{figure}[h]
 \begin{center}
-\begin{tabular}{ | m{5em} | m{7em} |  m{5em}| l | m{9em} | } 
+\begin{tabular}{ | L{4em} | L{7em} |  L{5em}| l | L{9em} | } 
 \hline
-Test & Computational tractability & Specific difficulty &  Hypothesis tested & Optimality condition  \\
+Test & guarentees & Specific difficulty &  Hypothesis tested & Optimality guarentees \\
 \hline
-Rank sum & ?  & Ties  &  $\P(X>Y) = \P(X<Y)$& most powerful when distribution are Logistic and $\frac{|\mu_1-\mu2|}{\sigma}\le \varepsilon$ \\
+Rank sum & Exact if $H_0:P=Q$ and Asymptotic test in general \cite{Janssen_1999,Chung_2013}  & Ties  &  $\P(X>Y) = \P(X<Y)$ & most powerful rank test \cite{Pratt_1981}\\
 \hline
-Empical mean diff. & ? & Non robust &  $\E[X]=\E[Y] $&most powerful among translation equivariants randomization tests \\
+Empical mean diff. & Exact if  $H_0:P=Q$ and Asymptotic test when $\E[X^2]$ is finite \cite{Romano_1990,Chung_2013} & Non robust &  $\E[X]=\E[Y] $&most powerful among translation equivariants randomization tests \cite{Pratt_1981}\\
+\hline
+IQ mean diff. & Exact if  $H_0:P=Q$ and ? in general (general case could be proved from \cite{lehmann2005testing,Chung_2013})& Ties  &  $IQM[X]=IQM[Y] $& ?\\
 \hline
 \end{tabular}
 \end{center}
@@ -149,8 +152,8 @@ Empical mean diff. & ? & Non robust &  $\E[X]=\E[Y] $&most powerful among transl
 
 
 \subsubsection{Permutation test and computation of the boundary.}
-
-Let $x_j=(x_{1,j},\dots,x_{n, j})\in \{0,1\}^n $ be the vector of assignements at step $j$. $x_{i,j}$ is $0$ if the evaluation $i$ in the $j^{th}$ group is comming from Agent 1 and it is $0$ if the reward is comming from  Agent 2. In our setting, this means that $x_{i,j}=0$ if $i \le n/2$ and $x_{i,j}=1$ if $i > n/2$. 
+\todoT{Rewrite this section, notations are not good}
+Let $a_j=(a_{1,j},\dots,a_{n, j})\in \{0,1\}^n $ be the vector of assignements at step $j$. $a_{i,j}$ is $0$ if the evaluation $i$ in the $j^{th}$ group is comming from Agent 1 and it is $0$ if the reward is comming from  Agent 2. In our setting, this means that $a_{i,j}=0$ if $i \le n/2$ and $a_{i,j}=1$ if $i > n/2$. 
 
 Let $e_j =(e_{1,j},\dots,e_{n,j}) \in \R^n$ be the vector of evaluations observed at step $j$. 
 
@@ -161,8 +164,8 @@ Define for any $j\le i$
 $$R_j^{(i)}=(r_1^{(i)}, \dots,r_{j}^{(i)})\in \N^{nj}.$$
 
 
-If $X_i=(x_1,\dots,x_i)\in \{0,1\}^{ni}$, we consider the linear rank test statistic
-$$w_i=R_i^{(i)}X_i.$$
+If $A_i=(a_1,\dots,a_i)\in \{0,1\}^{ni}$, we consider the linear rank test statistic
+$$w_i=R_i^{(i)}A_i.$$
 $w_i$ is in our case the sum of the ranks of the evaluations of Agent 2 after merging the evaluations on the first $i$ groups together.
 
 The data are then summarized using the $w_i$'s.
@@ -177,13 +180,13 @@ and for any $i$, we have
 $$q_{i-1}+\P\left(b_1^-\le W_1\le b_1^+, \dots, b_{i-1}^-\le W_{i-1}\le b_{i-1}^+, W_i  \notin(b_i^-, b_i^+) \right)=q_i \le \alpha\left(\frac{i}{K} \right).$$
 where $\alpha(p)$ is the so-called level spending function, a parameter of the test, it must verify $\alpha(0)=0$, $\alpha(1)=\alpha$ and be non-decreasing.
 
-The main computational burden of the algorithm is in computing $f_i(w_i)$, to compute $f_i$ we need to enumerate all the possible values $f_i(w_i)$ can take for the possible choices of affectation $X$, i.e. we must enumerate $\Gamma_1 \times \dots \times \Gamma_i$ where
-$$\Gamma_j= \left\{x_j: \sum_{l=1}^{2n}x_{j,l} = n,\quad x_{j,l}\in \{0,1 \}\right\}.$$
+The main computational burden of the algorithm is in computing $f_i(w_i)$, to compute $f_i$ we need to enumerate all the possible values $f_i(w_i)$ can take for the possible choices of affectation $A$, i.e. we must enumerate $\Gamma_1 \times \dots \times \Gamma_i$ where
+$$\Gamma_j= \left\{a_j: \sum_{l=1}^{2n}a_{j,l} = n,\quad a_{j,l}\in \{0,1 \}\right\}.$$
 one element of $\Gamma_1 \times \dots \times \Gamma_i$ is equivalent to the path in a graph. The graph of $\Gamma_j$ is composed of nodes labelled by a couple $(a,b)$ where $(a,b)$ implies that of the first $a$ samples, exactly $b$ have been assigned to Agent 2, see Figure~\ref{fig:graph} for an illustration of a path going through $\Gamma_1\times \Gamma_2$ when $n=2$.
 \begin{figure}[h!]
 \begin{center}
 \includegraphics[scale=0.7]{graph_gamma.pdf}
-\caption{Graph representation of $\Gamma_1$ and $\Gamma_2$. The thick path represent $X_i=(1,0,1,0,0,0,1,1)$\label{fig:graph}.}
+\caption{Graph representation of $\Gamma_1$ and $\Gamma_2$. The thick path represent $A_i=(1,0,1,0,0,0,1,1)$\label{fig:graph}.}
 \end{center}
 \end{figure}
 
@@ -196,8 +199,8 @@ This is arguably one of the most well-known permutation test.
 \subsubsection{High level description of the algorithm}
 
 Instead of a sum of rank, we consider the following statistic: 
-$$w_i=e_i(2X_i-1)=\sum_{j=1}^{ni} e_{i,j}(2X_{i,j}-1),$$
-i.e. we affect the sign $+1$ or $-1$ to the evaluations, initially the sign $+1$ is affected to Agent 1 and $-1$ to Agent 2 so that we effectively compute the difference between the mean evaluation of Agent 1 and the mean evaluation of Agent 2. For all possible values of $X_i\in \Gamma_i$.
+$$w_i=e_i(2A_i-1)=\sum_{j=1}^{ni} e_{i,j}(2A_{i,j}-1),$$
+i.e. we affect the sign $+1$ or $-1$ to the evaluations, initially the sign $+1$ is affected to Agent 1 and $-1$ to Agent 2 so that we effectively compute the difference between the mean evaluation of Agent 1 and the mean evaluation of Agent 2. For all possible values of $A_i\in \Gamma_i$.
 
 \subsection{Speeding up permutation tests}
 There are some methods to smartly explore the graph of permutations in order to speed up the computation of the function of interest (in particular in the case of rank sum test, as there can be many collision of having the same value of the function for two distinct permutation, the computation can be sped up considerably), however these changes in general don't change the global complexity which stays of order ${2n \choose n}^K$ (with possibly a multiplying constant smaller than $1$ in front).
@@ -208,6 +211,75 @@ Here are two different ways to speed-up a permutation test:
 \item Use random permutations and estimate the permutation test using Monte-Carlo. The speed of convergence of such an approximation can be assessed using the deviations of binomial random variables.
 \end{itemize}
 The advantage of the random permutations is that it is very well known in theory and often used in practice. The advantage of the group theory approach is that the experiment becomes reproducible (because the permutation are deterministically chosen) and it seems that for the same computational effort, this is more efficient than random permutations (citation ?). However the theoretical guarentees of such approach may not be as straightforward to prove as for the random permutation approach. 
+
+\subsection{Asymptotic study}
+\subsection{Case of a non-sequential permutation test}
+
+Foor a sample $Z_1^n=(Z_1,\dots,Z_n)$, denote $\sigma Z_1^n$ the permuted sample using the permutation $\sigma$: $\sigma Z_1^n=(Z_{\sigma(1)},\dots,Z_{\sigma(n)})$.\\
+For $T_n$ the difference of empirical mean, we have the following property.
+
+\begin{Proposition}\label{prop:asym_perm_test}
+Let $T_n(Z_1,\dots,Z_{2n})=\frac{1}{\sqrt{n}}\sum_{i=1}^n Z_i -\frac{1}{n}\sum_{i=n+1}^{2n} Z_i$. 
+
+Suppose $X_1,\dots,X_n$ are i.i.d from $P$ and $Y_1,\dots,Y_n$ are i.i.d from $Q$ and both $P$ and $Q$ has finite variance. Denote $Z_1,\dots,Z_{2n}=X_1,\dots,X_n, Y_1,\dots,Y_n$ the concatenation of the two samples. Then, we have
+$$\sup_{t}\left|\frac{1}{n!}\sum_{\sigma \in S_n} \1\{T_n(\sigma Z_{1}^{2n}) \le t\}- \Phi\left(t/\tau(P,Q) \right)\right|\xrightarrow[n \to \infty]{P} 0$$
+where $\tau(P,Q)^2=\sigma_P^2+\sigma_Q^2+\frac{(\mu_P- \mu_Q)^2}{2} $. 
+\end{Proposition}
+Remark: this proposition can be extended to other $T_n$ statistics using Theorem 2.1 in \cite{Chung_2013} or Theorem 15.2.5 of \cite{lehmann2005testing}.
+
+Using Proposition~\ref{prop:asym_perm_test}, we have that the empirical quantile defined by 
+$$Q_{1-\alpha}(T_n) = \inf\left\{t \in \R:\quad \frac{1}{n!}\sum_{\sigma \in S_n} \1\{T_n(\sigma Z_{1}^{2n}) \le t\} \ge 1-\alpha\right\} $$
+converges to the quantiles of a Gaussian with variance $\tau^2$
+$$Q_{1-\alpha}(T_n)\xrightarrow[n \to \infty]{P} \tau(P,Q)\Phi^{-1}(1-\alpha) $$
+
+ Hence, if $\mu_P = \mu_Q$ is true, in which case $T_n$ converges in distribution to $T_\infty\sim \mathcal{N}(0,\sigma_P^2+\sigma_Q^2 )$ and then
+$$\P\left( T_n \ge Q_{1-\alpha}(T_n)\right) \xrightarrow[n \to \infty]{} \P(T_\infty\ge \tau(P,Q)\Phi^{-1}(1-\alpha)) \ge  1-\Phi\left(\tau(P,Q)\frac{\Phi^{-1}(1-\alpha)}{\sigma_P^2+\sigma_Q^2 } \right)=\alpha  $$
+
+On the other hand, if $\mu_P > \mu_Q$, then $T_n \simeq \mathcal{N}(\sqrt{n}(\mu_P-\mu_Q),\sigma_P^2+\sigma_Q^2 ) $
+
+\begin{align*}
+\P\left( T_n \ge Q_{1-\alpha}(T_n)\right)&\simeq  1-\Phi\left(\tau(P,Q)\frac{\Phi^{-1}(1-\alpha)}{\sigma_P^2+\sigma_Q^2 }-  \sqrt{n}\frac{\mu_P-\mu_Q}{\sqrt{\sigma_P^2+\sigma_Q^2}} \right)  \\
+&\simeq  1-\Phi\left(\Phi^{-1}(1-\alpha)\left(1+\frac{(\mu_P-\mu_Q)^2}{\sigma_P^2+\sigma_Q^2 }\right)-  \sqrt{n}\frac{\mu_P-\mu_Q}{\sqrt{\sigma_P^2+\sigma_Q^2}} \right)
+\end{align*}
+For a given drift $\mu_P-\mu_Q$, we can solve for $n$ to get a sample size required in order to converge to a given power.
+
+Example: suppose we want to detect a drift $\mu_P-\mu_Q=\sqrt{\sigma_P^2+\sigma_Q^2}$ in with probability $0.9$. Then we solve $1-\Phi\left(\Phi^{-1}(1-\alpha)\left(1+\frac{(\mu_P-\mu_Q)^2}{\sigma_P^2+\sigma_Q^2 }\right)-  \sqrt{n}\frac{\mu_P-\mu_Q}{\sqrt{\sigma_P^2+\sigma_Q^2}} \right) = 0.9$ and get that $n$ must be larger than $21$.
+
+\subsection{Permutation Group Sequential tests}
+
+
+
+Denote $E_{i}^{i+j}=(E_i, E_{i+1},\dots, E_{i+j})$ and let $T_n(Z_1,\dots,Z_{2n})=\frac{1}{n}\sum_{i=1}^n Z_i -\frac{1}{n}\sum_{i=n+1}^{2n} Z_i$. Denote by 
+$$\widehat{R}_{n,k}(t)=\frac{1}{n!}\sum_{\sigma \in S_{2n}} \1\{T_n(\sigma E_{2nk}^{2n(k+1)}) \le t\} $$
+the randomization distribution of $T_n$ where for any permutation $\sigma \in S_n$, 
+$$\sigma E_{2nk}^{2n(k+1)}=(E_{\sigma(2nk)},E_{\sigma(2nk+1)},\dots,E_{\sigma(2n(k+1))})$$
+is the sample permuted using $ \sigma$. 
+
+
+We have 
+\begin{align*}
+\prod_{k=1}^K \widehat{R}_{n,k}(t) &=\frac{1}{(n!)^K}\sum_{\sigma_1,\dots,\sigma_K \in S_{2n}} \prod_{k=1}^K \1\{T_n(\sigma E_{2nk}^{2n(k+1)}) \le t\} \\
+&=\frac{1}{(n!)^K}\sum_{\sigma_1,\dots,\sigma_K \in S_{2n}}  \1\{ \forall 1\le k\le K, \quad T_n(\sigma E_{2nk}^{2n(k+1)}) \le t\}
+\end{align*}
+We have
+\begin{align*}
+\sup_{t}&\left|\prod_{k=1}^K \widehat{R}_{n,k}(t) - \Phi\left( \frac{t}{\tau(P,Q)}\right)^{K} \right| \\
+&= \sup_t \left| \widehat{R}_{n,K}(t)\left(\prod_{k=1}^{K-1} \widehat{R}_{n,k}(t) - \Phi\left( \frac{t}{\tau(P,Q)}\right)^{K-1}\right) + (\widehat{R}_{n,K}(t)-\Phi(t/\tau(P,Q))) \Phi(t/\tau(P,Q))^{K-1} \right|\\
+&\le \sup_t \left| \widehat{R}_{n,K}(t)\left(\prod_{k=1}^{K-1} \widehat{R}_{n,k}(t) - \Phi\left( \frac{t}{\tau(P,Q)}\right)^{K-1}\right)\right| + \sup_t\left|(\widehat{R}_{n,K}(t)-\Phi(t/\tau(P,Q))) \Phi(t/\tau(P,Q))^{K-1} \right|\\
+&\le \sup_t \left|\prod_{k=1}^{K-1} \widehat{R}_{n,k}(t) - \Phi\left( \frac{t}{\tau(P,Q)}\right)^{K-1}\right| + \sup_t\left|\widehat{R}_{n,K}(t)-\Phi(t/\tau(P,Q)) \right|
+\end{align*}
+Hence, reasoning by induction, we have from Proposition~\ref{prop:asym_perm_test}
+$$\sup_{t}\left|\prod_{k=1}^K \widehat{R}_{n,k}(t) - \Phi\left( \frac{t}{\tau(P,Q)}\right)^{K} \right|\xrightarrow[n \to \infty]{P} 0$$
+
+\textbf{Convergence of the boundary}
+
+The boundary is defined by $b_1^{-},b_1^{+},\dots, b_K^{-}, b_K^{+}$ such that 
+$$\P_\sigma(nT_n(\sigma E_1^{2n})\le b_1^{-}) = q_1^{-} \le \frac{1}{2} \alpha\left(\frac{1}{K}\right) $$
+$$\P_\sigma(nT_n(\sigma E_1^{2n})\ge b_1^{+}) = q_1^{+} \le \frac{1}{2} \alpha\left(\frac{1}{K}\right) $$
+
+$$\P_\sigma(nT_n(\sigma E_{2n}^{4n})+nT_n(\sigma E_1^{2n})\le b_2_{-}, b_1^{+}\le nT_n(\sigma E_1^{2n})\le b_1^{-}  ) = q_2^{-} \le \frac{1}{2}\alpha\left(\frac{2}{K}\right) $$
+$$\P_\sigma(nT_n(\sigma E_{2n}^{4n})+nT_n(\sigma E_1^{2n})\ge b_2_{+}, b_1^{+}\le nT_n(\sigma E_1^{2n})\le b_1^{-}  ) = q_2^{+} \le \frac{1}{2}\alpha\left(\frac{2}{K}\right) $$
+
 
 \newpage
 \section{Simulation study}
@@ -236,5 +308,5 @@ replicate adaptively the results of the NIPS article : do we also stop around 20
 % \end{algorithm}
 
 \bibliographystyle{plain}
-\bibliography{biblio_file}
+\bibliography{Adastop}
 \end{document}
