@@ -26,6 +26,8 @@ Remarks:
 - Stats in RL 1: https://arxiv.org/pdf/1806.08295.pdf
 - Stats in RL 2: https://arxiv.org/pdf/1904.06979.pdf
 - Nips paper: https://arxiv.org/abs/2108.13264
+- Using a subsample of the permutations to speed up computation : https://www.jstor.org/stable/2286069 , https://arxiv.org/pdf/2202.00967.pdf , 
+
 
 ## Linked refs (linked but not exactly the same problem):
 - Fast cross validation via sequential testing: https://www.jmlr.org/papers/volume16/krueger15a/krueger15a.pdf
