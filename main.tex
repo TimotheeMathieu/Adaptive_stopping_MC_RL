@@ -74,14 +74,13 @@ The presence of several modes in the distributions of the evaluations and the di
 
 
 
-\subsection{Proposed algorithm}
+% \subsection{Proposed algorithm}
 
-The non-parametric GST that we propose is taken from ()\todo{cite} in which the authors use exact permutation tests on linear rank statistics applied to group sequential testing. This test has the advantage of being entirely non-parametric, exact and robust. On the other hand, if the sample-size is too large this test can be computationally exphensive and also there can be some bias because we compare the ranks and not the means of the distributions.
+% The non-parametric GST that we propose is taken from ()\todo{cite} in which the authors use exact permutation tests on linear rank statistics applied to group sequential testing. This test has the advantage of being entirely non-parametric, exact and robust. On the other hand, if the sample-size is too large this test can be computationally untractable and also there can be some bias because we compare the ranks and not the means of the distributions.
 
-We describe an algorithm aiming at testing the hypothesis $H_0:$``Agent 1 and Agent 2 have same evaluation'' against the alternative hypothesis $H_1:$``Agent 1 and Agent 2 have different evaluations''. More precisely, we use a sum-rank test (usually called the Wilcoxon rank sum statistic which is equivalent to Mann–Whitney U test) to test 
-$$H_0: \P\left( S(A_1)>S(A_2)\right) =\P\left( S(A_1)<S(A_2)\right) \quad \text{Vs} \quad H_1:   \P\left( S(A_1)>S(A_2)\right)\neq \P\left( S(A_1)<S(A_2)\right).$$
+% We describe an algorithm aiming at testing the hypothesis $H_0:$``Agent 1 and Agent 2 have same evaluation'' against the alternative hypothesis $H_1:$``Agent 1 and Agent 2 have different evaluations''. More precisely, we use a sum-rank test (usually called the Wilcoxon rank sum statistic which is equivalent to Mann–Whitney U test) to test 
+% $$H_0: \P\left( S(A_1)>S(A_2)\right) =\P\left( S(A_1)<S(A_2)\right) \quad \text{Vs} \quad H_1:   \P\left( S(A_1)>S(A_2)\right)\neq \P\left( S(A_1)<S(A_2)\right).$$
 
-The non-parametric GST we use is taken from ()\todo{cite} in which the authors use exact permutation tests on linear rank statistics applied to group sequential testing. This test has the advantage of being entirely non-parametric, exact and robust. On the other hand, if the sample-size is too large this test can be computationally exphensive and also there can be some bias because we compare the ranks and not the means of the distributions.
 
 \subsection{High level description of the algorithm}
 If we denote by $n$ the size of a group and by $K$ the maximum number of groups (see Algorith~\ref{alg:adastop}), then the complexity of Permutation GST algorithm is ${n \choose n/2}^K$, which is reasonable for example for $n,K\le 6$. For higher values of $n$ and $K$, we may want to use random permutations to make an approximation of the boundary used in the GST. 
@@ -133,17 +132,17 @@ An illustration of the group sequential test is given in figure~\ref{fig:gst}. T
 }
 \begin{figure}[h]
 \begin{center}
-\begin{tabular}{ | c |c | c | } 
+\begin{tabular}{ | m{5em} | m{7em} |  m{5em}| l | m{9em} | } 
 \hline
-Test & Computational tractability & Robustness \\
+Test & Computational tractability & Specific difficulty &  Hypothesis tested & Optimality condition  \\
 \hline
-Rank sum &  & \\
+Rank sum & ?  & Ties  &  $\P(X>Y) = \P(X<Y)$& most powerful when distribution are Logistic and $\frac{|\mu_1-\mu2|}{\sigma}\le \varepsilon$ \\
 \hline
-Empical mean difference &  &  \\
+Empical mean diff. & ? & Non robust &  $\E[X]=\E[Y] $&most powerful among translation equivariants randomization tests \\
 \hline
 \end{tabular}
 \end{center}
-\caption{Comparison of the two main test used in this article}
+\caption{Comparison of the rank sum test and empirical mean differences randomization test}
 \end{figure}
 
 \subsection{Rank sum statistic}
@@ -162,7 +161,7 @@ Define for any $j\le i$
 $$R_j^{(i)}=(r_1^{(i)}, \dots,r_{j}^{(i)})\in \N^{nj}.$$
 
 
-If $X_i=(x_1,\dot,x_i)\in \{0,1\}^{ni}$, we consider the linear rank test statistic
+If $X_i=(x_1,\dots,x_i)\in \{0,1\}^{ni}$, we consider the linear rank test statistic
 $$w_i=R_i^{(i)}X_i.$$
 $w_i$ is in our case the sum of the ranks of the evaluations of Agent 2 after merging the evaluations on the first $i$ groups together.
 
@@ -184,17 +183,32 @@ one element of $\Gamma_1 \times \dots \times \Gamma_i$ is equivalent to the path
 \begin{figure}[h!]
 \begin{center}
 \includegraphics[scale=0.7]{graph_gamma.pdf}
-\caption{Graph representation of $\Gamma_1$ and $\Gamma_2$. The thick path represent $x_i=(1,0,1,0,0,0,1,1)$\label{fig:graph}.}
+\caption{Graph representation of $\Gamma_1$ and $\Gamma_2$. The thick path represent $X_i=(1,0,1,0,0,0,1,1)$\label{fig:graph}.}
 \end{center}
 \end{figure}
 
 \subsubsection{Breaking Ties}
-
+We consider two ways for breaking the ties: breaking ties at random (in which the usual null distribution is preserved) or breaking ties by averaging of the ranks which has the advantage of being deterministic and hence reproducible but which has the disadvantage of changing the null distribution.
 
 \subsection{Difference of empirical mean}
-
+This is arguably one of the most well-known permutation test. 
 
 \subsubsection{High level description of the algorithm}
+
+Instead of a sum of rank, we consider the following statistic: 
+$$w_i=e_i(2X_i-1)=\sum_{j=1}^{ni} e_{i,j}(2X_{i,j}-1),$$
+i.e. we affect the sign $+1$ or $-1$ to the evaluations, initially the sign $+1$ is affected to Agent 1 and $-1$ to Agent 2 so that we effectively compute the difference between the mean evaluation of Agent 1 and the mean evaluation of Agent 2. For all possible values of $X_i\in \Gamma_i$.
+
+\subsection{Speeding up permutation tests}
+There are some methods to smartly explore the graph of permutations in order to speed up the computation of the function of interest (in particular in the case of rank sum test, as there can be many collision of having the same value of the function for two distinct permutation, the computation can be sped up considerably), however these changes in general don't change the global complexity which stays of order ${2n \choose n}^K$ (with possibly a multiplying constant smaller than $1$ in front).
+
+Here are two different ways to speed-up a permutation test:
+\begin{itemize}
+\item Use a subset of all the permutations. If this subset is a group (in a sense to be defined) then the permutations are ``balanced'', and we the test is still exact (i.e. the type I error is still $\alpha$). On the other hand, the power may decrease depending on the size of the subset.
+\item Use random permutations and estimate the permutation test using Monte-Carlo. The speed of convergence of such an approximation can be assessed using the deviations of binomial random variables.
+\end{itemize}
+The advantage of the random permutations is that it is very well known in theory and often used in practice. The advantage of the group theory approach is that the experiment becomes reproducible (because the permutation are deterministically chosen) and it seems that for the same computational effort, this is more efficient than random permutations (citation ?). However the theoretical guarentees of such approach may not be as straightforward to prove as for the random permutation approach. 
+
 \newpage
 \section{Simulation study}
 \todoT{Misspecification study of Gaussian GST on uniform and maybe on multi-modal distributions}

@@ -26,3 +26,8 @@ Remarks:
 - Stats in RL 1: https://arxiv.org/pdf/1806.08295.pdf
 - Stats in RL 2: https://arxiv.org/pdf/1904.06979.pdf
 - Nips paper: https://arxiv.org/abs/2108.13264
+
+## Linked refs (linked but not exactly the same problem):
+- Fast cross validation via sequential testing: https://www.jmlr.org/papers/volume16/krueger15a/krueger15a.pdf
+- Sequential Testing for Early Stopping of Online Experiments http://eprints.gla.ac.uk/105812/1/105812.pdf
+- A Nonparametric Sequential Test for Online Randomized Experiments https://dl.acm.org/doi/pdf/10.1145/3041021.3054196?casa_token=7IvZtk9bu-IAAAAA:6735VM1feTvIbMxBHYdPP3eV6IPKhd5V8AONvosDopfW9rYLOth2vT7TKqpfHl3vS19pX-1P2nAxWQ
