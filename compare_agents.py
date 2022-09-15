@@ -180,7 +180,7 @@ class Two_AgentsComparator:
             id_md += 1
         mean_diffs_k = np.unique(np.abs(np.array(mean_diffs_k)))
 
-        choices = np.arange(int(binom(2*self.n, self.n))/2)
+        choices = np.arange(int(binom(2*self.n, self.n))//2)
 
         # compute all the mean_diffs by combination.
         self.mean_diffs = np.array([ r + mean_diffs_k[int(choice)] for r in self.mean_diffs  for choice in choices], dtype=np.float32)
@@ -309,7 +309,7 @@ class Two_AgentsComparator:
             
             if self.decision == "reject":
                 logger.info("Reject the null after " + str(k + 1) + " groups")
-                if Tsigne <= 0:
+                if Tsigned <= 0:
                     logger.info(m1.agent_name + " is better than " + m2.agent_name)
                 else:
                     logger.info(m2.agent_name + " is better than " + m1.agent_name)
