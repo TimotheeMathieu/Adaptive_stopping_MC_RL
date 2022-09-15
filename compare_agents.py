@@ -20,6 +20,10 @@ import rlberry
 #logger = rlberry.logger
 logger = logging.getLogger()
 
+# SMART THINGS TO DO:
+# * Permutation distribution of statistics is symmetric, only compute half of them
+# * At the last block, need only alpha*(2n choose n)**K statistics
+
 
 class MultipleAgentsComparator:
     """
@@ -154,7 +158,7 @@ class Two_AgentsComparator:
 
     def compute_means_diffs(self,  k, Z, boundary):
         """
-        Compute the means differences.
+        Compute the absolute value of the mean differences.
         """
         Zk = Z[(k*2*self.n):((k+1)*2*self.n)]
         ids_pos = itertools.combinations(np.arange(2*self.n), self.n)
@@ -162,21 +166,25 @@ class Two_AgentsComparator:
 
         # Pruning for conditional proba
         if k >0:
-            idxs = np.where(np.array([boundary[k-1][0] <= r <= boundary[k-1][1] for r in self.mean_diffs]))[0]
+            idxs = np.where(np.array([r <= boundary[k-1] for r in self.mean_diffs]))[0]
             self.mean_diffs = [self.mean_diffs[i] for i in idxs]
 
+        # Compute all differences in current clock
         mean_diffs_k = []
         for id_pos in ids_pos:
             mask = np.zeros(2*self.n)
             mask[list(id_pos)] = 1
             mask = mask == 1
+            Tpos  = np.sum(Zk[mask]-Zk[~mask])
             mean_diffs_k.append(np.sum(Zk[mask]-Zk[~mask]))
             id_md += 1
+        mean_diffs_k = np.unique(np.abs(np.array(mean_diffs_k)))
 
+        choices = np.arange(int(binom(2*self.n, self.n))/2)
 
-        choices = np.arange(int(binom(2*self.n, self.n)))
+        # compute all the mean_diffs by combination.
+        self.mean_diffs = np.array([ r + mean_diffs_k[int(choice)] for r in self.mean_diffs  for choice in choices], dtype=np.float32)
 
-        self.mean_diffs = np.array([ r + mean_diffs_k[choice] for r in self.mean_diffs  for choice in choices])
         # very inefficient. To do : improve computation.
             
         return self.mean_diffs
@@ -213,7 +221,7 @@ class Two_AgentsComparator:
 
 
         rs = self.compute_means_diffs( k, Z, self.boundary)
-        probas = np.ones(len(rs)) / len(rs)
+        probas = np.ones(len(rs)) / ( 2 * len(rs))
             
         idx = np.argsort(rs)
         values = np.array(rs)[idx]
@@ -229,47 +237,30 @@ class Two_AgentsComparator:
         else:
             bk_sup = np.inf
             level_to_add1 = 0
-        cumulative_probas = np.hstack([[0], np.cumsum(probas[idx])[:-1]])
-        admissible_values_inf = values[
-            self.level_spent2 + cumulative_probas <= clevel / 2 ]
-        
-        if len(admissible_values_inf)>0:
-            bk_inf = admissible_values_inf[-1]  # the maximum admissible value
-            level_to_add2 = cumulative_probas[self.level_spent2 + cumulative_probas <= clevel / 2][-1]
-        else:
-            bk_inf = -np.inf
-            level_to_add2 = 0
-        assert bk_inf <= bk_sup
             
-        T = np.sum(Z*(-1)**X)
+        T = np.abs(np.sum(Z*(-1)**X))
             
-        self.test_stats.append(T)
         
-        p_value = 2*min(self.level_spent1 + icumulative_probas[values >= T-1e-12][0] ,
-                        self.level_spent2 + cumulative_probas[values <= T+1e-12][-1])
+        p_value = 2*self.level_spent1 + icumulative_probas[values >= T][0] 
 
             
         self.level_spent1 += level_to_add1
-        self.level_spent2 += level_to_add2
 
-        self.boundary.append((bk_inf, bk_sup))
+        self.boundary.append(bk_sup)
 
-        self._writer.add_scalar("inf_bound", bk_inf, k)
 
         self._writer.add_scalar("Stat_val", T, k)
 
         self._writer.add_scalar("sup_bound", bk_sup, k)
 
-        logger.info(' value of T: '+str(T)+' and boundary: ['+str(bk_inf)+ ','+str( bk_sup)+']')
-
-        if (T > bk_sup) or (T < bk_inf):
+        if (T > bk_sup):
             decision = "reject"
         elif k == self.K - 1:
             decision = "accept"
         else:
             decision = "continue"
 
-        return decision, T, (bk_inf, bk_sup), p_value
+        return decision, np.sum(Z*(-1)**X), bk_sup, p_value
 
     def compare(self, manager1, manager2):
         """
@@ -313,12 +304,12 @@ class Two_AgentsComparator:
             X = np.hstack([X, np.zeros(self.n), np.ones(self.n)])
 
 
-            self.decision, T, (bk_inf, bk_sup), p_val = self.partial_compare(Z, X, k)
+            self.decision, Tsigned, bk_sup, p_val = self.partial_compare(Z, X, k)
 
             
             if self.decision == "reject":
                 logger.info("Reject the null after " + str(k + 1) + " groups")
-                if T <= bk_inf:
+                if Tsigne <= 0:
                     logger.info(m1.agent_name + " is better than " + m2.agent_name)
                 else:
                     logger.info(m2.agent_name + " is better than " + m1.agent_name)
