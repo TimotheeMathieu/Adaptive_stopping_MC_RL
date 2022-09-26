@@ -52,7 +52,7 @@
 \begin{document}
 \maketitle
 \section{Description of the problem}
-In Reinforcement Learning, we often use Monte-Carlo methods to evaluate the performances of an algorithm. In particular, if we denote $e(A)$ some evaluation of algorithm $A$, the global score of an algorithm by 
+In Reinforcement Learning, we often use Monte-Carlo methods to evaluate the performances of an algorithm. In particular, if we denote $e(A)$ some evaluation of algorithm $A$, the global score of an algorithm by
 $$S(A)=\frac{1}{N}\sum_{i=1}^N e_i(A) $$
 where $e_1(A), \dots,e_N(A)$ are the evaluation of the algorithm $A$ on $N$ different seeds (i.e. $e_1(A),\dots,e_N(A)$ are supposed i.i.d).
 
@@ -66,11 +66,11 @@ For now, we suppose that $e(A)$ is a continuous random variable, in particular $
 
 To choose $N$ adaptively, we propose to use group sequential testing (GST). GST are used in particular in clinical trials in which case an early stopping is desirable when comparing two drugs. We choose to use GST in particular and not sequential testing because the data are often naturally grouped due to the parallelization of the computation.
 
-GST often suppose strong models on the data, in particular it is often supposed that the data are i.i.d. from a Gaussian distribution. This assumption is often not verified in the case of $e_i(A)$ being evaluations from a RL algorithm. In particular, the distribution of $e_i(A)$ often presents several modes and it can sometimes contain outliers. 
+GST often suppose strong models on the data, in particular it is often supposed that the data are i.i.d. from a Gaussian distribution. This assumption is often not verified in the case of $e_i(A)$ being evaluations from a RL algorithm. In particular, the distribution of $e_i(A)$ often presents several modes and it can sometimes contain outliers.
 
 \todoT{Explain why several modes and give examples of distributions of DeepRL algos on classical environments. Ref https://arxiv.org/pdf/1806.08295.pdf on this also.}
 
-The presence of several modes in the distributions of the evaluations and the difficulty to make any distributional assumption justify a non-parametric approach of the problem, but to further justify this approach we did a study of the effect of model misspecification on simulated data when using Gaussian GST algorithm. 
+The presence of several modes in the distributions of the evaluations and the difficulty to make any distributional assumption justify a non-parametric approach of the problem, but to further justify this approach we did a study of the effect of model misspecification on simulated data when using Gaussian GST algorithm.
 
 
 
@@ -84,7 +84,7 @@ We describe an algorithm aiming at testing the hypothesis $H_0:$``Agent 1 and Ag
 
 \subsection{High level description of the algorithm}
 \todoT{Rewrite this section, notation are not good}
-If we denote by $n$ the size of a group and by $K$ the maximum number of groups (see Algorithm~\ref{alg:adastop}), then the complexity of Permutation GST algorithm is ${n \choose n/2}^K$, which is reasonable for example for $n,K\le 6$. For higher values of $n$ and $K$, we may want to use random permutations to make an approximation of the boundary used in the GST. 
+If we denote by $n$ the size of a group and by $K$ the maximum number of groups (see Algorithm~\ref{alg:adastop}), then the complexity of Permutation GST algorithm is ${n \choose n/2}^K$, which is reasonable for example for $n,K\le 6$. For higher values of $n$ and $K$, we may want to use random permutations to make an approximation of the boundary used in the GST.
 
 
 \begin{algorithm}[h]
@@ -115,7 +115,7 @@ If the test was never rejected, return accept. Else return reject.
 \caption{Adaptive Stopping.}\label{alg:adastop}
 \end{algorithm}
 
-An illustration of the group sequential test is given in figure~\ref{fig:gst}. The boundary in blue is computed sequentially to have a final level $1-\alpha$ for the test, the red points are the observed values of the test statistic (denoted $w_i$). The algorithm stops at the third iteration $k=3$ because the observed value of $w_i$ is outside of the boundary. 
+An illustration of the group sequential test is given in figure~\ref{fig:gst}. The boundary in blue is computed sequentially to have a final level $1-\alpha$ for the test, the red points are the observed values of the test statistic (denoted $w_i$). The algorithm stops at the third iteration $k=3$ because the observed value of $w_i$ is outside of the boundary.
 
 \begin{figure}
 \begin{center}
@@ -133,7 +133,7 @@ An illustration of the group sequential test is given in figure~\ref{fig:gst}. T
 % }
 \begin{figure}[h]
 \begin{center}
-\begin{tabular}{ | L{4em} | L{7em} |  L{5em}| l | L{9em} | } 
+\begin{tabular}{ | L{4em} | L{7em} |  L{5em}| l | L{9em} | }
 \hline
 Test & guarentees & Specific difficulty &  Hypothesis tested & Optimality guarentees \\
 \hline
@@ -153,9 +153,9 @@ IQ mean diff. & Exact if  $H_0:P=Q$ and ? in general (general case could be prov
 
 \subsubsection{Permutation test and computation of the boundary.}
 \todoT{Rewrite this section, notations are not good}
-Let $a_j=(a_{1,j},\dots,a_{n, j})\in \{0,1\}^n $ be the vector of assignements at step $j$. $a_{i,j}$ is $0$ if the evaluation $i$ in the $j^{th}$ group is comming from Agent 1 and it is $0$ if the reward is comming from  Agent 2. In our setting, this means that $a_{i,j}=0$ if $i \le n/2$ and $a_{i,j}=1$ if $i > n/2$. 
+Let $a_j=(a_{1,j},\dots,a_{n, j})\in \{0,1\}^n $ be the vector of assignements at step $j$. $a_{i,j}$ is $0$ if the evaluation $i$ in the $j^{th}$ group is comming from Agent 1 and it is $0$ if the reward is comming from  Agent 2. In our setting, this means that $a_{i,j}=0$ if $i \le n/2$ and $a_{i,j}=1$ if $i > n/2$.
 
-Let $e_j =(e_{1,j},\dots,e_{n,j}) \in \R^n$ be the vector of evaluations observed at step $j$. 
+Let $e_j =(e_{1,j},\dots,e_{n,j}) \in \R^n$ be the vector of evaluations observed at step $j$.
 
 Let
 $r_{j}^{(i)}=(r_{1,j}^{(i)},\dots,r_{n,j}^{(i)}) \in \N^n $ be the vector of ranks of $e_j$ after $i$ groups have been evaluated.  $r_{l,j}^{(i)}$ is the rank of the $l^{th}$ evaluation in the $j^{th}$ group among all the evaluations in the $i$ first groups. The superscript $(i)$ is necessary as the ranking changes when we add more groups in the data.
@@ -172,11 +172,11 @@ The data are then summarized using the $w_i$'s.
 
 The values of $b_k^-$ and $b_k^+$ such that the overall level of the group sequential test is $1-\alpha$ are computed using permutation methods.
 
-Define the boundary generating function $f_i$ by 
+Define the boundary generating function $f_i$ by
 $$f_i(w_i)=\P\left(b_1^-\le W_1\le b_1^+, \dots, b_{i-1}^-\le W_{i-1}\le b_{i-1}^+, W_i = w_i  \right)$$
-if we know how to compute $f_i$, it it then possible to find $b_i^-$ and $b_i^+$ such that 
+if we know how to compute $f_i$, it it then possible to find $b_i^-$ and $b_i^+$ such that
 $$\P\left(W_1 \notin (b_1^-, b_1^+) \right)=q_1 \le \alpha\left(\frac{1}{K} \right) $$
-and for any $i$, we have 
+and for any $i$, we have
 $$q_{i-1}+\P\left(b_1^-\le W_1\le b_1^+, \dots, b_{i-1}^-\le W_{i-1}\le b_{i-1}^+, W_i  \notin(b_i^-, b_i^+) \right)=q_i \le \alpha\left(\frac{i}{K} \right).$$
 where $\alpha(p)$ is the so-called level spending function, a parameter of the test, it must verify $\alpha(0)=0$, $\alpha(1)=\alpha$ and be non-decreasing.
 
@@ -194,11 +194,11 @@ one element of $\Gamma_1 \times \dots \times \Gamma_i$ is equivalent to the path
 We consider two ways for breaking the ties: breaking ties at random (in which the usual null distribution is preserved) or breaking ties by averaging of the ranks which has the advantage of being deterministic and hence reproducible but which has the disadvantage of changing the null distribution.
 
 \subsection{Difference of empirical mean}
-This is arguably one of the most well-known permutation test. 
+This is arguably one of the most well-known permutation test.
 
 \subsubsection{High level description of the algorithm}
 
-Instead of a sum of rank, we consider the following statistic: 
+Instead of a sum of rank, we consider the following statistic:
 $$w_i=e_i(2A_i-1)=\sum_{j=1}^{ni} e_{i,j}(2A_{i,j}-1),$$
 i.e. we affect the sign $+1$ or $-1$ to the evaluations, initially the sign $+1$ is affected to Agent 1 and $-1$ to Agent 2 so that we effectively compute the difference between the mean evaluation of Agent 1 and the mean evaluation of Agent 2. For all possible values of $A_i\in \Gamma_i$.
 
@@ -210,7 +210,7 @@ Here are two different ways to speed-up a permutation test:
 \item Use a subset of all the permutations. If this subset is a group (in a sense to be defined) then the permutations are ``balanced'', and we the test is still exact (i.e. the type I error is still $\alpha$). On the other hand, the power may decrease depending on the size of the subset.
 \item Use random permutations and estimate the permutation test using Monte-Carlo. The speed of convergence of such an approximation can be assessed using the deviations of binomial random variables.
 \end{itemize}
-The advantage of the random permutations is that it is very well known in theory and often used in practice. The advantage of the group theory approach is that the experiment becomes reproducible (because the permutation are deterministically chosen) and it seems that for the same computational effort, this is more efficient than random permutations (citation ?). However the theoretical guarentees of such approach may not be as straightforward to prove as for the random permutation approach. 
+The advantage of the random permutations is that it is very well known in theory and often used in practice. The advantage of the group theory approach is that the experiment becomes reproducible (because the permutation are deterministically chosen) and it seems that for the same computational effort, this is more efficient than random permutations (citation ?). However the theoretical guarentees of such approach may not be as straightforward to prove as for the random permutation approach.
 
 \subsection{Asymptotic study}
 \subsection{Case of a non-sequential permutation test}
@@ -219,15 +219,15 @@ Foor a sample $Z_1^n=(Z_1,\dots,Z_n)$, denote $\sigma Z_1^n$ the permuted sample
 For $T_n$ the difference of empirical mean, we have the following property.
 
 \begin{Proposition}\label{prop:asym_perm_test}
-Let $T_n(Z_1,\dots,Z_{2n})=\frac{1}{\sqrt{n}}\sum_{i=1}^n Z_i -\frac{1}{n}\sum_{i=n+1}^{2n} Z_i$. 
+Let $T_n(Z_1,\dots,Z_{2n})=\frac{1}{\sqrt{n}}\sum_{i=1}^n Z_i -\frac{1}{n}\sum_{i=n+1}^{2n} Z_i$.
 
 Suppose $X_1,\dots,X_n$ are i.i.d from $P$ and $Y_1,\dots,Y_n$ are i.i.d from $Q$ and both $P$ and $Q$ has finite variance. Denote $Z_1,\dots,Z_{2n}=X_1,\dots,X_n, Y_1,\dots,Y_n$ the concatenation of the two samples. Then, we have
 $$\sup_{t}\left|\frac{1}{n!}\sum_{\sigma \in S_n} \1\{T_n(\sigma Z_{1}^{2n}) \le t\}- \Phi\left(t/\tau(P,Q) \right)\right|\xrightarrow[n \to \infty]{P} 0$$
-where $\tau(P,Q)^2=\sigma_P^2+\sigma_Q^2+\frac{(\mu_P- \mu_Q)^2}{2} $. 
+where $\tau(P,Q)^2=\sigma_P^2+\sigma_Q^2+\frac{(\mu_P- \mu_Q)^2}{2} $.
 \end{Proposition}
 Remark: this proposition can be extended to other $T_n$ statistics using Theorem 2.1 in \cite{Chung_2013} or Theorem 15.2.5 of \cite{lehmann2005testing}.
 
-Using Proposition~\ref{prop:asym_perm_test}, we have that the empirical quantile defined by 
+Using Proposition~\ref{prop:asym_perm_test}, we have that the empirical quantile defined by
 $$Q_{1-\alpha}(T_n) = \inf\left\{t \in \R:\quad \frac{1}{n!}\sum_{\sigma \in S_n} \1\{T_n(\sigma Z_{1}^{2n}) \le t\} \ge 1-\alpha\right\} $$
 converges to the quantiles of a Gaussian with variance $\tau^2$
 $$Q_{1-\alpha}(T_n)\xrightarrow[n \to \infty]{P} \tau(P,Q)\Phi^{-1}(1-\alpha) $$
@@ -249,17 +249,17 @@ Example: suppose we want to detect a drift $\mu_P-\mu_Q=\sqrt{\sigma_P^2+\sigma_
 
 
 
-Denote $E_{i}^{i+j}=(E_i, E_{i+1},\dots, E_{i+j})$ and let $T_n(Z_1,\dots,Z_{2n})=\frac{1}{n}\sum_{i=1}^n Z_i -\frac{1}{n}\sum_{i=n+1}^{2n} Z_i$. Denote by 
-$$\widehat{R}_{n,k}(t)=\frac{1}{n!}\sum_{\sigma \in S_{2n}} \1\{T_n(\sigma E_{2nk}^{2n(k+1)}) \le t\} $$
-the randomization distribution of $T_n$ where for any permutation $\sigma \in S_n$, 
+Denote $E_{i}^{i+j}=(E_i, E_{i+1},\dots, E_{i+j})$ and let $T_n(Z_1,\dots,Z_{2n})=\frac{1}{n}\sum_{i=1}^n Z_i -\frac{1}{n}\sum_{i=n+1}^{2n} Z_i$. Denote by
+$$\widehat{R}_{n,k}(t)=\frac{1}{n!}\sum_{\sigma \in S_{2n}} \1\{\sqrt{n}T_n(\sigma E_{2nk}^{2n(k+1)}) \le t\} $$
+the randomization distribution of $T_n$ where for any permutation $\sigma \in S_n$,
 $$\sigma E_{2nk}^{2n(k+1)}=(E_{\sigma(2nk)},E_{\sigma(2nk+1)},\dots,E_{\sigma(2n(k+1))})$$
-is the sample permuted using $ \sigma$. 
+is the sample permuted using $ \sigma$.
 
 
-We have 
+We have
 \begin{align*}
-\prod_{k=1}^K \widehat{R}_{n,k}(t) &=\frac{1}{(n!)^K}\sum_{\sigma_1,\dots,\sigma_K \in S_{2n}} \prod_{k=1}^K \1\{T_n(\sigma E_{2nk}^{2n(k+1)}) \le t\} \\
-&=\frac{1}{(n!)^K}\sum_{\sigma_1,\dots,\sigma_K \in S_{2n}}  \1\{ \forall 1\le k\le K, \quad T_n(\sigma E_{2nk}^{2n(k+1)}) \le t\}
+\prod_{k=1}^K \widehat{R}_{n,k}(t) &=\frac{1}{(n!)^K}\sum_{\sigma_1,\dots,\sigma_K \in S_{2n}} \prod_{k=1}^K \1\{\sqrt{n}T_n(\sigma E_{2nk}^{2n(k+1)}) \le t\} \\
+&=\frac{1}{(n!)^K}\sum_{\sigma_1,\dots,\sigma_K \in S_{2n}}  \1\{ \forall 1\le k\le K, \quad \sqrt{n} T_n(\sigma E_{2nk}^{2n(k+1)}) \le t\}
 \end{align*}
 We have
 \begin{align*}
@@ -273,20 +273,42 @@ $$\sup_{t}\left|\prod_{k=1}^K \widehat{R}_{n,k}(t) - \Phi\left( \frac{t}{\tau(P,
 
 \textbf{Convergence of the boundary}
 
-The boundary is defined by $b_1^{-},b_1^{+},\dots, b_K^{-}, b_K^{+}$ such that 
-$$\P_\sigma(nT_n(\sigma E_1^{2n})\le b_1^{-}) = q_1^{-} \le \frac{1}{2} \alpha\left(\frac{1}{K}\right) $$
-$$\P_\sigma(nT_n(\sigma E_1^{2n})\ge b_1^{+}) = q_1^{+} \le \frac{1}{2} \alpha\left(\frac{1}{K}\right) $$
+Remark that on the first step, because the conditional distribution of $T_n(\sigma E_1^{2n})$ knowing $E_1^{2n}$ is symmetric, there is no need to compute the lower boundary and the decision can be made solely by testing $|T_n(E_1^{2n})|\ge B_1$ for some $B_1$. The same reasoning can be used for the remaining steps.
 
-$$\P_\sigma(nT_n(\sigma E_{2n}^{4n})+nT_n(\sigma E_1^{2n})\le b_2^{-}, b_1^{+}\le nT_n(\sigma E_1^{2n})\le b_1^{-}  ) = q_2^{-} \le \frac{1}{2}\alpha\left(\frac{2}{K}\right) $$
-$$\P_\sigma(nT_n(\sigma E_{2n}^{4n})+nT_n(\sigma E_1^{2n})\ge b_2^{+}, b_1^{+}\le nT_n(\sigma E_1^{2n})\le b_1^{-}  ) = q_2^{+} \le \frac{1}{2}\alpha\left(\frac{2}{K}\right) $$
+The boundary are the minimal values of $B_1,\dots, B_K$ such that
 
+$$\P_\sigma(n|T_n(\sigma E_1^{2n})|\ge B_1\sqrt{n}) = q_1 \le \alpha\left(\frac{1}{K}\right) $$
 
+$$\P_\sigma\left( \sqrt{n}|T_n(\sigma E_{2n}^{4n})+T_n(\sigma E_1^{2n})|\ge  B_2\sqrt{n},\quad  n|T_n(\sigma E_1^{2n})|\le  B_1\sqrt{n}  \right)+q_1 = q_2 \le\alpha\left(\frac{2}{K}\right) $$
+More generally, for any $2\le i\le K$,
+$$ \P_\sigma\left(n\left|\sum_{j=0}^i T_n\left(\sigma E_{2nj+1}^{2n(j+1)}\right)\right|\ge B_{j+1} \sqrt{n}, \quad \forall k < i,\,  n\left|\sum_{j=0}^k T_n\left(\sigma E_{2nj+1}^{2n(j+1)}\right)\right|\le  B_k\sqrt{n}  \right)+\sum_{j=1}^{i-1}q_j  = q_i \le\alpha\left(\frac{i}{K}\right).$$
+Remark that $B_k$ is deterministic conditionally on the values of $E_1,\dots,E_{2nk}$. Hence it is deterministic with respect to the random permutation $\sigma$, but it still depends on $n$ and the values of $E_i$.
+
+\paragraph{Convergence of $B_1$}
+$$B_1 = \min \left\{ b>0 : \P_\sigma(\sqrt{n}|T_n(\sigma E_1^{2n})|\ge b) \le \alpha\left(\frac{1}{K}\right)\right\} $$
+This implies
+$$\P_\sigma(\sqrt{n}|T_n(\sigma E_1^{2n})|\ge B_1) = 1-\widehat{R}_{n,1}\left(B_1\right) \le \alpha\left( \frac{1}{K} \right) $$
+and for any $b < B_1$, we have
+$$\P_\sigma(\sqrt{n}|T_n(\sigma E_1^{2n})|\ge b)=1-\widehat{R}_{n,1}\left(b\right) > \alpha\left( \frac{1}{K} \right) $$
+Then,
+\begin{align*}
+1-\Phi\left( \frac{B_1}{\tau(P,Q)}\right) &\le \left|\Phi\left( \frac{B_1}{\tau(P,Q)}\right) -\widehat{R}_{n,1}\left(B_1\right) \right| + 1 - \widehat{R}_{n,1}\left(B_1\right)\\
+&\le \sup_{t}\left|\Phi\left( \frac{t}{\tau(P,Q)}\right) -\widehat{R}_{n,1}\left(t\right) \right| + \alpha\left( \frac{1}{K} \right)
+\end{align*}
+Hence, by taking $n$ to infinity, we have
+$$\limsup_{n \to \infty} 1-\Phi\left( \frac{B_1}{\tau(P,Q)}\right) \le \alpha\left( \frac{1}{K} \right).$$
+and for any $\varepsilon>0$, we have
+$$\liminf_{n \to \infty} 1-\Phi\left( \frac{B_1+\varepsilon}{\tau(P,Q)}\right) > \alpha\left( \frac{1}{K} \right).$$
+By continuity of $\Phi$, this implies that $B_1$ converges almost surely and its limit is such that
+$$1-\Phi\left( \frac{\lim_{n \to \infty}B_1}{\tau(P,Q)}\right)= \alpha\left( \frac{1}{K} \right)$$
+Hence, we have the following almost sure convergence:
+$$\lim_{n \to \infty} B_1 = \tau(P,Q)\Phi^{-1}\left(1- \alpha\left( \frac{1}{K} \right) \right) $$
 \newpage
 \section{Simulation study}
 \todoT{Misspecification study of Gaussian GST on uniform and maybe on multi-modal distributions}
 \todoT{Comparison of GST algorithms on gaussian Data.}
 \section{Experimental results}
-\todoT{Apply to some classical algorithms on classical environments. Maybe also try to 
+\todoT{Apply to some classical algorithms on classical environments. Maybe also try to
 replicate adaptively the results of the NIPS article : do we also stop around 20 iterations when comparing two agents on an Atari environment?}
 \todoT{Compare with article https://arxiv.org/pdf/1806.08295.pdf on environments that are simpler than Atari. Maybe show that depending on the environment the number of seeds needed can vary a lot.}
 % \section{Other possible algorithms}
@@ -295,11 +317,11 @@ replicate adaptively the results of the NIPS article : do we also stop around 20
 % \SetKwInput{KwParameter}{Parameters}
 % \KwParameter{Evaluations $e_1(A_i),\dots,e_t(A_i)$ for $i \in \{1,2\}$, level of the test $\alpha$, number of blocks $K$, number of permutations $B$.}
 % Compute $t_0=S_t(A_1)-S_t(A_2)$.\\
-% Define $Z_1,\dots,Z_{2t}$ with 
-% $$Z_i = \begin{cases}e_i(A_1) & \text{ if }1\le i\le t\\ e_{i-t}(A) & \text{ if }t+1\le i\le 2t \end{cases} $$ 
+% Define $Z_1,\dots,Z_{2t}$ with
+% $$Z_i = \begin{cases}e_i(A_1) & \text{ if }1\le i\le t\\ e_{i-t}(A) & \text{ if }t+1\le i\le 2t \end{cases} $$
 % \For{$b=1,\dots,B$}{
 % Draw a permutation $\sigma$ uniformly at random in $\mathcal{S}_{2t}$.\\
-% Compute 
+% Compute
 % $$t_b = \frac{1}{t}\sum_{i=1}^t Z_{\sigma(i)}-\frac{1}{t}\sum_{i=t+1}^{2t} Z_{\sigma(i)}$$
 % }
 % Let $q_1$ be the empirical quantile of level $\frac{\alpha}{2K}$ of $t_1,\dots,t_B$ and $q_2$ the empirical quantile of level $1-\frac{\alpha}{2K}$.\\
