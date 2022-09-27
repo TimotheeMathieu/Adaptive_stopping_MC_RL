@@ -292,17 +292,19 @@ and for any $b < B_1$, we have
 $$\P_\sigma(\sqrt{n}|T_n(\sigma E_1^{2n})|\ge b)=1-\widehat{R}_{n,1}\left(b\right) > \alpha\left( \frac{1}{K} \right) $$
 Then,
 \begin{align*}
-1-\Phi\left( \frac{B_1}{\tau(P,Q)}\right) &\le \left|\Phi\left( \frac{B_1}{\tau(P,Q)}\right) -\widehat{R}_{n,1}\left(B_1\right) \right| + 1 - \widehat{R}_{n,1}\left(B_1\right)\\
-&\le \sup_{t}\left|\Phi\left( \frac{t}{\tau(P,Q)}\right) -\widehat{R}_{n,1}\left(t\right) \right| + \alpha\left( \frac{1}{K} \right)
+\Phi&\left( \frac{B_1}{\tau(P,Q)}\right)-\Phi\left(-\frac{B_1}{\tau(P,Q)}\right)\\
+ &\ge 1-\left|\Phi\left( \frac{B_1}{\tau(P,Q)}\right) -\widehat{R}_{n,1}\left(B_1\right) \right|-\left|\Phi\left( -\frac{B_1}{\tau(P,Q)}\right) -\widehat{R}_{n,1}\left(-B_1\right) \right| \\
+&\ge1- \alpha\left( \frac{1}{K} \right)- 2\sup_{t}\left|\Phi\left( \frac{t}{\tau(P,Q)}\right) -\widehat{R}_{n,1}\left(t\right) \right|
 \end{align*}
 Hence, by taking $n$ to infinity, we have
-$$\limsup_{n \to \infty} 1-\Phi\left( \frac{B_1}{\tau(P,Q)}\right) \le \alpha\left( \frac{1}{K} \right).$$
+$$\limsup_{n \to \infty} \Phi\left( \frac{B_1}{\tau(P,Q)}\right)-\Phi\left(-\frac{B_1}{\tau(P,Q)}\right) \ge 1-\alpha\left( \frac{1}{K} \right).$$
 and for any $\varepsilon>0$, we have
-$$\liminf_{n \to \infty} 1-\Phi\left( \frac{B_1+\varepsilon}{\tau(P,Q)}\right) > \alpha\left( \frac{1}{K} \right).$$
+$$\liminf_{n \to \infty} \Phi\left( \frac{B_1+\varepsilon}{\tau(P,Q)}\right)-\Phi\left( -\frac{B_1+\varepsilon}{\tau(P,Q)}\right) < 1- \alpha\left( \frac{1}{K} \right).$$
 By continuity of $\Phi$, this implies that $B_1$ converges almost surely and its limit is such that
-$$1-\Phi\left( \frac{\lim_{n \to \infty}B_1}{\tau(P,Q)}\right)= \alpha\left( \frac{1}{K} \right)$$
-Hence, we have the following almost sure convergence:
-$$\lim_{n \to \infty} B_1 = \tau(P,Q)\Phi^{-1}\left(1- \alpha\left( \frac{1}{K} \right) \right) $$
+$$\Phi\left( \frac{\lim_{n \to \infty}B_1}{\tau(P,Q)}\right)-\Phi\left( -\frac{\lim_{n \to \infty}B_1}{\tau(P,Q)}\right)= 1-\alpha\left( \frac{1}{K} \right).$$
+Or said differently, let $W\sim \mathcal{N}(0,1)$, the we have the almost sure convergence $\lim_{n \to \infty}B_1 = b_\infty$ where $b_\infty$ is the real number defined by
+$$ \P\left(\left|W \right|\ge \frac{b_1}{\tau(P,Q)}  \right)=\alpha\left( \frac{1}{K} \right).$$
+We can then condition on this event in the definition of $B_2$ to prove the same type of convergence for $B_1$ and then use induction to prove the result for every $B_k$.
 \newpage
 \section{Simulation study}
 \todoT{Misspecification study of Gaussian GST on uniform and maybe on multi-modal distributions}
