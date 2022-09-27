@@ -2,15 +2,15 @@
 
 Adaptive stopping when evaluating RL agents with evaluation estimated through Monte-Carlo methods.
 
-![boundary.svg]
 
 ## Quick start
 
-The main algorithm is in `compare_agents.py` and is called `AgentComparator`.
+The main algorithm is in `code/compare_agents.py` and is called `AgentComparator`.
 
-In `example_compare_agent.py` the comparator is used to know whether manager1 and manager2 are deemed different on the environment.
+In `code/example_deeprl/example_compare_agent.py` the comparator is used to know whether manager1 and manager2 are deemed different on the environment.
 
-
+Example of plot describing the process of monitoring an evaluation statistic during the Monte-carlo evaluation, and comparing it to a boundary is the following.
+![](boundary.svg)
 
 ## TODO:
 - [ ] See about power and sample-size requirements.
