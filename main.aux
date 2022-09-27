@@ -16,6 +16,7 @@
 \gdef\HyperFirstAtBeginDocument#1{#1}
 \providecommand\HyField@AuxAddToFields[1]{}
 \providecommand\HyField@AuxAddToCoFields[2]{}
+\citation{Mehta_1994}
 \providecommand \oddpage@label [2]{}
 \@writefile{toc}{\contentsline {section}{\numberline {1}Description of the problem}{1}{section.1}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {2}Adaptive stopping using Group Sequential Testing}{1}{section.2}\protected@file@percent }
@@ -25,30 +26,62 @@
 \@writefile{tdo}{\contentsline {todo}{{\textbf  {T:}\nobreakspace  {}}Explain why several modes and give examples of distributions of DeepRL algos on classical environments. Ref https://arxiv.org/pdf/1806.08295.pdf on this also.}{1}{section*.2}\protected@file@percent }
 \pgfsyspdfmark {pgfid2}{20112834}{16376011}
 \@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Proposed algorithm}{1}{subsection.2.2}\protected@file@percent }
-\@writefile{tdo}{\contentsline {todo}{cite}{2}{section*.3}\protected@file@percent }
-\pgfsyspdfmark {pgfid3}{21316572}{49287276}
-\pgfsyspdfmark {pgfid6}{37172510}{49299564}
-\pgfsyspdfmark {pgfid7}{39286046}{49075650}
+\citation{Mehta_1994}
+\citation{Zhang_2007}
+\citation{Mehta_1994}
+\citation{Janssen_1999}
+\citation{Chung_2013}
+\citation{Pratt_1981}
+\citation{Romano_1990}
+\citation{Chung_2013}
+\citation{Pratt_1981}
+\citation{lehmann2005testing}
+\citation{Chung_2013}
+\@writefile{tdo}{\contentsline {todo}{{\textbf  {T:}\nobreakspace  {}}For now, I found only two articles with permutation group sequential testing. \cite  {Mehta_1994} and \cite  {Zhang_2007}. In only read \cite  {Mehta_1994}. There are however papers on other nonparametric GST that may be relevant to us.}{2}{section*.3}\protected@file@percent }
+\pgfsyspdfmark {pgfid3}{20112834}{46035508}
 \@writefile{toc}{\contentsline {subsection}{\numberline {2.3}High level description of the algorithm}{2}{subsection.2.3}\protected@file@percent }
+\@writefile{tdo}{\contentsline {todo}{{\textbf  {T:}\nobreakspace  {}}Rewrite this section, notation are not good}{2}{section*.4}\protected@file@percent }
+\pgfsyspdfmark {pgfid4}{20112834}{41751553}
 \@writefile{loa}{\contentsline {algocf}{\numberline {1}{\ignorespaces Adaptive Stopping.}}{2}{algocf.1}\protected@file@percent }
 \newlabel{alg:adastop}{{1}{2}{High level description of the algorithm}{algocf.1}{}}
-\@writefile{tdo}{\contentsline {todo}{{\textbf  {T:}\nobreakspace  {}}Theoretical concerns : \\ - is this test most powerfull in some class of tests ?\\ - What is the expected stopping time if the Agents are indeed different ?\\ - Can we show that if the distribution is well behaved, then we really compare the means of the distributions ? Even with rank test.\\ - Explain the empirical mean permutation test and finish explaining the rank permutation test.\\ - Also show some robustness properties like insensitivity to outliers as this would show that our algorithm also answers the concerns of the NIPS article ?\\ - Can we show that when using uniform permutation to approximate the test, we are still efficient ? How many random permutation should be used ? }{2}{section*.4}\protected@file@percent }
-\pgfsyspdfmark {pgfid10}{20112834}{11724135}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.4}Rank sum statistic}{2}{subsection.2.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.4.1}Permutation test and computation of the boundary.}{2}{subsubsection.2.4.1}\protected@file@percent }
+\@writefile{tdo}{\contentsline {todo}{{\textbf  {T:}\nobreakspace  {}}Rewrite this section, notations are not good}{2}{section*.5}\protected@file@percent }
+\pgfsyspdfmark {pgfid7}{20112834}{9341636}
 \@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Illustration of the boundary $b_k^+, b_k^-$ and the observed values $w_k$, $K=5$ and $n=5$, $\alpha =0.05$ using Permutation GST on linear rank tests. In this example we reject at the last step $k=5$. }}{3}{figure.1}\protected@file@percent }
 \newlabel{fig:gst}{{1}{3}{Illustration of the boundary $b_k^+, b_k^-$ and the observed values $w_k$, $K=5$ and $n=5$, $\alpha =0.05$ using Permutation GST on linear rank tests. In this example we reject at the last step $k=5$}{figure.1}{}}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.3.1}Permutation test and computation of the boundary.}{3}{subsubsection.2.3.1}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Graph representation of $\Gamma _1$ and $\Gamma _2$. The thick path represent $x_i=(1,0,1,0,0,0,1,1)$.}}{4}{figure.2}\protected@file@percent }
-\newlabel{fig:graph}{{2}{4}{Graph representation of $\Gamma _1$ and $\Gamma _2$. The thick path represent $x_i=(1,0,1,0,0,0,1,1)$}{figure.2}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Comparison of the rank sum test and empirical mean differences randomization test}}{4}{figure.2}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Graph representation of $\Gamma _1$ and $\Gamma _2$. The thick path represent $A_i=(1,0,1,0,0,0,1,1)$.}}{4}{figure.3}\protected@file@percent }
+\newlabel{fig:graph}{{3}{4}{Graph representation of $\Gamma _1$ and $\Gamma _2$. The thick path represent $A_i=(1,0,1,0,0,0,1,1)$}{figure.3}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.4.2}Breaking Ties}{4}{subsubsection.2.4.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.5}Difference of empirical mean}{4}{subsection.2.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.5.1}High level description of the algorithm}{4}{subsubsection.2.5.1}\protected@file@percent }
+\citation{Chung_2013}
+\citation{lehmann2005testing}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.6}Speeding up permutation tests}{5}{subsection.2.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.7}Asymptotic study}{5}{subsection.2.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.8}Case of a non-sequential permutation test}{5}{subsection.2.8}\protected@file@percent }
+\newlabel{prop:asym_perm_test}{{1}{5}{}{Proposition.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.9}Permutation Group Sequential tests}{6}{subsection.2.9}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Convergence of $B_1$}{7}{section*.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Convergence of $B_k$ for $k>1$}{7}{section*.7}\protected@file@percent }
 \bibstyle{plain}
-\bibdata{biblio_file}
-\@writefile{toc}{\contentsline {section}{\numberline {3}Simulation study}{5}{section.3}\protected@file@percent }
-\@writefile{tdo}{\contentsline {todo}{{\textbf  {T:}\nobreakspace  {}}Misspecification study of Gaussian GST on uniform and maybe on multi-modal distributions}{5}{section*.5}\protected@file@percent }
-\pgfsyspdfmark {pgfid11}{20112834}{47644237}
-\@writefile{tdo}{\contentsline {todo}{{\textbf  {T:}\nobreakspace  {}}Comparison of GST algorithms on gaussian Data.}{5}{section*.6}\protected@file@percent }
-\pgfsyspdfmark {pgfid12}{20112834}{46511921}
-\@writefile{toc}{\contentsline {section}{\numberline {4}Experimental results}{5}{section.4}\protected@file@percent }
-\@writefile{tdo}{\contentsline {todo}{{\textbf  {T:}\nobreakspace  {}}Apply to some classical algorithms on classical environments. Maybe also try to replicate adaptively the results of the NIPS article : do we also stop around 20 iterations when comparing two agents on an Atari environment?}{5}{section*.7}\protected@file@percent }
-\pgfsyspdfmark {pgfid13}{20112834}{41593450}
-\@writefile{tdo}{\contentsline {todo}{{\textbf  {T:}\nobreakspace  {}}Compare with article https://arxiv.org/pdf/1806.08295.pdf on environments that are simpler than Atari. Maybe show that depending on the environment the number of seeds needed can vary a lot.}{5}{section*.8}\protected@file@percent }
-\pgfsyspdfmark {pgfid14}{20112834}{38870066}
-\gdef \@abspage@last{5}
+\bibdata{Adastop}
+\bibcite{Chung_2013}{1}
+\bibcite{Janssen_1999}{2}
+\bibcite{lehmann2005testing}{3}
+\bibcite{Mehta_1994}{4}
+\bibcite{Pratt_1981}{5}
+\bibcite{Romano_1990}{6}
+\bibcite{Zhang_2007}{7}
+\@writefile{toc}{\contentsline {section}{\numberline {3}Simulation study}{8}{section.3}\protected@file@percent }
+\@writefile{tdo}{\contentsline {todo}{{\textbf  {T:}\nobreakspace  {}}Misspecification study of Gaussian GST on uniform and maybe on multi-modal distributions}{8}{section*.8}\protected@file@percent }
+\pgfsyspdfmark {pgfid8}{20112834}{47644237}
+\@writefile{tdo}{\contentsline {todo}{{\textbf  {T:}\nobreakspace  {}}Comparison of GST algorithms on gaussian Data.}{8}{section*.9}\protected@file@percent }
+\pgfsyspdfmark {pgfid9}{20112834}{46511921}
+\@writefile{toc}{\contentsline {section}{\numberline {4}Experimental results}{8}{section.4}\protected@file@percent }
+\@writefile{tdo}{\contentsline {todo}{{\textbf  {T:}\nobreakspace  {}}Apply to some classical algorithms on classical environments. Maybe also try to replicate adaptively the results of the NIPS article : do we also stop around 20 iterations when comparing two agents on an Atari environment?}{8}{section*.10}\protected@file@percent }
+\pgfsyspdfmark {pgfid10}{20112834}{41593450}
+\@writefile{tdo}{\contentsline {todo}{{\textbf  {T:}\nobreakspace  {}}Compare with article https://arxiv.org/pdf/1806.08295.pdf on environments that are simpler than Atari. Maybe show that depending on the environment the number of seeds needed can vary a lot.}{8}{section*.11}\protected@file@percent }
+\pgfsyspdfmark {pgfid11}{20112834}{38870066}
+\gdef \@abspage@last{8}
