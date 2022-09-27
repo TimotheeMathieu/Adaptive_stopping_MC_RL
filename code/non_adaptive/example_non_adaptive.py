@@ -90,5 +90,5 @@ if __name__ == "__main__":
     # multimanager.load(dirnames)
     multimanager.pilot_study()
     # This last command recommand a number of seeds.
-    # Change the number of seed to the one advised and runthe manager again befor doing stat_test
+    # Change the number of seed to the one advised and run the manager again befor doing stat_test
     # multimanager.stat_test()
