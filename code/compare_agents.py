@@ -16,7 +16,7 @@ from rlberry.utils.writers import DefaultWriter
 import itertools
 
 
-#logger = rlberry.logger
+# logger = rlberry.logger
 logger = logging.getLogger()
 
 # TO DO:
@@ -82,9 +82,12 @@ class Two_AgentsComparator:
 
     test_stats: array of floats
         Value of the statistic T = sum(Eval_agent1)-sum(Eval_agent2) at each interim.
+
     """
 
-    def __init__(self, n=5, K=5, B=None, alpha=0.05, name="PK",  n_evaluations=1, seed=None):
+    def __init__(
+        self, n=5, K=5, B=None, alpha=0.05, name="PK", n_evaluations=1, seed=None
+    ):
         self.n = n
         self.K = K
         self.B = B
@@ -113,37 +116,43 @@ class Two_AgentsComparator:
         else:
             raise RuntimeError("name not implemented")
 
-
-    def compute_sum_diffs(self,  k, Z, boundary):
+    def compute_sum_diffs(self, k, Z, boundary):
         """
         Compute the absolute value of the sum differences.
         """
-        Zk = Z[(k*2*self.n):((k+1)*2*self.n)]
-
-
+        Zk = Z[(k * 2 * self.n) : ((k + 1) * 2 * self.n)]
 
         sum_diffs_k = []
 
-        if self.B is None :
+        if self.B is None:
             # Enumerate all possibilities using previous enumeration
             # Pruning for conditional proba
-            if k >0:
-                idxs = np.where(np.array([r <= boundary[k-1] for r in self.sum_diffs]))[0]
+            if k > 0:
+                idxs = np.where(
+                    np.array([r <= boundary[k - 1] for r in self.sum_diffs])
+                )[0]
                 self.sum_diffs = [self.sum_diffs[i] for i in idxs]
 
-            ids_pos = itertools.combinations(np.arange(2*self.n), self.n)
+            ids_pos = itertools.combinations(np.arange(2 * self.n), self.n)
             # Compute all differences in current block
             for id_pos in ids_pos:
-                mask = np.zeros(2*self.n)
+                mask = np.zeros(2 * self.n)
                 mask[list(id_pos)] = 1
                 mask = mask == 1
-                Tpos  = np.sum(Zk[mask]-Zk[~mask])
-                sum_diffs_k.append(np.sum(Zk[mask]-Zk[~mask]))
+                Tpos = np.sum(Zk[mask] - Zk[~mask])
+                sum_diffs_k.append(np.sum(Zk[mask] - Zk[~mask]))
 
             choices = np.arange(len(sum_diffs_k))
 
             # compute all the sum_diffs by combination.
-            self.sum_diffs = np.array([ r + sum_diffs_k[int(choice)] for r in self.sum_diffs  for choice in choices], dtype=np.float32)
+            self.sum_diffs = np.array(
+                [
+                    r + sum_diffs_k[int(choice)]
+                    for r in self.sum_diffs
+                    for choice in choices
+                ],
+                dtype=np.float32,
+            )
 
         else:
             # Compute sums on B random permutations of blocks, conditional to not rejected.
@@ -153,22 +162,20 @@ class Two_AgentsComparator:
                 # sample a random permutation of all the blocks, conditional on not rejected till now.
                 sum_diff = 0
                 add_it = True
-                for j in range(k+1):
-                    Zj = Z[(j*2*self.n):((j+1)*2*self.n)]
-                    mask = np.zeros(2*self.n)
-                    id_pos = self.rng.choice(2*self.n, self.n, replace=False)
+                for j in range(k + 1):
+                    Zj = Z[(j * 2 * self.n) : ((j + 1) * 2 * self.n)]
+                    mask = np.zeros(2 * self.n)
+                    id_pos = self.rng.choice(2 * self.n, self.n, replace=False)
                     mask[list(id_pos)] = 1
                     mask = mask == 1
-                    sum_diff += np.sum(Zj[mask]-Zj[~mask])
+                    sum_diff += np.sum(Zj[mask] - Zj[~mask])
                     if (j < k) and sum_diff > boundary[j]:
                         add_it = False
                         break
-                if add_it :
+                if add_it:
                     self.sum_diffs.append(sum_diff)
 
         return self.sum_diffs
-
-
 
     def partial_compare(self, Z, X, k):
         """
@@ -198,20 +205,24 @@ class Two_AgentsComparator:
 
         clevel = spending_fun((k + 1) / self.K)
 
-        rs = np.abs(np.array(self.compute_sum_diffs( k, Z, self.boundary)))
+        rs = np.abs(np.array(self.compute_sum_diffs(k, Z, self.boundary)))
 
-        values = np.sort(rs) # for now, don't care about ties. And there are ties, for instance when B is None, there are at least two of every values !
+        values = np.sort(
+            rs
+        )  # for now, don't care about ties. And there are ties, for instance when B is None, there are at least two of every values !
 
-        icumulative_probas = np.arange(len(rs))[::-1]/len(rs) # This corresponds to 1 - F(t) = P(T > t)
+        icumulative_probas = np.arange(len(rs))[::-1] / len(
+            rs
+        )  # This corresponds to 1 - F(t) = P(T > t)
 
         # Compute admissible values, i.e. values that would not be rejected.
-        admissible_values_sup = values[
-            self.level_spent + icumulative_probas <= clevel
-        ]
+        admissible_values_sup = values[self.level_spent + icumulative_probas <= clevel]
 
-        if len(admissible_values_sup)>0:
+        if len(admissible_values_sup) > 0:
             bk = admissible_values_sup[0]  # the minimum admissible value
-            level_to_add = icumulative_probas[self.level_spent + icumulative_probas <= clevel][0]
+            level_to_add = icumulative_probas[
+                self.level_spent + icumulative_probas <= clevel
+            ][0]
         else:
             # This case is possible if clevel-self.level_spent <= 1/len(rs) (smallest proba possible),
             # in which case there are not enough points and we don't take any decision for now. Happens in particular if B is None.
@@ -219,29 +230,29 @@ class Two_AgentsComparator:
             level_to_add = 0
 
         # Test statistic
-        T = np.abs(np.sum(Z*(-1)**X))
+        T = np.abs(np.sum(Z * (-1) ** X))
 
         # p-value computation. Not used in the algo, just for info purpose.
-        if len(icumulative_probas[values >= T])>0:
+        if len(icumulative_probas[values >= T]) > 0:
             p_value = self.level_spent + icumulative_probas[values >= T][0]
         else:
             p_value = self.level_spent
 
-        self.level_spent += level_to_add # level effectively used at this point
+        self.level_spent += level_to_add  # level effectively used at this point
 
         self.boundary.append(bk)
 
         self._writer.add_scalar("Stat_val", T, k)
         self._writer.add_scalar("sup_bound", bk, k)
 
-        if (T > bk):
+        if T > bk:
             decision = "reject"
         elif k == self.K - 1:
             decision = "accept"
         else:
             decision = "continue"
 
-        return decision, np.sum(Z*(-1)**X), bk, p_value
+        return decision, np.sum(Z * (-1) ** X), bk, p_value
 
     def compare(self, manager1, manager2):
         """
@@ -264,24 +275,24 @@ class Two_AgentsComparator:
         kwargs2 = manager2[1]
         kwargs2["n_fit"] = self.n
 
-        Z = np.array([]) # concatenated values of evaluation
-        X = np.array([]) # assignement vector of 0 and 1
+        Z = np.array([])  # concatenated values of evaluation
+        X = np.array([])  # assignement vector of 0 and 1
 
         # Initialization of the permutation distribution
         self.sum_diffs = [0]
 
         # spawn independent seeds, one for each fit and one for the comparator.
-        seeders = self.seeder.spawn(2*self.K+1)
+        seeders = self.seeder.spawn(2 * self.K + 1)
         self.rng = seeders[-1].rng
 
         for k in range(self.K):
 
-            m1 = AgentManager(agent_class1, **kwargs1, seed=seeders[2*k])
-            m2 = AgentManager(agent_class2, **kwargs2, seed=seeders[2*k+1])
+            m1 = AgentManager(agent_class1, **kwargs1, seed=seeders[2 * k])
+            m2 = AgentManager(agent_class2, **kwargs2, seed=seeders[2 * k + 1])
 
             m1.fit()
             m2.fit()
-            self.n_iter += 2*self.n
+            self.n_iter += 2 * self.n
 
             Z = np.hstack([Z, self._get_evals(m1), self._get_evals(m2)])
             X = np.hstack([X, np.zeros(self.n), np.ones(self.n)])
@@ -311,7 +322,7 @@ class Two_AgentsComparator:
         self.agent2_name = m2.agent_name
 
         self.p_val = p_val
-        logger.info('p value is '+str(p_val))
+        logger.info("p value is " + str(p_val))
 
     def plot_boundary(self):
         """
@@ -319,7 +330,9 @@ class Two_AgentsComparator:
 
         self.compare must have been executed prior to executing plot_boundary.
         """
-        assert len(self.boundary)>0, "Boundary not found. Did you do execute the comparison?"
+        assert (
+            len(self.boundary) > 0
+        ), "Boundary not found. Did you do execute the comparison?"
 
         y1 = np.array(self.boundary)
         y2 = -y1
@@ -329,10 +342,8 @@ class Two_AgentsComparator:
         plt.plot(x, y2, "o-", color=p2[0].get_color(), alpha=0.7)
         plt.scatter(x, self.test_stats, color="red", label="observations")
         plt.legend()
-        plt.xlabel('$k$')
-        plt.ylabel('test stat.')
-
-
+        plt.xlabel("$k$")
+        plt.ylabel("test stat.")
 
     def _get_evals(self, manager):
         """
@@ -342,9 +353,7 @@ class Two_AgentsComparator:
         for idx in range(self.n):
             logger.info("Evaluating agent " + str(idx))
             eval_values.append(
-                np.mean(
-                    manager.eval_agents(self.n_evaluations, agent_id=idx)
-                )
+                np.mean(manager.eval_agents(self.n_evaluations, agent_id=idx))
             )
         return eval_values
 
@@ -389,7 +398,7 @@ class MultipleAgentsComparator:
         p-value of the test
     """
 
-    def __init__(self, n=5, K=5, alpha=0.05, name="PK",  n_evaluations=1, seed=None):
+    def __init__(self, n=5, K=5, alpha=0.05, name="PK", n_evaluations=1, seed=None):
         self.n = n
         self.K = K
         self.alpha = alpha
@@ -407,13 +416,17 @@ class MultipleAgentsComparator:
         managers : list of tuple of agent_class and init_kwargs for the agent.
 
         """
-        pairs = list(itertools.combinations(managers),2)
+        pairs = list(itertools.combinations(managers), 2)
         level = self.alpha / len(pairs)
 
         decisions = []
         for pair in pairs:
-            comparator = Two_AgentsComparator(self.n, self.K, self.alpha, self.name, self.n_evaluations, self.seed)
+            comparator = Two_AgentsComparator(
+                self.n, self.K, self.alpha, self.name, self.n_evaluations, self.seed
+            )
             comparator.compare(pair[0], pair[1])
-            decisions.append((comparator.agent1_name, comparator.agent2_name), comparator.decision)
+            decisions.append(
+                (comparator.agent1_name, comparator.agent2_name), comparator.decision
+            )
 
         return decisions
