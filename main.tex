@@ -8,7 +8,7 @@
 \usepackage[verbose=true,letterpaper]{geometry}
 \newgeometry{
   textheight=9.5in,
-  textwidth=6in,
+  textwidth=6.5in,
   top=0.5in,
   headheight=12pt,
   headsep=25pt,
@@ -74,143 +74,54 @@ The presence of several modes in the distributions of the evaluations and the di
 
 
 
-\subsection{Proposed algorithm}
-
-The non-parametric GST that we propose is taken from \cite{Mehta_1994} in which the authors use exact permutation tests on linear rank statistics applied to group sequential testing. This test has the advantage of being entirely non-parametric, exact and robust. On the other hand, if the sample-size is too large this test can be computationally untractable and also there can be some bias because we compare the ranks and not the means of the distributions.
-
-We describe an algorithm aiming at testing the hypothesis $H_0:$``Agent 1 and Agent 2 have same evaluation'' against the alternative hypothesis $H_1:$``Agent 1 and Agent 2 have different evaluations''. The formal transcriptions of $H_0$ and $H_1$ will vary according to which test we use.
-
-\todoT{For now, I found only two articles with permutation group sequential testing. \cite{Mehta_1994} and \cite{Zhang_2007}. In only read \cite{Mehta_1994}. There are however papers on other nonparametric GST that may be relevant to us.}
+\subsection{Algorithm}
 
 \subsection{High level description of the algorithm}
-\todoT{Rewrite this section, notation are not good}
-If we denote by $n$ the size of a group and by $K$ the maximum number of groups (see Algorithm~\ref{alg:adastop}), then the complexity of Permutation GST algorithm is ${n \choose n/2}^K$, which is reasonable for example for $n,K\le 6$. For higher values of $n$ and $K$, we may want to use random permutations to make an approximation of the boundary used in the GST.
-
+We use the following algorithm.
 
 \begin{algorithm}[h]
 \SetAlgoLined
 \SetKwInput{KwParameter}{Parameters}
-\KwParameter{Algorithms $A_1,A_2$, environment $\mathcal{E}$, number of blocks $K \in \N^*$, size of a block $n$, level of the test $\alpha\in (0,1)$.}
+\KwParameter{Agents $A_1,A_2$, environment $\mathcal{E}$, number of blocks $K \in \N^*$, size of a block $n$, level of the test $\alpha\in (0,1)$.}
 Define $2nK$ different seeds $s_{1,1},\dots,s_{1,n},s_{2,1},\dots,s_{2,n}$.\\
-\For{$t=1,\dots,K$}{
-\For{$i=1,2$}{
-Train aglorithm $A_i$ on environment $\mathcal{E}$ on seeds $s_{i,tn},\dots,s_{i,(t+1)n}$.\\
-Collect evaluations $e_{tn}(A_i),\dots,e_{(t+1)n}(A_i)$.\\
-Compute $S_t(A_i)=\frac{1}{nt}\sum_{j=1}^{nt}e_{j}(A_i)$.
-}
-Test  $H_0: S_t(A_1)=S_t(A_2)$ versus $H_1: S_t(A_1)\neq S_t(A_2)$ using GST Algorithm as follows:
 \For{$k=1,\dots,K$}{
-Observe $a_k$ and $e_k$.\\
-Compute $w_k$ the linear rank statistic from $a_1,\dots,a_k$ and $e_1,\dots,e_k$.\\
-Compute $b_k^-, b_k^+$ boundary values.\\
-\If{$w_k \ge b_k^+$ or $w_k \le b_k^-$}{
-Reject $H_0$, break the loop and returns the answer
+\For{$i=1,2$}{
+Train agent $A_i$ on environment $\mathcal{E}$ with the seeds $s_{i,kn},\dots,s_{i,(k+1)n}$.\\
+Collect evaluations $e_{kn}(A_i),\dots,e_{(k+1)n}(A_i)$.\\
+Compute $S_t(A_i)=\frac{1}{nk}\sum_{j=1}^{nk}e_{j}(A_i)$.\\
+}
+Compute the boundary $B_k$ of the current block using the permutation distribution of the difference of means of $e_{1}(A_1),\dots,e_{(k+1)n}(A_1),e_{1}(A_2),\dots,e_{(k+1)n}(A_2)$.\\
+\If{$|S_t(A_1)-S_t(A_2)| \ge B_k$}{
+Reject the equality of the agents' evaluation, break the loop and returns the answer
 }
 \Else{
-If $k=K$ then accept $H_0$ otherwise continue.
-}}
-If we reject $H_0$, then break the loop.
+If $k=K$ then accept the equality of the agents' evaluation, otherwise continue.
+}
 }
 If the test was never rejected, return accept. Else return reject.
 \caption{Adaptive Stopping.}\label{alg:adastop}
 \end{algorithm}
+\todoT{Write a small algorithm to explain how to compute $B_k$ using Equation~\eqref{eq:def_Bk}, with an alternative version for the random permutation version.}
 
 An illustration of the group sequential test is given in figure~\ref{fig:gst}. The boundary in blue is computed sequentially to have a final level $1-\alpha$ for the test, the red points are the observed values of the test statistic (denoted $w_i$). The algorithm stops at the third iteration $k=3$ because the observed value of $w_i$ is outside of the boundary.
 
 \begin{figure}
 \begin{center}
 \input{boundary.tex}
-\caption{Illustration of the boundary $b_k^+, b_k^-$ and the observed values $w_k$, $K=5$ and $n=5$, $\alpha=0.05$ using Permutation GST on linear rank tests. In this example we reject at the last step $k=5$. \label{fig:gst}}
-\end{center}
-\end{figure}
-% \todoT{Theoretical concerns : \\
-% - is this test most powerfull in some class of tests ?\\
-% - What is the expected stopping time if the Agents are indeed different ?\\
-% - Can we show that if the distribution is well behaved, then we really compare the means of the distributions ? Even with rank test.\\
-% - Explain the empirical mean permutation test and finish explaining the rank permutation test.\\
-% - Also show some robustness properties like insensitivity to outliers as this would show that our algorithm also answers the concerns of the NIPS article ?\\
-% - Can we show that when using uniform permutation to approximate the test, we are still efficient ? How many random permutation should be used ?
-% }
-\begin{figure}[h]
-\begin{center}
-\begin{tabular}{ | L{4em} | L{7em} |  L{5em}| l | L{9em} | }
-\hline
-Test & guarentees & Specific difficulty &  Hypothesis tested & Optimality guarentees \\
-\hline
-Rank sum & Exact if $H_0:P=Q$ and Asymptotic test in general \cite{Janssen_1999,Chung_2013}  & Ties  &  $\P(X>Y) = \P(X<Y)$ & most powerful rank test \cite{Pratt_1981}\\
-\hline
-Empical mean diff. & Exact if  $H_0:P=Q$ and Asymptotic test when $\E[X^2]$ is finite \cite{Romano_1990,Chung_2013} & Non robust &  $\E[X]=\E[Y] $&most powerful among translation equivariants randomization tests \cite{Pratt_1981}\\
-\hline
-IQ mean diff. & Exact if  $H_0:P=Q$ and ? in general (general case could be proved from \cite{lehmann2005testing,Chung_2013})& Ties  &  $IQM[X]=IQM[Y] $& ?\\
-\hline
-\end{tabular}
-\end{center}
-\caption{Comparison of the rank sum test and empirical mean differences randomization test}
-\end{figure}
-
-\subsection{Rank sum statistic}
-
-
-\subsubsection{Permutation test and computation of the boundary.}
-\todoT{Rewrite this section, notations are not good}
-Let $a_j=(a_{1,j},\dots,a_{n, j})\in \{0,1\}^n $ be the vector of assignements at step $j$. $a_{i,j}$ is $0$ if the evaluation $i$ in the $j^{th}$ group is comming from Agent 1 and it is $0$ if the reward is comming from  Agent 2. In our setting, this means that $a_{i,j}=0$ if $i \le n/2$ and $a_{i,j}=1$ if $i > n/2$.
-
-Let $e_j =(e_{1,j},\dots,e_{n,j}) \in \R^n$ be the vector of evaluations observed at step $j$.
-
-Let
-$r_{j}^{(i)}=(r_{1,j}^{(i)},\dots,r_{n,j}^{(i)}) \in \N^n $ be the vector of ranks of $e_j$ after $i$ groups have been evaluated.  $r_{l,j}^{(i)}$ is the rank of the $l^{th}$ evaluation in the $j^{th}$ group among all the evaluations in the $i$ first groups. The superscript $(i)$ is necessary as the ranking changes when we add more groups in the data.
-
-Define for any $j\le i$
-$$R_j^{(i)}=(r_1^{(i)}, \dots,r_{j}^{(i)})\in \N^{nj}.$$
-
-
-If $A_i=(a_1,\dots,a_i)\in \{0,1\}^{ni}$, we consider the linear rank test statistic
-$$w_i=R_i^{(i)}A_i.$$
-$w_i$ is in our case the sum of the ranks of the evaluations of Agent 2 after merging the evaluations on the first $i$ groups together.
-
-The data are then summarized using the $w_i$'s.
-
-The values of $b_k^-$ and $b_k^+$ such that the overall level of the group sequential test is $1-\alpha$ are computed using permutation methods.
-
-Define the boundary generating function $f_i$ by
-$$f_i(w_i)=\P\left(b_1^-\le W_1\le b_1^+, \dots, b_{i-1}^-\le W_{i-1}\le b_{i-1}^+, W_i = w_i  \right)$$
-if we know how to compute $f_i$, it it then possible to find $b_i^-$ and $b_i^+$ such that
-$$\P\left(W_1 \notin (b_1^-, b_1^+) \right)=q_1 \le \alpha\left(\frac{1}{K} \right) $$
-and for any $i$, we have
-$$q_{i-1}+\P\left(b_1^-\le W_1\le b_1^+, \dots, b_{i-1}^-\le W_{i-1}\le b_{i-1}^+, W_i  \notin(b_i^-, b_i^+) \right)=q_i \le \alpha\left(\frac{i}{K} \right).$$
-where $\alpha(p)$ is the so-called level spending function, a parameter of the test, it must verify $\alpha(0)=0$, $\alpha(1)=\alpha$ and be non-decreasing.
-
-The main computational burden of the algorithm is in computing $f_i(w_i)$, to compute $f_i$ we need to enumerate all the possible values $f_i(w_i)$ can take for the possible choices of affectation $A$, i.e. we must enumerate $\Gamma_1 \times \dots \times \Gamma_i$ where
-$$\Gamma_j= \left\{a_j: \sum_{l=1}^{2n}a_{j,l} = n,\quad a_{j,l}\in \{0,1 \}\right\}.$$
-one element of $\Gamma_1 \times \dots \times \Gamma_i$ is equivalent to the path in a graph. The graph of $\Gamma_j$ is composed of nodes labelled by a couple $(a,b)$ where $(a,b)$ implies that of the first $a$ samples, exactly $b$ have been assigned to Agent 2, see Figure~\ref{fig:graph} for an illustration of a path going through $\Gamma_1\times \Gamma_2$ when $n=2$.
-\begin{figure}[h!]
-\begin{center}
-\includegraphics[scale=0.7]{graph_gamma.pdf}
-\caption{Graph representation of $\Gamma_1$ and $\Gamma_2$. The thick path represent $A_i=(1,0,1,0,0,0,1,1)$\label{fig:graph}.}
+\caption{Illustration of the boundary.\label{fig:gst}}
 \end{center}
 \end{figure}
 
-\subsubsection{Breaking Ties}
-We consider two ways for breaking the ties: breaking ties at random (in which the usual null distribution is preserved) or breaking ties by averaging of the ranks which has the advantage of being deterministic and hence reproducible but which has the disadvantage of changing the null distribution.
-
-\subsection{Difference of empirical mean}
-This is arguably one of the most well-known permutation test.
+\todoT{For now, the illustration is done using toy model, with gaussian of drift 0.7. Real agent would be better.}
 
 \subsubsection{High level description of the algorithm}
 
-Instead of a sum of rank, we consider the following statistic:
+We consider the following statistic:
 $$w_i=e_i(2A_i-1)=\sum_{j=1}^{ni} e_{i,j}(2A_{i,j}-1),$$
 i.e. we affect the sign $+1$ or $-1$ to the evaluations, initially the sign $+1$ is affected to Agent 1 and $-1$ to Agent 2 so that we effectively compute the difference between the mean evaluation of Agent 1 and the mean evaluation of Agent 2. For all possible values of $A_i\in \Gamma_i$.
 
 \subsection{Speeding up permutation tests}
-There are some methods to smartly explore the graph of permutations in order to speed up the computation of the function of interest (in particular in the case of rank sum test, as there can be many collision of having the same value of the function for two distinct permutation, the computation can be sped up considerably), however these changes in general don't change the global complexity which stays of order ${2n \choose n}^K$ (with possibly a multiplying constant smaller than $1$ in front).
-
-Here are two different ways to speed-up a permutation test:
-\begin{itemize}
-\item Use a subset of all the permutations. If this subset is a group (in a sense to be defined) then the permutations are ``balanced'', and we the test is still exact (i.e. the type I error is still $\alpha$). On the other hand, the power may decrease depending on the size of the subset.
-\item Use random permutations and estimate the permutation test using Monte-Carlo. The speed of convergence of such an approximation can be assessed using the deviations of binomial random variables.
-\end{itemize}
-The advantage of the random permutations is that it is very well known in theory and often used in practice. The advantage of the group theory approach is that the experiment becomes reproducible (because the permutation are deterministically chosen) and it seems that for the same computational effort, this is more efficient than random permutations (citation ?). However the theoretical guarentees of such approach may not be as straightforward to prove as for the random permutation approach.
+We use Monte-Carlo approximation, using random permutation instead of enumerating all the permutations.
 
 \subsection{Asymptotic study}
 \subsection{Case of a non-sequential permutation test}
@@ -256,58 +167,129 @@ $$\sigma E_{2nk}^{2n(k+1)}=(E_{\sigma(2nk)},E_{\sigma(2nk+1)},\dots,E_{\sigma(2n
 is the sample permuted using $ \sigma$.
 
 
-We have
-\begin{align*}
-\prod_{k=1}^K \widehat{R}_{n,k}(t) &=\frac{1}{(n!)^K}\sum_{\sigma_1,\dots,\sigma_K \in S_{2n}} \prod_{k=1}^K \1\{\sqrt{n}T_n(\sigma E_{2nk}^{2n(k+1)}) \le t\} \\
-&=\frac{1}{(n!)^K}\sum_{\sigma_1,\dots,\sigma_K \in S_{2n}}  \1\{ \forall 1\le k\le K, \quad \sqrt{n} T_n(\sigma E_{2nk}^{2n(k+1)}) \le t\}
-\end{align*}
-We have
-\begin{align*}
-\sup_{t}&\left|\prod_{k=1}^K \widehat{R}_{n,k}(t) - \Phi\left( \frac{t}{\tau(P,Q)}\right)^{K} \right| \\
-&= \sup_t \left| \widehat{R}_{n,K}(t)\left(\prod_{k=1}^{K-1} \widehat{R}_{n,k}(t) - \Phi\left( \frac{t}{\tau(P,Q)}\right)^{K-1}\right) + (\widehat{R}_{n,K}(t)-\Phi(t/\tau(P,Q))) \Phi(t/\tau(P,Q))^{K-1} \right|\\
-&\le \sup_t \left| \widehat{R}_{n,K}(t)\left(\prod_{k=1}^{K-1} \widehat{R}_{n,k}(t) - \Phi\left( \frac{t}{\tau(P,Q)}\right)^{K-1}\right)\right| + \sup_t\left|(\widehat{R}_{n,K}(t)-\Phi(t/\tau(P,Q))) \Phi(t/\tau(P,Q))^{K-1} \right|\\
-&\le \sup_t \left|\prod_{k=1}^{K-1} \widehat{R}_{n,k}(t) - \Phi\left( \frac{t}{\tau(P,Q)}\right)^{K-1}\right| + \sup_t\left|\widehat{R}_{n,K}(t)-\Phi(t/\tau(P,Q)) \right|
-\end{align*}
-Hence, reasoning by induction, we have from Proposition~\ref{prop:asym_perm_test}
-$$\sup_{t}\left|\prod_{k=1}^K \widehat{R}_{n,k}(t) - \Phi\left( \frac{t}{\tau(P,Q)}\right)^{K} \right|\xrightarrow[n \to \infty]{P} 0$$
+% We have
+% \begin{align*}
+% \prod_{k=1}^K \widehat{R}_{n,k}(t_k) &=\frac{1}{(n!)^K}\sum_{\sigma_1,\dots,\sigma_K \in S_{2n}} \prod_{k=1}^K \1\{\sqrt{n}T_n(\sigma E_{2nk}^{2n(k+1)}) \le t_k\} \\
+% &=\frac{1}{(n!)^K}\sum_{\sigma_1,\dots,\sigma_K \in S_{2n}}  \1\{ \forall 1\le k\le K, \quad \sqrt{n} T_n(\sigma E_{2nk}^{2n(k+1)}) \le t_k\}
+% \end{align*}
+% We have
+% \begin{align*}
+% \sup_{t}&\left|\prod_{k=1}^K \widehat{R}_{n,k}(t_k) - \prod_{k=1}^K \Phi\left( \frac{t_k}{\tau(P,Q)}\right) \right| \\
+% &= \sup_t \left| \widehat{R}_{n,K}(t_K)\left(\prod_{k=1}^{K-1} \widehat{R}_{n,k}(t_k) - \prod_{k=1}^{K-1}\Phi\left( \frac{t_k}{\tau(P,Q)}\right)\right) + (\widehat{R}_{n,K}(t_K)-\Phi(t_K/\tau(P,Q))) \prod_{k=1}^{K-1} \Phi(t_k/\tau(P,Q))\right|\\
+% &\le \sup_t \left| \widehat{R}_{n,K}(t_K)\left(\prod_{k=1}^{K-1} \widehat{R}_{n,k}(t_k) -\prod_{k=1}^{K-1} \Phi\left( \frac{t_k}{\tau(P,Q)}\right)\right)\right| + \sup_t\left|(\widehat{R}_{n,K}(t_K)-\Phi(t_K/\tau(P,Q))) \prod_{k=1}^{K-1}\Phi(t_k/\tau(P,Q)) \right|\\
+% &\le \sup_t \left|\prod_{k=1}^{K-1} \widehat{R}_{n,k}(t_k) - \prod_{k=1}^{K-1}\Phi\left( \frac{t_k}{\tau(P,Q)}\right)\right| + \sup_t\left|\widehat{R}_{n,K}(t_K)-\Phi(t_K/\tau(P,Q)) \right|
+% \end{align*}
+% Hence, reasoning by induction, we have from Proposition~\ref{prop:asym_perm_test}
+% $$\sup_{t}\left|\prod_{k=1}^K \widehat{R}_{n,k}(t_k) - \prod_{k=1}^{K}\Phi\left( \frac{t_k}{\tau(P,Q)}\right) \right|\xrightarrow[n \to \infty]{P} 0$$
 
 \textbf{Convergence of the boundary}
+
+Notation:
+$$T_{n,k}(\sigma)=T_n\left(\sigma E_{2nk+1}^{2n(k+1)}\right) $$
+is the difference of the means on the $k^{th}$ bloc when the block have been permuted using $\sigma$.
+\todoT{Use this notation everywhere}
 
 Remark that on the first step, because the conditional distribution of $T_n(\sigma E_1^{2n})$ knowing $E_1^{2n}$ is symmetric, there is no need to compute the lower boundary and the decision can be made solely by testing $|T_n(E_1^{2n})|\ge B_1$ for some $B_1$. The same reasoning can be used for the remaining steps.
 
 The boundary are the minimal values of $B_1,\dots, B_K$ such that
 
-$$\P_\sigma(n|T_n(\sigma E_1^{2n})|\ge B_1\sqrt{n}) = q_1 \le \alpha\left(\frac{1}{K}\right) $$
+$$\P_{\sigma_1}(n|T_{n,1}(\sigma_1)|\ge B_1\sqrt{n}) = q_1 \le \alpha\left(\frac{1}{K}\right) $$
 
-$$\P_\sigma\left( \sqrt{n}|T_n(\sigma E_{2n}^{4n})+T_n(\sigma E_1^{2n})|\ge  B_2\sqrt{n},\quad  n|T_n(\sigma E_1^{2n})|\le  B_1\sqrt{n}  \right)+q_1 = q_2 \le\alpha\left(\frac{2}{K}\right) $$
-More generally, for any $2\le i\le K$,
-$$ \P_\sigma\left(n\left|\sum_{j=0}^i T_n\left(\sigma E_{2nj+1}^{2n(j+1)}\right)\right|\ge B_{j+1} \sqrt{n}, \quad \forall k < i,\,  n\left|\sum_{j=0}^k T_n\left(\sigma E_{2nj+1}^{2n(j+1)}\right)\right|\le  B_k\sqrt{n}  \right)+\sum_{j=1}^{i-1}q_j  = q_i \le\alpha\left(\frac{i}{K}\right).$$
+$$\P_{\sigma_1^2}\left( \sqrt{n}|T_{n,2}(\sigma_2)+T_{n,1}(\sigma_1)|\ge  B_2\sqrt{n},\quad  n|T_{n,1}(\sigma_1)|\le  B_1\sqrt{n}  \right)+q_1 = q_2 \le\alpha\left(\frac{2}{K}\right) $$
+More generally, for any $2\le k\le K$,
+\begin{equation}\label{eq:def_Bk}
+\P_{\sigma_1^k}\left(n\left|\sum_{j=0}^k T_{n,j}(\sigma_j)\right|\ge B_{k} \sqrt{n}, \quad \forall i < k,\,  n\left|\sum_{j=0}^i T_{n,j}\left(\sigma_j\right)\right|\le  B_i\sqrt{n}  \right)+\sum_{j=1}^{k-1}q_j  = q_k \le\alpha\left(\frac{k}{K}\right).
+\end{equation}
 Remark that $B_k$ is deterministic conditionally on the values of $E_1,\dots,E_{2nk}$. Hence it is deterministic with respect to the random permutation $\sigma$, but it still depends on $n$ and the values of $E_i$.
 
+\begin{Theorem}\label{th:conv_boundary}
+We have that for any $1\le k\le K$, $B_k\xrightarrow[n \to \infty]{}b_k$ where the real numbers $b_k$ are defined as follows. Let $W_1,\dots, W_K$ be i.i.d random variable with law $\mathcal{N}(0,1)$, then $b_1$ is the solution of the following equation:
+$$ \P\left(\left|W \right|\ge \frac{b_1}{\tau(P,Q)}  \right)=\alpha\left( \frac{1}{K} \right),$$
+and for any $1<k\le K$, $b_k$ is solution of
+\begin{equation*}
+\P\left( \left|\sum_{j=1}^k W_j\right| > \frac{b_l}{\tau(P,Q)}, \quad \forall i<k,\, \left|\sum_{i=1}^j W_i\right| \le \frac{b_j}{\tau(P,Q)} \right)=\alpha\left(\frac{k}{K} \right) - \alpha\left( \frac{k-1}{K}\right).
+\end{equation*}
+
+\end{Theorem}
+In short, Theorem~\ref{th:conv_boundary} tells us that asymptotically, the group sequential test behaves like a sequential test on Gaussians in which the boundary is set to spend the level $\alpha$ exactly as predicted by the level-spending function.
+
+\section{Proof of Theorem~\ref{th:conv_boundary}}
 \paragraph{Convergence of $B_1$}
-$$B_1 = \min \left\{ b>0 : \P_\sigma(\sqrt{n}|T_n(\sigma E_1^{2n})|\ge b) \le \alpha\left(\frac{1}{K}\right)\right\} $$
+$$B_1 = \min \left\{ b>0 : \P_\sigma(\sqrt{n}|T_{n,1}(\sigma_1)|\ge b) \le \alpha\left(\frac{1}{K}\right)\right\} $$
 This implies
-$$\P_\sigma(\sqrt{n}|T_n(\sigma E_1^{2n})|\ge B_1) = 1-\widehat{R}_{n,1}\left(B_1\right) \le \alpha\left( \frac{1}{K} \right) $$
+$$\P_\sigma(\sqrt{n}|T_{n,1}(\sigma_1)|\le B_1) = \widehat{R}_{n,1}\left(B_1\right)-\widehat{R}_{n,1}\left(-B_1\right) \ge 1-\alpha\left( \frac{1}{K} \right) $$
 and for any $b < B_1$, we have
-$$\P_\sigma(\sqrt{n}|T_n(\sigma E_1^{2n})|\ge b)=1-\widehat{R}_{n,1}\left(b\right) > \alpha\left( \frac{1}{K} \right) $$
+$$\P_\sigma(\sqrt{n}|T_{n,1}(\sigma_1)|\le b)=\widehat{R}_{n,1}\left(b\right)-\widehat{R}_{n,1}\left(b\right) < 1- \alpha\left( \frac{1}{K} \right) $$
 Then,
 \begin{align*}
 \Phi&\left( \frac{B_1}{\tau(P,Q)}\right)-\Phi\left(-\frac{B_1}{\tau(P,Q)}\right)\\
- &\ge 1-\left|\Phi\left( \frac{B_1}{\tau(P,Q)}\right) -\widehat{R}_{n,1}\left(B_1\right) \right|-\left|\Phi\left( -\frac{B_1}{\tau(P,Q)}\right) -\widehat{R}_{n,1}\left(-B_1\right) \right| \\
+ &\ge \widehat{R}_{n,1}\left(B_1\right)-\widehat{R}_{n,1}\left(-B_1\right)-\left|\Phi\left( \frac{B_1}{\tau(P,Q)}\right) -\widehat{R}_{n,1}\left(B_1\right) \right|-\left|\Phi\left( -\frac{B_1}{\tau(P,Q)}\right) -\widehat{R}_{n,1}\left(-B_1\right) \right| \\
 &\ge1- \alpha\left( \frac{1}{K} \right)- 2\sup_{t}\left|\Phi\left( \frac{t}{\tau(P,Q)}\right) -\widehat{R}_{n,1}\left(t\right) \right|
 \end{align*}
 Hence, by taking $n$ to infinity, we have
-$$\limsup_{n \to \infty} \Phi\left( \frac{B_1}{\tau(P,Q)}\right)-\Phi\left(-\frac{B_1}{\tau(P,Q)}\right) \ge 1-\alpha\left( \frac{1}{K} \right).$$
+$$\liminf_{n \to \infty} \Phi\left( \frac{B_1}{\tau(P,Q)}\right)-\Phi\left(-\frac{B_1}{\tau(P,Q)}\right) \ge 1-\alpha\left( \frac{1}{K} \right).$$
 and for any $\varepsilon>0$, we have
-$$\liminf_{n \to \infty} \Phi\left( \frac{B_1+\varepsilon}{\tau(P,Q)}\right)-\Phi\left( -\frac{B_1+\varepsilon}{\tau(P,Q)}\right) < 1- \alpha\left( \frac{1}{K} \right).$$
+$$\limsup_{n \to \infty} \Phi\left( \frac{B_1+\varepsilon}{\tau(P,Q)}\right)-\Phi\left( -\frac{B_1+\varepsilon}{\tau(P,Q)}\right) < 1- \alpha\left( \frac{1}{K} \right).$$
+\todoT{Maybe explain this a bit more}
 By continuity of $\Phi$, this implies that $B_1$ converges almost surely and its limit is such that
 $$\Phi\left( \frac{\lim_{n \to \infty}B_1}{\tau(P,Q)}\right)-\Phi\left( -\frac{\lim_{n \to \infty}B_1}{\tau(P,Q)}\right)= 1-\alpha\left( \frac{1}{K} \right).$$
-Or said differently, let $W\sim \mathcal{N}(0,1)$, the we have the almost sure convergence $\lim_{n \to \infty}B_1 = b_\infty$ where $b_\infty$ is the real number defined by
+\todoT{There is a switch of two limits here, check it}
+Or said differently, let $W\sim \mathcal{N}(0,1)$, the we have the almost sure convergence $\lim_{n \to \infty}B_1 = b_1$ where $b_1$ is the real number defined by
 $$ \P\left(\left|W \right|\ge \frac{b_1}{\tau(P,Q)}  \right)=\alpha\left( \frac{1}{K} \right).$$
 
-\paragraph{Convergence of $B_k$ for $k>1$}.
+\paragraph{Convergence of $B_k$ for $k>1$.}
 
-We can then condition on this event in the definition of $B_2$ to prove the same type of convergence for $B_1$ and then use induction to prove the result for every $B_k$.
+We proceed by induction. Suppose that for all $l <k$, $B_l$ converges to $b_l$ defined by
+
+\begin{equation}\label{eq:induction_hyp}
+\P\left( \left|\sum_{j=1}^l W_j\right| > \frac{b_l}{\tau(P,Q)}, \quad \forall i<l,\, \left|\sum_{i=1}^j W_i\right| \le \frac{b_j}{\tau(P,Q)} \right)=\alpha\left(\frac{l}{K} \right) - \alpha\left( \frac{l-1}{K}\right).
+\end{equation}
+
+We have
+$$B_k = \min \left\{ b>0 : \P_{\sigma_1^k}\left(n\left|\sum_{j=0}^k T_{n,j}\left(\sigma_j\right)\right|\ge b \sqrt{n}, \quad \forall j < k,\,  n\left|\sum_{i=0}^j T_{n,i}\left(\sigma_i\right)\right|\le  B_j\sqrt{n}  \right)+\sum_{i=1}^{k-1}q_i \le\alpha\left(\frac{k}{K}\right)\right\}.$$
+
+By the recurrence hypothesis, we have $q_i \xrightarrow[n \to \infty]{}\alpha\left( \frac{i}{K} \right)-\alpha\left( \frac{i-1}{K} \right)$ and $q_1\xrightarrow[n \to \infty]{}\alpha\left( \frac{1}{K} \right)$.
+
+Let $W_1,\dots,W_k$ be i.i.d $\mathcal{N}(0,1)$ random variables. Denote
+$$\Psi_k(b) = \P\left( \sum_{j=1}^k W_j \le \frac{b}{\tau(P,Q)}, \quad \forall i<k,\, \left|\sum_{i=1}^j W_i\right| \le \frac{b_j}{\tau(P,Q)} \right) $$
+We will need the following lemma, proved in Section~\ref{sec:proof_lem_conv}.
+\begin{Lemma}\label{lem:convergence_conditional}
+Suppose Equation~\eqref{eq:induction_hyp} is true. Then,
+$$\sup_{b}\left|\P_{\sigma_1^{k}}\left(n\sum_{j=1}^k T_{n,j}\left(\sigma_j\right)\le b \sqrt{n}, \quad \forall j < k,\,  n\left|\sum_{i=1}^j T_{n,i}\left(\sigma_i\right)\right|\le  B_j\sqrt{n} \right)-\Psi_k(b) \right|\xrightarrow[n \to \infty]{}0$$
+\end{Lemma}
+We have, conditionally on $B_k$,
+\begin{align*}
+\Psi_k(B_k)-\Psi_k(-B_k)\ge&  \P_{\sigma_1^{k}}\left(n\left|\sum_{j=1}^k T_{n,j}\left(\sigma_j\right)\right|\le B_k \sqrt{n}, \quad \forall j < k,\,  n\left|\sum_{i=1}^j T_{n,i}\left(\sigma_i\right)\right|\le  B_j\sqrt{n} \right)\\
+&+ 2 \sup_{b}\left|\P_{\sigma_1^{k}}\left(n\sum_{j=1}^k T_{n,j}\left(\sigma_j\right)\le b \sqrt{n}, \quad \forall j < k,\,  n\left|\sum_{i=1}^j T_{n,i}\left(\sigma_i\right)\right|\le  B_j\sqrt{n} \right)-\Psi_k(b) \right|\\
+&\ge 1-\left(\alpha\left( \frac{k}{K}\right)-\sum_{i=1}^{k-1}q_i\right) \\
+&+ 2 \sup_{b}\left|\P_{\sigma_1^{k}}\left(n\sum_{j=1}^k T_{n,j}\left(\sigma_j\right)\le b \sqrt{n}, \quad \forall j < k,\,  n\left|\sum_{i=1}^j T_{n,i}\left(\sigma_i\right)\right|\le  B_j\sqrt{n} \right)-\Psi_k(b) \right|
+\end{align*}
+We use Lemma~\ref{lem:convergence_conditional} and the convergence of the $q_i$'s to conclude that
+$$\liminf_{n \to \infty}\Psi_k(B_k)-\Psi_k(-B_k) \ge 1-\left(\alpha\left( \frac{k}{K}\right)-\alpha\left( \frac{k-1}{K}\right)\right).$$
+And similarly to the case $k=1$, we also have for any $\varepsilon>0$,
+$$\limsup_{n \to \infty}\Psi_k(B_k+\varepsilon)-\Psi_k(-B_k-\varepsilon) \le  1-\left(\alpha\left( \frac{k}{K}\right)-\alpha\left( \frac{k-1}{K}\right)\right).$$
+and by continuity of $\Psi_k$ we conclude that $B_k$ converges almost surely to $b_k$.
+\todoT{Check continuity of $\Psi_k$}
+\section{Proof of Lemmas}
+\subsection{Proof of Lemma~\ref{lem:convergence_conditional}}\label{sec:proof_lem_conv}
+\begin{align*}
+\P_\sigma&\left(n\sum_{j=1}^k T_{n,j}\left(\sigma_j\right)\le b \sqrt{n}, \quad \forall j < k,\,  n\left|\sum_{i=1}^j T_{n,i}\left(\sigma_i\right)\right|\le  B_j\sqrt{n}  \right)\\
+&= \E_{\sigma_1^{k-1}} \left[ \P_{\sigma_k}\left(n\sum_{j=0}^k T_{n,j}\left(\sigma_j\right)\le b \sqrt{n}\right)\1\left\{ \forall j < k,\,  n\left|\sum_{i=1}^j T_{n,i}\left(\sigma_j\right)\right|\le  B_j\sqrt{n}\right\}\right]
+\end{align*}
+Now, conditionally on the permutations $\sigma_1^{k-1}=\sigma_1,\dots,\sigma_{k-1}$, we have
+\begin{align*}
+\P_{\sigma_k}\left(n\sum_{j=0}^k T_{n,j}\left(\sigma_j\right)\le b \sqrt{n}\right) &= \P_{\sigma_k}\left(n T_{n,k}\left(\sigma_k\right)\le b \sqrt{n}-n\sum_{j=1}^{k-1}T_{n,j}\left(\sigma_j\right) \right)\\
+&= \widehat{R}_{n,k}\left(b \sqrt{n}-n\sum_{j=1}^{k-1}T_{n,j}\left(\sigma_j\right)\right)
+\end{align*}
+We have, because the convergence is uniform,
+\begin{align*}
+&\hspace{-3em}\left|\E_{\sigma_1^{k-1}} \left[ \P_{\sigma_k}\left(n\sum_{j=0}^k T_{n,j}\left(\sigma_j\right)\le b \sqrt{n}\right)\1\left\{ \forall j < k,\,  n\left|\sum_{i=1}^j T_{n,i}\left(\sigma_j\right)\right|\le  B_j\sqrt{n}\right\}\right]\right.\\
+&\hspace{-1em}\left.- \E_{\sigma_1^{k-1}} \left[ \Phi\left( b - \sqrt{n}\sum_{j=1}^{k-1}T_{n,j}(\sigma_j) \right)\1\left\{ \forall j < k,\,  n\left|\sum_{i=1}^j T_{n,i}\left(\sigma_j\right)\right|\le  B_j\sqrt{n}\right\}\right] \right|\\
+&\le \E_{\sigma_1^{k-1}} \left[ \left|\P_{\sigma_k}\left(n\sum_{j=0}^k T_{n,j}\left(\sigma_j\right)\le b \sqrt{n}\right)- \Phi\left( \frac{b - \sqrt{n}\sum_{j=1}^{k-1}T_{n,j}(\sigma_j) }{\tau(P,Q)}\right)\right|\right]\\
+&\le \sup_t \left|\widehat{R}_n(t)-\Phi\left( \frac{t}{\tau(P,Q)}\right)\right|  \xrightarrow[n \to \infty]{}0
+\end{align*}
+Finally, use that by hypothesis, $B_j \to b_j$ and $\sqrt{n}T_{n,j} \to W_j$ to conclude that the lemma is true by dominated convergence.
+\todoT{Maybe explain this further}
 \newpage
 \section{Simulation study}
 \todoT{Misspecification study of Gaussian GST on uniform and maybe on multi-modal distributions}
