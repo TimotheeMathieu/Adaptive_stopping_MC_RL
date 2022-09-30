@@ -254,7 +254,7 @@ class Two_AgentsComparator:
 
         return decision, np.sum(Z * (-1) ** X), bk, p_value
 
-    def compare(self, manager1, manager2):
+    def compare(self, manager1, manager2, clean_after = True):
         """
         Compare manager1 and manager2 performances
 
@@ -262,7 +262,7 @@ class Two_AgentsComparator:
         ----------
         manager1 : tuple of agent_class and init_kwargs for the agent.
         manager2 : tuple of agent_class and init_kwargs for the agent.
-
+        clean_after: boolean
         """
         X = np.array([])
         Z = np.array([])
@@ -300,7 +300,9 @@ class Two_AgentsComparator:
             self.decision, Tsigned, bk, p_val = self.partial_compare(Z, X, k)
 
             self.test_stats.append(Tsigned)
-
+            if clean_after:
+                m1.clear_output_dir()
+                m2.clear_output_dir()
             if self.decision == "reject":
                 logger.info("Reject the null after " + str(k + 1) + " groups")
                 if Tsigned <= 0:
