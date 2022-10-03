@@ -72,8 +72,6 @@ GST often suppose strong models on the data, in particular it is often supposed 
 
 The presence of several modes in the distributions of the evaluations and the difficulty to make any distributional assumption justify a non-parametric approach of the problem, but to further justify this approach we did a study of the effect of model misspecification on simulated data when using Gaussian GST algorithm.
 
-
-
 \subsection{Algorithm}
 
 \subsection{High level description of the algorithm}
@@ -137,6 +135,8 @@ $$\sup_{t}\left|\frac{1}{n!}\sum_{\sigma \in S_n} \1\{T_n(\sigma Z_{1}^{2n}) \le
 where $\tau(P,Q)^2=\sigma_P^2+\sigma_Q^2+\frac{(\mu_P- \mu_Q)^2}{2} $.
 \end{Proposition}
 Remark: this proposition can be extended to other $T_n$ statistics using Theorem 2.1 in \cite{Chung_2013} or Theorem 15.2.5 of \cite{lehmann2005testing}.
+\todoT{Maybe I could do an edgeworth expansion to show that the convergence is with speed $1/n$ (under $H_0$ ?) because of the symmetry of $T$. Using \cite{Romano_1990} and \cite[Theorem 7]{Petrov_1975}. The expansion could be used to derive an approximation of the power that could be used to set K beforehand.}
+\todoT{Another possible interesting result would be to show how many random permutations we need to estimate the true permutation distribution. Concentration inequalities could be used here.}
 
 Using Proposition~\ref{prop:asym_perm_test}, we have that the empirical quantile defined by
 $$Q_{1-\alpha}(T_n) = \inf\left\{t \in \R:\quad \frac{1}{n!}\sum_{\sigma \in S_n} \1\{T_n(\sigma Z_{1}^{2n}) \le t\} \ge 1-\alpha\right\} $$
@@ -187,7 +187,6 @@ is the sample permuted using $ \sigma$.
 Notation:
 $$T_{n,k}(\sigma)=T_n\left(\sigma E_{2nk+1}^{2n(k+1)}\right) $$
 is the difference of the means on the $k^{th}$ bloc when the block have been permuted using $\sigma$.
-\todoT{Use this notation everywhere}
 
 Remark that on the first step, because the conditional distribution of $T_n(\sigma E_1^{2n})$ knowing $E_1^{2n}$ is symmetric, there is no need to compute the lower boundary and the decision can be made solely by testing $|T_n(E_1^{2n})|\ge B_1$ for some $B_1$. The same reasoning can be used for the remaining steps.
 
@@ -207,12 +206,19 @@ We have that for any $1\le k\le K$, $B_k\xrightarrow[n \to \infty]{}b_k$ where t
 $$ \P\left(\left|W \right|\ge \frac{b_1}{\tau(P,Q)}  \right)=\alpha\left( \frac{1}{K} \right),$$
 and for any $1<k\le K$, $b_k$ is solution of
 \begin{equation*}
-\P\left( \left|\sum_{j=1}^k W_j\right| > \frac{b_l}{\tau(P,Q)}, \quad \forall i<k,\, \left|\sum_{i=1}^j W_i\right| \le \frac{b_j}{\tau(P,Q)} \right)=\alpha\left(\frac{k}{K} \right) - \alpha\left( \frac{k-1}{K}\right).
+\P\left( \left|\sum_{j=1}^k W_j\right| > \frac{b_l}{\tau(P,Q)}, \quad \forall j<k,\, \left|\sum_{i=1}^j W_i\right| \le \frac{b_j}{\tau(P,Q)} \right)=\alpha\left(\frac{k}{K} \right) - \alpha\left( \frac{k-1}{K}\right).
 \end{equation*}
 
 \end{Theorem}
-In short, Theorem~\ref{th:conv_boundary} tells us that asymptotically, the group sequential test behaves like a sequential test on Gaussians in which the boundary is set to spend the level $\alpha$ exactly as predicted by the level-spending function.
+In short, Theorem~\ref{th:conv_boundary} tells us that asymptotically, the group sequential test behaves like a sequential test on Gaussians in which the boundary is set to spend the level $\alpha$ exactly as predicted by the level-spending function. There are several consequences of this theorem.
 
+\begin{itemize}
+ \item Asymptotically, the test $H_0:\mu_X = \mu_Y$ vs $H_1:\mu_X \neq \mu_Y$ has level $\alpha$ because under $H_0$, $\tau(P,Q)^2=\sigma_P^2+\sigma_Q^2$ and $T_n(\mathrm{id} E_1^{2n})=\frac{1}{\sqrt{n}}\left(\sum_{i=1}^n E_i - \sum_{i=n+1}^{2n} E_i\right)$ converges to $\mathcal{N}(0,\sigma_X^2+\sigma_Y^2)$. Hence the boundary correspond to the appropriate law.
+ \item Under $H_1:\mu_P \neq \mu_Q$, we have an expression of the asymptotic boundary. On the other hand, we also have that
+$$T_n(\mathrm{id}E_1^{2n}) =\frac{1}{\sqrt{n}}\left(\sum_{i=1}^n E_i - \sum_{i=n+1}^{2n} E_i\right) = \frac{1}{\sqrt{n}}\left(\sum_{i=1}^n (E_i-\mu_X) - \sum_{i=n+1}^{2n} (E_i-\mu_Y)   + n (\mu_X-\mu_Y)\right)$$
+Hence, the test statistics is equivalent to $\sqrt{n}(\mu_X-\mu_Y)$ asymptotically. This gives us a way to choose $n$ and $K$ to have a given power. This also show that the test is consistent in the sense that the power converges to $1$ as $n$ goes to infinity.
+\end{itemize}
+\todoT{Rk: an asymptotic expansion would be good for the power computation}
 \section{Proof of Theorem~\ref{th:conv_boundary}}
 \paragraph{Convergence of $B_1$}
 $$B_1 = \min \left\{ b>0 : \P_\sigma(\sqrt{n}|T_{n,1}(\sigma_1)|\ge b) \le \alpha\left(\frac{1}{K}\right)\right\} $$
