@@ -264,8 +264,6 @@ class Two_AgentsComparator:
         manager2 : tuple of agent_class and init_kwargs for the agent.
         clean_after: boolean
         """
-        X = np.array([])
-        Z = np.array([])
 
         agent_class1 = manager1[0]
         kwargs1 = manager1[1]
@@ -361,9 +359,9 @@ class Two_AgentsComparator:
 
 
 # Draft, still todo.
-class MultipleAgentsComparator:
+class MultipleAgentsComparator(Two_AgentsComparator):
     """
-    Compare sequentially two agents, with possible early stopping.
+    Compare sequentially agents, with possible early stopping.
     At maximum, there can be n times K fits done.
 
     For now, implement only a two-sided test.
@@ -401,6 +399,7 @@ class MultipleAgentsComparator:
     """
 
     def __init__(self, n=5, K=5, alpha=0.05, name="PK", n_evaluations=1, seed=None):
+        Two_AgentsComparator.__init__(self, n, K, alpha, name, n_evaluations, seed)
         self.n = n
         self.K = K
         self.alpha = alpha
@@ -409,26 +408,67 @@ class MultipleAgentsComparator:
         self.n_evaluations = n_evaluations
         self.seed = seed
 
-    def compare(self, managers):
+    def compare(self, managers, comparisons = None):
         """
         Compare the managers pair by pair using Bonferroni correction.
 
         Parameters
         ----------
         managers : list of tuple of agent_class and init_kwargs for the agent.
+        comparisons: list of tuple of indices or None
+                if None, all the pairwise comparison are done.
+                If = [(0,1), (0,2)] for instance, the compare only 0 vs 1  and 0 vs 2
 
         """
-        pairs = list(itertools.combinations(managers), 2)
-        level = self.alpha / len(pairs)
+        n_managers = len(managers)
+        if comparisons = None:
+            comparisons = [(i,j) for i in range(n_managers) for j in range(n_managers) if i<j]
 
-        decisions = []
-        for pair in pairs:
-            comparator = Two_AgentsComparator(
-                self.n, self.K, self.alpha, self.name, self.n_evaluations, self.seed
-            )
-            comparator.compare(pair[0], pair[1])
-            decisions.append(
-                (comparator.agent1_name, comparator.agent2_name), comparator.decision
-            )
+        X = [ np.array([]) for _ in comparisons]
+        Z = [ np.array([]) for _ in comparisons]
 
+        agent_classes = [ manager[0] for manager in managers]
+        kwargs_list = [ manager[1] for manager in managers]
+        for k in kwargs_list:
+            k["n_fit"] = self.n
+
+        # Initialization of the permutation distribution
+        self.sum_diffs = [0]
+
+        # spawn independent seeds, one for each fit and one for the comparator.
+        seeders = self.seeder.spawn(len(managers) * self.K + 1)
+        self.rng = seeders[-1].rng
+
+        for k in range(self.K):
+            managers = []
+            for agent_class, kwargs, seeder in zip(agent_classes, kwargs_list, seeders):
+                managers.append(AgentManager(agent_class, **kwargs, seed=seeder))
+                managers[-1].fit()
+
+            self.n_iter += n_managers * self.n
+
+            for i, comp in enumerate(comparisons):
+                Z[i] = np.hstack([Z[i], self._get_evals(managers[comp[0]]), self._get_evals(managers[comp[1]])])
+                X[i] = np.hstack([X[i], np.zeros(self.n), np.ones(self.n)])
+###########################"
+            self.decision, Tsigned, bk, p_val = self.partial_compare(Z, X, k)
+
+            self.test_stats.append(Tsigned)
+            if clean_after:
+                m1.clear_output_dir()
+                m2.clear_output_dir()
+            if self.decision == "reject":
+                logger.info("Reject the null after " + str(k + 1) + " groups")
+                if Tsigned <= 0:
+                    logger.info(m1.agent_name + " is better than " + m2.agent_name)
+                else:
+                    logger.info(m2.agent_name + " is better than " + m1.agent_name)
+
+                break
+            else:
+                logger.info("Did not reject on interim " + str(k + 1))
+        if self.decision == "accept":
+            logger.info(
+                "Did not reject the null hypothesis: either K, n are too small or the agents perform similarly"
+            )
         return decisions
