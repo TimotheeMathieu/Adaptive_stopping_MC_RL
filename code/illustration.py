@@ -39,7 +39,7 @@ if __name__ == "__main__":
 
     env_ctor = gym_make
     env_kwargs = dict(id="Acrobot-v1")
-    budget = 1e5
+    budget = 5e4
 
     manager1 = (
             DQNAgent,
@@ -47,7 +47,7 @@ if __name__ == "__main__":
                 train_env=(env_ctor, env_kwargs),
                 fit_budget=budget,
                 eval_kwargs=dict(eval_horizon=500),
-                init_kwargs=dict(learning_rate=6.3e-4, batch_size=128, chunk_size=250, gamma=0.99),
+                init_kwargs=dict(learning_rate=6.3e-4, batch_size=128, gamma=0.99),
                 agent_name="DQN",
                 parallelization="process"
             ),
@@ -56,16 +56,16 @@ if __name__ == "__main__":
         PPOAgent,
         dict(
             train_env=(env_ctor, env_kwargs),
-            fit_budget=budget*10,
+            fit_budget=budget,
             eval_kwargs=dict(eval_horizon=500),
-            init_kwargs=dict(normalize_rewards=True,n_steps=256, gamma=0.99),
+            init_kwargs=dict(normalize_rewards=True, n_steps=256, gamma=0.99),
             agent_name="PPO",
             parallelization="process"
         ),
     )
 
 
-    comparator.compare(manager1, manager2)
+    comparator.compare( manager2, manager1)
     # comparator.plot_boundary()
     print("Number of iterations used is "+str(comparator.n_iter))
 
