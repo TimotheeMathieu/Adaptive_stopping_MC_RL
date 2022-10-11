@@ -20,69 +20,48 @@ import itertools
 logger = logging.getLogger()
 
 # TO DO:
-# * At the last block, need only alpha*(2n choose n)**K statistics
 # * Be careful about ties
-# * Implement the Multiple Agent for multiple > 2
 
 
 class Two_AgentsComparator:
     """
     Compare sequentially two agents, with possible early stopping.
     At maximum, there can be n times K fits done.
-
     For now, implement only a two-sided test.
-
     Parameters
     ----------
-
     n: int, default=5
         number of fits before each early stopping check
-
     K: int, default=5
         number of checks
-
     B: int or None, default=None
         number of random permutation used in each block to approximate permutation distribution.
         If not None, the final complexity is K*B*n^2.
-
     alpha: float, default=0.05
         level of the test
-
     name: str in {'PK', 'OF'}, default = "PK"
         type of spending function to use.
-
     n_evaluations: int, default=10
         number of evaluations used in the function _get_rewards.
-
     seed: int or None, default = None
-
     Attributes
     ----------
-
     decision: str in {"accept" , "reject"}
         decision of the test.
-
     boundary: array of size at most K
         Boundary computed during the test.
-
     n_iter: int
         Total number of fits used.
-
     eval_1: array of floats
         Evaluations of Agent 1 used during comparison
-
     eval_2: array of floats
         Evaluations of Agent 1 used during comparison
-
     agent1_name: str
         Name of Agent 1
-
     agent2_name: str
         Name of Agent 2
-
     test_stats: array of floats
         Value of the statistic T = sum(Eval_agent1)-sum(Eval_agent2) at each interim.
-
     """
 
     def __init__(
@@ -104,7 +83,6 @@ class Two_AgentsComparator:
     def get_spending_fun(self):
         """
         Return the spending function corresponding to self.name
-
         should be an increasing function f such that f(0)=0 and f(1)=alpha
         """
         if self.name == "PK":
@@ -180,7 +158,6 @@ class Two_AgentsComparator:
     def partial_compare(self, Z, X, k):
         """
         Do the test of the k^th interim.
-
         Parameters
         ----------
         Z: array of size 2*self.n*(k+1)
@@ -189,7 +166,6 @@ class Two_AgentsComparator:
             {0,1} array with the affectation of each value of Z to either Agent 1 (0) or Agent 2 (1)
         k: int
             index of the interim, in {0,...,K-1}
-
         Returns
         -------
         decision: str in {'accept', 'reject', 'continue'}
@@ -198,8 +174,6 @@ class Two_AgentsComparator:
            Test statistic.
         bk: gloat
            threshold.
-
-
         """
         spending_fun = self.get_spending_fun()
 
@@ -257,13 +231,14 @@ class Two_AgentsComparator:
     def compare(self, manager1, manager2, clean_after = True):
         """
         Compare manager1 and manager2 performances
-
         Parameters
         ----------
         manager1 : tuple of agent_class and init_kwargs for the agent.
         manager2 : tuple of agent_class and init_kwargs for the agent.
         clean_after: boolean
         """
+        X = np.array([])
+        Z = np.array([])
 
         agent_class1 = manager1[0]
         kwargs1 = manager1[1]
@@ -327,7 +302,6 @@ class Two_AgentsComparator:
     def plot_boundary(self):
         """
         Graphical representation of the boundary and the test statistics as it was computed during the self.compare execution.
-
         self.compare must have been executed prior to executing plot_boundary.
         """
         assert (
@@ -357,7 +331,6 @@ class Two_AgentsComparator:
             )
         return eval_values
 
-
 # Draft, still todo.
 class MultipleAgentsComparator(Two_AgentsComparator):
     """
@@ -365,8 +338,6 @@ class MultipleAgentsComparator(Two_AgentsComparator):
     At maximum, there can be n times K fits done.
 
     For now, implement only a two-sided test.
-
-    !! STILL NOT FINISHED !! For now, use TwoAgentsComparator
 
     Parameters
     ----------
@@ -391,24 +362,152 @@ class MultipleAgentsComparator(Two_AgentsComparator):
     Attributes
     ----------
 
-    decision: str in {"accept" , "reject"}
-        decision of the test.
+    decision: list of str in {"accept" , "reject"}
+        decision of the tests for each comparison.
 
-    p_val: float
-        p-value of the test
+    rejected_decision: list of Tuple (comparison, bool)
+       the choice of which agent is better in each rejected comparison
     """
 
-    def __init__(self, n=5, K=5, alpha=0.05, name="PK", n_evaluations=1, seed=None):
+    def __init__(
+        self, n=5, K=5, B=None, alpha=0.05, name="PK", n_evaluations=1, seed=None
+    ):
         Two_AgentsComparator.__init__(self, n, K, alpha, name, n_evaluations, seed)
         self.n = n
         self.K = K
+        self.B = B
         self.alpha = alpha
         self.name = name
-        self.ttype = ttype
         self.n_evaluations = n_evaluations
-        self.seed = seed
+        self.boundary = []
+        self.test_stats = []
+        self.level_spent = 0
+        self.n_iter = 0
+        self.seeder = Seeder(seed)
+        self._writer = DefaultWriter("Comparator")
+        self.rejected_decision = []
 
-    def compare(self, managers, comparisons = None):
+    def compute_sum_diffs(self, k, Z, comparisons, boundary):
+        """
+        Compute the absolute value of the sum differences.
+        """
+
+        if k == 0:
+            for _ in range(self.B):
+                sum_diff = []
+                for i, comp in enumerate(comparisons):
+                    Zi = Z[i][ : (2 * self.n)]
+                    id_pos = self.rng.choice(2 * self.n, self.n, replace=False)
+                    mask = np.zeros(2 * self.n)
+                    mask[list(id_pos)] = 1
+                    mask = mask == 1
+                    sum_diff.append(np.sum(Zi[mask] - Zi[~mask]))
+                self.sum_diffs.append(np.array(sum_diff))
+        else:
+            # Compute sums on B random permutations of blocks, conditional to not rejected.
+            # Warning : there can be less than B resulting values due to rejection.
+
+            # Eliminate for conditional
+            sum_diffs = []
+            for zval in self.sum_diffs:
+                if np.max(zval) <= boundary[-1]:
+                    sum_diffs.append(np.abs(zval))
+
+            # add a new random permutation
+            for j in range(len(self.sum_diffs)):
+                id_pos = self.rng.choice(2 * self.n, self.n, replace=False)
+                for i, comp in enumerate(comparisons):
+                    Zk = Z[i][(k * 2 * self.n) : ((k + 1) * 2 * self.n)]
+                    mask = np.zeros(2 * self.n)
+                    mask[list(id_pos)] = 1
+                    mask = mask == 1
+                    self.sum_diffs[j][i] += np.sum(Zk[mask] - Zk[~mask])
+
+        return self.sum_diffs
+
+    def partial_compare(self, Z, X, comparisons,  k):
+        """
+        Do the test of the k^th interim.
+
+        Parameters
+        ----------
+        Z: array of size n_comparisons x 2*self.n*(k+1)
+            Concatenation All the evaluations of Agent 1 and Agent2 up till interim k
+        X: array of size n_comparisons x 2*self.n*(k+1)
+            {0,1} array with the affectation of each value of Z to either Agent 1 (0) or Agent 2 (1)
+        k: int
+            index of the interim, in {0,...,K-1}
+
+        Returns
+        -------
+        decision: str in {'accept', 'reject', 'continue'}
+           decision of the test at this step.
+        T: float
+           Test statistic.
+        bk: gloat
+           threshold.
+
+
+        """
+        spending_fun = self.get_spending_fun()
+
+        clevel = spending_fun((k + 1) / self.K)
+
+        rs = np.abs(np.array(self.compute_sum_diffs(k, Z, comparisons, self.boundary)))
+        decisions = np.array(['continue']*len(comparisons))
+        print(np.shape(rs), len(decisions))
+        for j in range(len(decisions)):
+            rs_now = rs[:, decisions == 'continue']
+            values = np.sort(
+                np.max(rs_now, axis=1)
+            )  # for now, don't care about ties. And there are ties, for instance when B is None, there are at least two of every values !
+
+            icumulative_probas = np.arange(len(rs_now))[::-1] / len(
+                rs_now
+            )  # This corresponds to 1 - F(t) = P(T > t)
+
+            # Compute admissible values, i.e. values that would not be rejected.
+
+            admissible_values_sup = values[self.level_spent + icumulative_probas <= clevel]
+
+
+            if len(admissible_values_sup) > 0:
+                bk = admissible_values_sup[0]  # the minimum admissible value
+                level_to_add = icumulative_probas[
+                    self.level_spent + icumulative_probas <= clevel
+                ][0]
+            else:
+                # This case is possible if clevel-self.level_spent <= 1/len(rs) (smallest proba possible),
+                # in which case there are not enough points and we don't take any decision for now. Happens in particular if B is None.
+                bk = np.inf
+                level_to_add = 0
+
+            # Test statistic
+            T = 0
+            Tsigned = 0
+            for i, comp in enumerate(comparisons[decisions == 'continue']):
+                Tj = np.abs(np.sum(Z[i] * (-1) ** X[i]))
+                if Tj > T:
+                    T = Tj
+                    jmax = j
+                    Tsigned = np.sum(Z[i] * (-1) ** X[i])
+
+            if T > bk :
+                decisions[jmax] = 'reject'
+                self.rejected_decision.append((comparisons[jmax], Tsigned>0))
+            else:
+                break
+
+        self.boundary.append(bk)
+
+        self._writer.add_scalar("Stat_val", T, k)
+        self._writer.add_scalar("sup_bound", bk, k)
+
+        self.level_spent += level_to_add  # level effectively used at this point
+
+        return decisions, Tsigned, bk
+
+    def compare(self, managers, comparisons = None, clean_after = True):
         """
         Compare the managers pair by pair using Bonferroni correction.
 
@@ -421,8 +520,8 @@ class MultipleAgentsComparator(Two_AgentsComparator):
 
         """
         n_managers = len(managers)
-        if comparisons = None:
-            comparisons = [(i,j) for i in range(n_managers) for j in range(n_managers) if i<j]
+        if comparisons is None:
+            comparisons = np.array([(i,j) for i in range(n_managers) for j in range(n_managers) if i<j])
 
         X = [ np.array([]) for _ in comparisons]
         Z = [ np.array([]) for _ in comparisons]
@@ -433,12 +532,13 @@ class MultipleAgentsComparator(Two_AgentsComparator):
             k["n_fit"] = self.n
 
         # Initialization of the permutation distribution
-        self.sum_diffs = [0]
+        self.sum_diffs = []
 
         # spawn independent seeds, one for each fit and one for the comparator.
         seeders = self.seeder.spawn(len(managers) * self.K + 1)
         self.rng = seeders[-1].rng
-
+        decisions = np.array(["continue"]*len(comparisons))
+        id_tracked = np.arange(len(decisions))
         for k in range(self.K):
             managers = []
             for agent_class, kwargs, seeder in zip(agent_classes, kwargs_list, seeders):
@@ -450,25 +550,28 @@ class MultipleAgentsComparator(Two_AgentsComparator):
             for i, comp in enumerate(comparisons):
                 Z[i] = np.hstack([Z[i], self._get_evals(managers[comp[0]]), self._get_evals(managers[comp[1]])])
                 X[i] = np.hstack([X[i], np.zeros(self.n), np.ones(self.n)])
-###########################"
-            self.decision, Tsigned, bk, p_val = self.partial_compare(Z, X, k)
+            self.decisions, T, bk = self.partial_compare(Z, X, comparisons, k)
 
-            self.test_stats.append(Tsigned)
+            self.test_stats.append(T)
             if clean_after:
-                m1.clear_output_dir()
-                m2.clear_output_dir()
-            if self.decision == "reject":
-                logger.info("Reject the null after " + str(k + 1) + " groups")
-                if Tsigned <= 0:
-                    logger.info(m1.agent_name + " is better than " + m2.agent_name)
-                else:
-                    logger.info(m2.agent_name + " is better than " + m1.agent_name)
+                for m in managers:
+                    m.clear_output_dir()
 
+            if np.all(self.decisions == "reject"):
+                logger.info("Reject all the null after " + str(k + 1) + " groups")
                 break
             else:
-                logger.info("Did not reject on interim " + str(k + 1))
-        if self.decision == "accept":
+                logger.info("Rejected "+str(np.sum(np.array(self.decisions) == "reject"))+" on interim " + str(k + 1))
+                id_rejected = np.array(self.decisions) == 'reject'
+                decisions[id_tracked[id_rejected]]='reject'
+                id_tracked = id_tracked[~id_rejected]
+                comparisons = comparisons[np.array(self.decisions) == "continue"]
+                self.sum_diffs = np.array(self.sum_diffs)[:,np.array(self.decisions) == "continue"]
+
+        if (k == self.K-1):
+            decisions[decisions == 'continue']="accept"
             logger.info(
-                "Did not reject the null hypothesis: either K, n are too small or the agents perform similarly"
+                "Did not reject all the null hypothesis: either K, n are too small or the agents perform similarly"
             )
+        self.decisions = decisions
         return decisions
