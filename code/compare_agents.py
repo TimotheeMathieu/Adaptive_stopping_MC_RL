@@ -4,7 +4,7 @@ from copy import copy
 import os
 from scipy import stats
 from scipy.special import binom
-from scipy.stats import rankdata
+from scipy.stats import norm
 import matplotlib.pyplot as plt
 
 import rlberry
@@ -15,12 +15,15 @@ from rlberry.utils.writers import DefaultWriter
 
 import itertools
 
-
+from tqdm import tqdm
 # logger = rlberry.logger
 logger = logging.getLogger()
 
 # TO DO:
 # * Be careful about ties
+
+
+
 
 
 class Two_AgentsComparator:
@@ -331,8 +334,52 @@ class Two_AgentsComparator:
             )
         return eval_values
 
-# Draft, still todo.
-class MultipleAgentsComparator(Two_AgentsComparator):
+
+    def asym_boundary(self, M = 100000):
+        """
+        Compute the asymptotic boundary of b_1,...,b_K using M Monte-Carlo approximation, with \tau(P,Q)=1.
+
+        M is int, number of MC used to approximate
+        """
+        W = np.random.normal(size=(self.K,M))
+
+        # computation of b_1 is exact and don't need Monte-Carlo approximation
+        spending_fun = self.get_spending_fun()
+
+        alphas = [ spending_fun((k + 1) / self.K) for k in range(self.K)]
+        boundary = [ norm.ppf(1-alphas[0])]
+
+        # computation of b_k, k > 1
+        for k in tqdm(range(1,self.K)):
+            res = 0
+            values = []
+            for m in range(M):
+                # condition on the past
+                event = np.all([ np.abs(np.mean(W[:(j+1),m]))< boundary[j] for j in range(k)])
+                if event:
+                    values.append(np.abs(np.mean(W[:(k+1),m])))
+            boundary.append(np.quantile(values, 1-(alphas[k]-alphas[k-1])))
+
+        return boundary
+    def power(self, M=100000, mup, muq, sigmap, sigmaq):
+        """
+        Estimation of the power using M MC estimation. mup, muq are the mean of the two agents and sigmap, sigmaq are their respective stds.
+        """
+
+        W = np.random.normal(size=(self.K,M))
+        boundary = self.asym_boundary(M)
+
+        delta = np.abs(mup - muq)/np.sqrt(sigmap**2+sigmaq**2)
+        boundary_factor = np.sqrt(sigmap**2+sigmaq**2+(mup-muq)**2/2)/np.sqrt(sigmap**2+sigmaq**2)
+
+        events = []
+        for m in tqdm(range(M)):
+            events.append(np.any([ np.abs(np.mean(W[:(j+1),m]) + np.sqrt(self.n)*delta)> boundary[j]*boundary_factor for j in range(self.K)]))
+        return np.mean(events)
+
+
+
+class MultipleAgentsComparator():
     """
     Compare sequentially agents, with possible early stopping.
     At maximum, there can be n times K fits done.
@@ -372,7 +419,6 @@ class MultipleAgentsComparator(Two_AgentsComparator):
     def __init__(
         self, n=5, K=5, B=None, alpha=0.05, name="PK", n_evaluations=1, seed=None
     ):
-        Two_AgentsComparator.__init__(self, n, K, alpha, name, n_evaluations, seed)
         self.n = n
         self.K = K
         self.B = B
@@ -575,3 +621,27 @@ class MultipleAgentsComparator(Two_AgentsComparator):
             )
         self.decisions = decisions
         return decisions
+    def _get_evals(self, manager):
+        """
+        Can be overwritten for alternative evaluation function.
+        """
+        eval_values = []
+        for idx in range(self.n):
+            logger.info("Evaluating agent " + str(idx))
+            eval_values.append(
+                np.mean(manager.eval_agents(self.n_evaluations, agent_id=idx))
+            )
+        return eval_values
+    def get_spending_fun(self):
+        """
+        Return the spending function corresponding to self.name
+        should be an increasing function f such that f(0)=0 and f(1)=alpha
+        """
+        if self.name == "PK":
+            return lambda p: self.alpha * np.log(1 + np.exp(1) * p - p)
+        elif self.name == "OF":
+            return lambda p: 2 - 2 * stats.norm.cdf(
+                stats.norm.ppf(1 - self.alpha / 2) / np.sqrt(p)
+            )
+        else:
+            raise RuntimeError("name not implemented")
