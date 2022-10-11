@@ -587,7 +587,10 @@ class MultipleAgentsComparator():
         id_tracked = np.arange(len(decisions))
         for k in range(self.K):
             managers = []
-            for agent_class, kwargs, seeder in zip(agent_classes, kwargs_list, seeders):
+            for i in range(len(agent_classes)):
+                agent_class = agent_classes[i]
+                kwargs = kwargs_list[i]
+                seeder = seeders[i]
                 managers.append(AgentManager(agent_class, **kwargs, seed=seeder))
                 managers[-1].fit()
 
