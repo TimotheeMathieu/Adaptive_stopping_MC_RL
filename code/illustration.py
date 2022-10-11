@@ -91,3 +91,5 @@ if __name__ == "__main__":
     print(comparator.decisions,
           comparator.comparisons,
           comparator.rejected_decision)
+
+    print('Evaluations are',comparator.eval_values)
