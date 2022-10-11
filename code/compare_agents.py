@@ -350,7 +350,7 @@ class Two_AgentsComparator:
         boundary = [ norm.ppf(1-alphas[0])]
 
         # computation of b_k, k > 1
-        for k in tqdm(range(1,self.K)):
+        for k in range(1,self.K):
             res = 0
             values = []
             for m in range(M):
@@ -361,7 +361,7 @@ class Two_AgentsComparator:
             boundary.append(np.quantile(values, 1-(alphas[k]-alphas[k-1])))
 
         return boundary
-    def power(self, M=100000, mup, muq, sigmap, sigmaq):
+    def power(self, M, mup, muq, sigmap, sigmaq):
         """
         Estimation of the power using M MC estimation. mup, muq are the mean of the two agents and sigmap, sigmaq are their respective stds.
         """
@@ -568,7 +568,7 @@ class MultipleAgentsComparator():
         n_managers = len(managers)
         if comparisons is None:
             comparisons = np.array([(i,j) for i in range(n_managers) for j in range(n_managers) if i<j])
-
+        self.comparisons = comparisons
         X = [ np.array([]) for _ in comparisons]
         Z = [ np.array([]) for _ in comparisons]
 
@@ -620,7 +620,9 @@ class MultipleAgentsComparator():
                 "Did not reject all the null hypothesis: either K, n are too small or the agents perform similarly"
             )
         self.decisions = decisions
+        self.eval_values = Z
         return decisions
+
     def _get_evals(self, manager):
         """
         Can be overwritten for alternative evaluation function.
