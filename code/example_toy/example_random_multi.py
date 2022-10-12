@@ -11,6 +11,8 @@ import numpy as np
 from tqdm import tqdm
 from joblib import Parallel, delayed
 
+from rlberry.utils.logging import set_level
+set_level('ERROR')
 
 # GST definition
 
@@ -51,7 +53,7 @@ if __name__ == "__main__":
         RandomAgent,
         dict(
             train_env=(DummyEnv, {}),
-            init_kwargs={"drift": 0},
+            init_kwargs={"drift": k},
             fit_budget=1,
             agent_name="Agent1",
         ),
@@ -68,6 +70,8 @@ if __name__ == "__main__":
         comparator = MultipleAgentsComparator(n, K,B,  alpha, seed=seed)
         comparator.compare(managers)
         return comparator.decisions
-    res = Parallel(n_jobs=6, backend="multiprocessing")(delayed(decision)(i) for i in tqdm(range(500)))
+    #res = Parallel(n_jobs=6, backend="multiprocessing")(delayed(decision)(i) for i in tqdm(range(500)))
+    res = [decision(i) for i in tqdm(range(500))]
+
     idxs = [ 'reject' in a for a in res]
     print("proba to reject", np.mean(idxs))
