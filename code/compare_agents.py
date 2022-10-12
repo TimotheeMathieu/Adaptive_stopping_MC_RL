@@ -16,8 +16,9 @@ from rlberry.utils.writers import DefaultWriter
 import itertools
 
 from tqdm import tqdm
-# logger = rlberry.logger
+
 logger = logging.getLogger()
+
 
 # TO DO:
 # * Be careful about ties
@@ -298,6 +299,8 @@ class Two_AgentsComparator:
         self.eval_2 = Z[X == 1]
         self.agent1_name = m1.agent_name
         self.agent2_name = m2.agent_name
+        self.eval_values = Z
+        self.affectations = X
 
         self.p_val = p_val
         logger.info("p value is " + str(p_val))
@@ -442,7 +445,7 @@ class MultipleAgentsComparator():
             for _ in range(self.B):
                 sum_diff = []
                 for i, comp in enumerate(comparisons):
-                    Zi = Z[i][ : (2 * self.n)]
+                    Zi = np.hstack([Z[comp[0]][ :  self.n], Z[comp[1]][ :  self.n]])
                     id_pos = self.rng.choice(2 * self.n, self.n, replace=False)
                     mask = np.zeros(2 * self.n)
                     mask[list(id_pos)] = 1
@@ -463,7 +466,7 @@ class MultipleAgentsComparator():
             for j in range(len(self.sum_diffs)):
                 id_pos = self.rng.choice(2 * self.n, self.n, replace=False)
                 for i, comp in enumerate(comparisons):
-                    Zk = Z[i][(k * 2 * self.n) : ((k + 1) * 2 * self.n)]
+                    Zk = np.hstack([Z[comp[0]][(k* self.n) : ((k+1)* self.n)], Z[comp[1]][(k* self.n) :  ((k+1)*self.n)]])
                     mask = np.zeros(2 * self.n)
                     mask[list(id_pos)] = 1
                     mask = mask == 1
@@ -471,7 +474,7 @@ class MultipleAgentsComparator():
 
         return self.sum_diffs
 
-    def partial_compare(self, Z, X, comparisons,  k):
+    def partial_compare(self, Z,  comparisons,  k):
         """
         Do the test of the k^th interim.
 
@@ -479,8 +482,6 @@ class MultipleAgentsComparator():
         ----------
         Z: array of size n_comparisons x 2*self.n*(k+1)
             Concatenation All the evaluations of Agent 1 and Agent2 up till interim k
-        X: array of size n_comparisons x 2*self.n*(k+1)
-            {0,1} array with the affectation of each value of Z to either Agent 1 (0) or Agent 2 (1)
         k: int
             index of the interim, in {0,...,K-1}
 
@@ -501,7 +502,8 @@ class MultipleAgentsComparator():
 
         rs = np.abs(np.array(self.compute_sum_diffs(k, Z, comparisons, self.boundary)))
         decisions = np.array(['continue']*len(comparisons))
-        print(np.shape(rs), len(decisions))
+
+        print('Step {}'.format(k))
         for j in range(len(decisions)):
             rs_now = rs[:, decisions == 'continue']
             values = np.sort(
@@ -532,17 +534,22 @@ class MultipleAgentsComparator():
             T = 0
             Tsigned = 0
             for i, comp in enumerate(comparisons[decisions == 'continue']):
-                Tj = np.abs(np.sum(Z[i] * (-1) ** X[i]))
-                if Tj > T:
-                    T = Tj
-                    jmax = j
-                    Tsigned = np.sum(Z[i] * (-1) ** X[i])
+                Ti = np.abs(np.sum(Z[comp[0]][:((k+1)* self.n)]- Z[comp[1]][:((k+1)*self.n)]))
+                if Ti > T:
+                    T = Ti
+                    imax = i
+                    Tsigned = np.sum(Z[comp[0]][:((k+1)* self.n)]- Z[comp[1]][:((k+1)*self.n)])
 
             if T > bk :
-                decisions[jmax] = 'reject'
-                self.rejected_decision.append((comparisons[jmax], Tsigned>0))
+                id_reject = np.arange(len(decisions))[decisions == 'continue'][imax]
+                decisions[id_reject] = 'reject'
+                self.rejected_decision.append(comparisons[imax])
             else:
                 break
+
+        import pdb; breakpoint()
+
+
 
         self.boundary.append(bk)
 
@@ -569,8 +576,7 @@ class MultipleAgentsComparator():
         if comparisons is None:
             comparisons = np.array([(i,j) for i in range(n_managers) for j in range(n_managers) if i<j])
         self.comparisons = comparisons
-        X = [ np.array([]) for _ in comparisons]
-        Z = [ np.array([]) for _ in comparisons]
+        Z = [ np.array([]) for _ in managers]
 
         agent_classes = [ manager[0] for manager in managers]
         kwargs_list = [ manager[1] for manager in managers]
@@ -596,26 +602,29 @@ class MultipleAgentsComparator():
 
             self.n_iter += n_managers * self.n
 
-            for i, comp in enumerate(comparisons):
-                Z[i] = np.hstack([Z[i], self._get_evals(managers[comp[0]]), self._get_evals(managers[comp[1]])])
-                X[i] = np.hstack([X[i], np.zeros(self.n), np.ones(self.n)])
-            self.decisions, T, bk = self.partial_compare(Z, X, comparisons, k)
+            for i, manager in enumerate(managers):
+                Z[i] = np.hstack([Z[i], self._get_evals(manager)])
+
+
+            self.decisions, T, bk = self.partial_compare(Z,  comparisons, k)
 
             self.test_stats.append(T)
             if clean_after:
                 for m in managers:
                     m.clear_output_dir()
 
+            id_rejected = np.array(self.decisions) == 'reject'
+            decisions[id_tracked[id_rejected]]='reject'
+            id_tracked = id_tracked[~id_rejected]
+            comparisons = comparisons[~id_rejected]
+            self.sum_diffs = np.array(self.sum_diffs)[:, ~id_rejected]
+
             if np.all(self.decisions == "reject"):
                 logger.info("Reject all the null after " + str(k + 1) + " groups")
                 break
             else:
                 logger.info("Rejected "+str(np.sum(np.array(self.decisions) == "reject"))+" on interim " + str(k + 1))
-                id_rejected = np.array(self.decisions) == 'reject'
-                decisions[id_tracked[id_rejected]]='reject'
-                id_tracked = id_tracked[~id_rejected]
-                comparisons = comparisons[np.array(self.decisions) == "continue"]
-                self.sum_diffs = np.array(self.sum_diffs)[:,np.array(self.decisions) == "continue"]
+
 
         if (k == self.K-1):
             decisions[decisions == 'continue']="accept"
@@ -624,6 +633,7 @@ class MultipleAgentsComparator():
             )
         self.decisions = decisions
         self.eval_values = Z
+        self.mean_eval_values = np.mean(Z, axis = 1)
         return decisions
 
     def _get_evals(self, manager):
