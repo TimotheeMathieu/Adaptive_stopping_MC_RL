@@ -431,7 +431,6 @@ class MultipleAgentsComparator():
         self.boundary = []
         self.test_stats = []
         self.level_spent = 0
-        self.n_iter = 0
         self.seeder = Seeder(seed)
         self._writer = DefaultWriter("Comparator")
         self.rejected_decision = []
@@ -585,6 +584,7 @@ class MultipleAgentsComparator():
 
         # Initialization of the permutation distribution
         self.sum_diffs = []
+        self.n_iters = [0]*len(managers)
 
         # spawn independent seeds, one for each fit and one for the comparator.
         seeders = self.seeder.spawn(len(managers) * self.K + 1)
@@ -592,25 +592,23 @@ class MultipleAgentsComparator():
         decisions = np.array(["continue"]*len(comparisons))
         id_tracked = np.arange(len(decisions))
         for k in range(self.K):
-            managers = []
+            managers_in = []
             for i in range(len(agent_classes)):
-                agent_class = agent_classes[i]
-                kwargs = kwargs_list[i]
-                seeder = seeders[i]
-                managers.append(AgentManager(agent_class, **kwargs, seed=seeder))
-                managers[-1].fit()
-
-            self.n_iter += n_managers * self.n
-
-            for i, manager in enumerate(managers):
-                Z[i] = np.hstack([Z[i], self._get_evals(manager)])
+                if i in np.array(comparisons).ravel():
+                    agent_class = agent_classes[i]
+                    kwargs = kwargs_list[i]
+                    seeder = seeders[i]
+                    managers_in.append( AgentManager(agent_class, **kwargs, seed=seeder))
+                    managers_in[-1].fit()
+                    self.n_iters[i]+=self.n
+                    Z[i] = np.hstack([Z[i], self._get_evals(managers_in[-1])])
 
 
             self.decisions, T, bk = self.partial_compare(Z,  comparisons, k)
 
             self.test_stats.append(T)
             if clean_after:
-                for m in managers:
+                for m in managers_in:
                     m.clear_output_dir()
 
             id_rejected = np.array(self.decisions) == 'reject'
@@ -633,7 +631,7 @@ class MultipleAgentsComparator():
             )
         self.decisions = decisions
         self.eval_values = Z
-        self.mean_eval_values = np.mean(Z, axis = 1)
+        self.mean_eval_values = [np.mean(z) for z in Z]
         return decisions
 
     def _get_evals(self, manager):
