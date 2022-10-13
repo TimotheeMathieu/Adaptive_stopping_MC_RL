@@ -542,7 +542,7 @@ class MultipleAgentsComparator():
             if T > bk :
                 id_reject = np.arange(len(decisions))[decisions == 'continue'][imax]
                 decisions[id_reject] = 'reject'
-                self.rejected_decision.append(comparisons[imax])
+                self.rejected_decision.append(comparisons[id_reject])
             else:
                 break
 
