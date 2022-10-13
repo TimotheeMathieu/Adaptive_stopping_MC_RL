@@ -19,7 +19,7 @@ Example of plot describing the process of monitoring an evaluation statistic dur
 - [ ] Do comparison with other methods in the litterature
 - [ ] Do the simulation studies
 - [ ] Do the empirical studies.
-
+- [ ] Possible improvement: adapt Tukey's significant difference for a more performant (and non-pairwise) Multiple testing scheme. Much harder to have theoretical results on this.
 ## Refs:
 - Permutation test https://www.jstor.org/stable/2533442?seq=1
 - Stats in RL 1: https://arxiv.org/pdf/1806.08295.pdf
