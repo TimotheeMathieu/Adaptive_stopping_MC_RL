@@ -112,16 +112,40 @@ An illustration of the group sequential test is given in figure~\ref{fig:gst}. T
 
 \todoT{For now, the illustration is done using toy model, with gaussian of drift 0.7. Real agent would be better.}
 
-\subsubsection{High level description of the algorithm}
-
-We consider the following statistic:
-$$w_i=e_i(2A_i-1)=\sum_{j=1}^{ni} e_{i,j}(2A_{i,j}-1),$$
-i.e. we affect the sign $+1$ or $-1$ to the evaluations, initially the sign $+1$ is affected to Agent 1 and $-1$ to Agent 2 so that we effectively compute the difference between the mean evaluation of Agent 1 and the mean evaluation of Agent 2. For all possible values of $A_i\in \Gamma_i$.
 
 \subsection{Speeding up permutation tests}
 We use Monte-Carlo approximation, using random permutation instead of enumerating all the permutations.
 
-\subsection{Asymptotic study}
+\section{Multiple testing}
+\subsection{Case of non-sequential permutation test}
+When dealing with multiple testing, particular care must be taken so as not to decrease the error of the test. Suppose that we want to test $H_j$ versus $H_j'$ for $1\le j\le J$ using a test statistic $T_{n}^{(j)}$. Instead of the type I error considered in two-sample testing, we consider the family-wise error rate (FWE) which is defined as the probability of making at least one type I error:
+$$\mathrm{FWE} = \P_{H_1,\dots,H_J}\left(\exists 1\le j\le J:\quad  \text{reject }H_j \right).$$
+
+\paragraph{Bonferroni procedure:} a first approach is obtained by taking a threshold for $H_j$ vs $H_j'$ equal to a quantile of order $1-\alpha/J$ of the permutation distribution of $T_n^{(j)}$, this is the Bonferroni procedure and it can be very conservative.
+
+\paragraph{Step-down procedure:} another approach proposed by \cite{Romano_2003} is to consider a step-down procedure defined as follows: for some $\textbf{K} \subset \{1,\dots,J\}$, denote
+$$T_{n}^{(\textbf{K})}(\sigma)= \max\left(T_n^{(j)}(\sigma),\quad j \in \textbf{K}\right)$$
+
+\begin{algorithm}[h]
+\SetAlgoLined
+\SetKwInput{KwParameter}{Parameters}
+\KwParameter{$\alpha \in (0,1)$}
+Initialize $\textbf{K}=\{1,\dots,J\}$\\
+\While{$\textbf{K} \neq \emptyset$}{
+Compute $\widehat{c}_{n}^{(\textbf{K})}(1-\alpha)$ the quantile of order $1-\alpha$ of the permutation law of $T_{n}^{(\textbf{K})}(\sigma)$:
+$$\sum_{\sigma \in S_n} \1\{T_{n}^{(\textbf{K})}(\sigma) \ge  \widehat{c}_{n}^{(\textbf{K})}(1-\alpha)\} = \lfloor \alpha n! \rfloor .$$
+\If{$T_{n}^{(\textbf{K})}(\mathrm{id}) \le \widehat{c}_{n}^{(\textbf{K})}(1-\alpha)$}{
+Accept all the hypotheses $H_j, j\in \textbf{K}$ and break the loop.}
+\Else{
+Reject $H_{j_{\max}}$ where $j_{\max} =  \argmax\left(T_n^{(j)}(\sigma),\quad j \in \textbf{K}\right)$.\\
+Define $\textbf{K}=\textbf{K} \setminus \{j_{max}\}$
+}
+}
+If the test was never rejected, return accept. Else return reject.
+\caption{Adaptive Stopping.}\label{alg:multiple_test_1}
+\end{algorithm}
+The Algorithm~\ref{alg:multiple_test_1} is consistent (i.e. $\mathrm{FWE}\le \alpha$) for the equality of distribution hypotheses.
+\section{Asymptotic study}
 \subsection{Case of a non-sequential permutation test}
 
 Foor a sample $Z_1^n=(Z_1,\dots,Z_n)$, denote $\sigma Z_1^n$ the permuted sample using the permutation $\sigma$: $\sigma Z_1^n=(Z_{\sigma(1)},\dots,Z_{\sigma(n)})$.\\
@@ -135,8 +159,8 @@ $$\sup_{t}\left|\frac{1}{n!}\sum_{\sigma \in S_n} \1\{T_n(\sigma Z_{1}^{2n}) \le
 where $\tau(P,Q)^2=\sigma_P^2+\sigma_Q^2+\frac{(\mu_P- \mu_Q)^2}{2} $.
 \end{Proposition}
 Remark: this proposition can be extended to other $T_n$ statistics using Theorem 2.1 in \cite{Chung_2013} or Theorem 15.2.5 of \cite{lehmann2005testing}.
-\todoT{Maybe I could do an edgeworth expansion to show that the convergence is with speed $1/n$ (under $H_0$ ?) because of the symmetry of $T$. Using \cite{Romano_1990} and \cite[Theorem 7]{Petrov_1975}. The expansion could be used to derive an approximation of the power that could be used to set K beforehand.}
-\todoT{Another possible interesting result would be to show how many random permutations we need to estimate the true permutation distribution. Concentration inequalities could be used here.}
+%\todoT{Maybe I could do an edgeworth expansion to show that the convergence is with speed $1/n$ (under $H_0$ ?) because of the symmetry of $T$. Using \cite{Romano_1990} and \cite[Theorem 7]{Petrov_1975}. The expansion could be used to derive an approximation of the power that could be used to set K beforehand.}
+%\todoT{Another possible interesting result would be to show how many random permutations we need to estimate the true permutation distribution. Concentration inequalities could be used here.}
 
 Using Proposition~\ref{prop:asym_perm_test}, we have that the empirical quantile defined by
 $$Q_{1-\alpha}(T_n) = \inf\left\{t \in \R:\quad \frac{1}{n!}\sum_{\sigma \in S_n} \1\{T_n(\sigma Z_{1}^{2n}) \le t\} \ge 1-\alpha\right\} $$
@@ -158,19 +182,17 @@ Example: suppose we want to detect a drift $\mu_P-\mu_Q=\sqrt{\sigma_P^2+\sigma_
 
 \subsection{Permutation Group Sequential tests}
 
-
-
-Denote $E_{i}^{i+j}=(E_i, E_{i+1},\dots, E_{i+j})$ and let $T_n(Z_1,\dots,Z_{2n})=\frac{1}{n}\sum_{i=1}^n Z_i -\frac{1}{n}\sum_{i=n+1}^{2n} Z_i$. Denote by
-$$\widehat{R}_{n,k}(t)=\frac{1}{n!}\sum_{\sigma \in S_{2n}} \1\{\sqrt{n}T_n(\sigma E_{2nk}^{2n(k+1)}) \le t\} $$
+Denote $S_{i}^{i+j}=(S_i, S_{i+1},\dots, S_{i+j})$ and let $T_n(S_1^n)=T(S_1,\dots,S_{2n})=\frac{1}{\sqrt{n}}\sum_{i=1}^n S_i -\frac{1}{n}\sum_{i=n+1}^{2n} S_i$. Denote by
+$$\widehat{R}_{n,k}(t)=\frac{1}{n!}\sum_{\sigma \in S_{2n}} \1\{\sqrt{n}T_n(\sigma S_{2nk}^{2n(k+1)}) \le t\} $$
 the randomization distribution of $T_n$ where for any permutation $\sigma \in S_n$,
-$$\sigma E_{2nk}^{2n(k+1)}=(E_{\sigma(2nk)},E_{\sigma(2nk+1)},\dots,E_{\sigma(2n(k+1))})$$
+$$\sigma S_{2nk}^{2n(k+1)}=(S_{\sigma(2nk)},S_{\sigma(2nk+1)},\dots,S_{\sigma(2n(k+1))})$$
 is the sample permuted using $ \sigma$.
 
 
 % We have
 % \begin{align*}
-% \prod_{k=1}^K \widehat{R}_{n,k}(t_k) &=\frac{1}{(n!)^K}\sum_{\sigma_1,\dots,\sigma_K \in S_{2n}} \prod_{k=1}^K \1\{\sqrt{n}T_n(\sigma E_{2nk}^{2n(k+1)}) \le t_k\} \\
-% &=\frac{1}{(n!)^K}\sum_{\sigma_1,\dots,\sigma_K \in S_{2n}}  \1\{ \forall 1\le k\le K, \quad \sqrt{n} T_n(\sigma E_{2nk}^{2n(k+1)}) \le t_k\}
+% \prod_{k=1}^K \widehat{R}_{n,k}(t_k) &=\frac{1}{(n!)^K}\sum_{\sigma_1,\dots,\sigma_K \in S_{2n}} \prod_{k=1}^K \1\{\sqrt{n}T_n(\sigma S_{2nk}^{2n(k+1)}) \le t_k\} \\
+% &=\frac{1}{(n!)^K}\sum_{\sigma_1,\dots,\sigma_K \in S_{2n}}  \1\{ \forall 1\le k\le K, \quad \sqrt{n} T_n(\sigma S_{2nk}^{2n(k+1)}) \le t_k\}
 % \end{align*}
 % We have
 % \begin{align*}
@@ -185,47 +207,61 @@ is the sample permuted using $ \sigma$.
 \textbf{Convergence of the boundary}
 
 Notation:
-$$T_{n,k}(\sigma)=T_n\left(\sigma E_{2nk+1}^{2n(k+1)}\right) $$
+$$T_{n,k}(\sigma)=T_n\left(\sigma S_{2nk+1}^{2n(k+1)}\right) $$
 is the difference of the means on the $k^{th}$ bloc when the block have been permuted using $\sigma$.
 
-Remark that on the first step, because the conditional distribution of $T_n(\sigma E_1^{2n})$ knowing $E_1^{2n}$ is symmetric, there is no need to compute the lower boundary and the decision can be made solely by testing $|T_n(E_1^{2n})|\ge B_1$ for some $B_1$. The same reasoning can be used for the remaining steps.
+Remark that on the first step, because the conditional distribution of $T_n(\sigma S_1^{2n})$ knowing $S_1^{2n}$ is symmetric, there is no need to compute the lower boundary and the decision can be made solely by testing $|T_n(S_1^{2n})|\ge B_1$ for some $B_1$. The same reasoning can be used for the remaining steps.
 
 The boundary are the minimal values of $B_1,\dots, B_K$ such that
 
-$$\P_{\sigma_1}(n|T_{n,1}(\sigma_1)|\ge B_1\sqrt{n}) = q_1 \le \alpha\left(\frac{1}{K}\right) $$
+$$\P_{\sigma_1}(|T_{n,1}(\sigma_1)|\ge B_1) = q_1 \le \alpha\left(\frac{1}{K}\right) $$
 
-$$\P_{\sigma_1^2}\left( \sqrt{n}|T_{n,2}(\sigma_2)+T_{n,1}(\sigma_1)|\ge  B_2\sqrt{n},\quad  n|T_{n,1}(\sigma_1)|\le  B_1\sqrt{n}  \right)+q_1 = q_2 \le\alpha\left(\frac{2}{K}\right) $$
+$$\P_{\sigma_1^2}\left( \frac{1}{2}|T_{n,2}(\sigma_2)+T_{n,1}(\sigma_1)|\ge  B_2\sqrt{n},\quad  |T_{n,1}(\sigma_1)|\le  B_1\sqrt{n}  \right)+q_1 = q_2 \le\alpha\left(\frac{2}{K}\right) $$
 More generally, for any $2\le k\le K$,
 \begin{equation}\label{eq:def_Bk}
-\P_{\sigma_1^k}\left(n\left|\sum_{j=0}^k T_{n,j}(\sigma_j)\right|\ge B_{k} \sqrt{n}, \quad \forall i < k,\,  n\left|\sum_{j=0}^i T_{n,j}\left(\sigma_j\right)\right|\le  B_i\sqrt{n}  \right)+\sum_{j=1}^{k-1}q_j  = q_k \le\alpha\left(\frac{k}{K}\right).
+\P_{\sigma_1^k}\left(\left|\frac{1}{k}\sum_{j=0}^k T_{n,j}(\sigma_j)\right|\ge B_{k}, \quad \forall i < k,\,  n\left|\frac{1}{i}\sum_{j=0}^i T_{n,j}\left(\sigma_j\right)\right|\le  B_i\right)+\sum_{j=1}^{k-1}q_j  = q_k \le\alpha\left(\frac{k}{K}\right).
 \end{equation}
-Remark that $B_k$ is deterministic conditionally on the values of $E_1,\dots,E_{2nk}$. Hence it is deterministic with respect to the random permutation $\sigma$, but it still depends on $n$ and the values of $E_i$.
+Remark that $B_k$ is deterministic conditionally on the values of $S_1,\dots,S_{2nk}$. Hence it is deterministic with respect to the random permutation $\sigma$, but it still depends on $n$ and the values of $S_i$.
 
 \begin{Theorem}\label{th:conv_boundary}
 We have that for any $1\le k\le K$, $B_k\xrightarrow[n \to \infty]{}b_k$ where the real numbers $b_k$ are defined as follows. Let $W_1,\dots, W_K$ be i.i.d random variable with law $\mathcal{N}(0,1)$, then $b_1$ is the solution of the following equation:
-$$ \P\left(\left|W \right|\ge \frac{b_1}{\tau(P,Q)}  \right)=\alpha\left( \frac{1}{K} \right),$$
+$$ \P\left(\left|W_1 \right|\ge \frac{b_1}{\tau(P,Q)}  \right)=\alpha\left( \frac{1}{K} \right),$$
 and for any $1<k\le K$, $b_k$ is solution of
 \begin{equation*}
-\P\left( \left|\sum_{j=1}^k W_j\right| > \frac{b_l}{\tau(P,Q)}, \quad \forall j<k,\, \left|\sum_{i=1}^j W_i\right| \le \frac{b_j}{\tau(P,Q)} \right)=\alpha\left(\frac{k}{K} \right) - \alpha\left( \frac{k-1}{K}\right).
+\P\left( \left|\frac{1}{k}\sum_{j=1}^k W_j\right| > \frac{b_l}{\tau(P,Q)}, \quad \forall j<k,\, \left|\frac{1}{j}\sum_{i=1}^j W_i\right| \le \frac{b_j}{\tau(P,Q)} \right)=\alpha\left(\frac{k}{K} \right) - \alpha\left( \frac{k-1}{K}\right).
 \end{equation*}
 
 \end{Theorem}
 In short, Theorem~\ref{th:conv_boundary} tells us that asymptotically, the group sequential test behaves like a sequential test on Gaussians in which the boundary is set to spend the level $\alpha$ exactly as predicted by the level-spending function. There are several consequences of this theorem.
-
+\todoT{Show this properly with lemmas and proving everything}
 \begin{itemize}
- \item Asymptotically, the test $H_0:\mu_X = \mu_Y$ vs $H_1:\mu_X \neq \mu_Y$ has level $\alpha$ because under $H_0$, $\tau(P,Q)^2=\sigma_P^2+\sigma_Q^2$ and $T_n(\mathrm{id} E_1^{2n})=\frac{1}{\sqrt{n}}\left(\sum_{i=1}^n E_i - \sum_{i=n+1}^{2n} E_i\right)$ converges to $\mathcal{N}(0,\sigma_X^2+\sigma_Y^2)$. Hence the boundary correspond to the appropriate law.
+ \item Asymptotically, the test $H_0:\mu_X = \mu_Y$ vs $H_1:\mu_X \neq \mu_Y$ has level $\alpha$ because under $H_0$, $\tau(P,Q)^2=\sigma_P^2+\sigma_Q^2$ and $T_n(\mathrm{id} S_1^{2n})=\frac{1}{\sqrt{n}}\left(\sum_{i=1}^n S_i - \sum_{i=n+1}^{2n} S_i\right)$ converges to $\mathcal{N}(0,\sigma_X^2+\sigma_Y^2)$. Hence the boundary correspond to the appropriate law.
  \item Under $H_1:\mu_P \neq \mu_Q$, we have an expression of the asymptotic boundary. On the other hand, we also have that
-$$T_n(\mathrm{id}E_1^{2n}) =\frac{1}{\sqrt{n}}\left(\sum_{i=1}^n E_i - \sum_{i=n+1}^{2n} E_i\right) = \frac{1}{\sqrt{n}}\left(\sum_{i=1}^n (E_i-\mu_X) - \sum_{i=n+1}^{2n} (E_i-\mu_Y)   + n (\mu_X-\mu_Y)\right)$$
-Hence, the test statistics is equivalent to $\sqrt{n}(\mu_X-\mu_Y)$ asymptotically. This gives us a way to choose $n$ and $K$ to have a given power. This also show that the test is consistent in the sense that the power converges to $1$ as $n$ goes to infinity.
+$$T_n(\mathrm{id}S_1^{2n}) =\frac{1}{\sqrt{n}}\left(\sum_{i=1}^n S_i - \sum_{i=n+1}^{2n} S_i\right) = \frac{1}{\sqrt{n}}\left(\sum_{i=1}^n (S_i-\mu_X) - \sum_{i=n+1}^{2n} (S_i-\mu_Y)   + n (\mu_X-\mu_Y)\right)$$
+Hence, because the convergence in the CLT is uniform, we have
+$$\P\left( T_n(\mathrm{id}S_1^{2n}) \le B_1\right) = \Phi\left(\frac{B_1-\sqrt{n}(\mu_X-\mu_Y)}{\sqrt{\sigma_X^2+\sigma_Y^2}}\right) + o_P(1).$$
+Then, by Theorem~\ref{th:conv_boundary},
+$$\P\left( T_n(\mathrm{id}S_1^{2n}) \le B_1\right) = \Phi\left(\frac{b_1+o_P(1)-\sqrt{n}(\mu_X-\mu_Y)}{\sqrt{\sigma_X^2+\sigma_Y^2}}\right) + o_P(1) =\Phi\left(\frac{b_1-\sqrt{n}(\mu_X-\mu_Y)}{\sqrt{\sigma_X^2+\sigma_Y^2}}\right) + o_P(1)$$
+Then, repeating the same reasoning on $\P\left( T_n(\mathrm{id}S_1^{2n}) \ge - B_1\right)$, we obtain, the probability to reject at the first interim given by
+$$\P\left( |T_n(\mathrm{id}S_1^{2n})| > B_1\right) = \P\left( \left|W_1\sqrt{\sigma_X^2+\sigma_Y^2}-\sqrt{n}(\mu_X-\mu_Y)\right|\ge b_1\right) + o_P(1).$$
+Proceeding similarly, we have that there exists $W_1,\dots,W_K$ i.i.d. $\mathcal{N}(0,1)$ random variables such that
+$$\P\left( \exists k \le K:\, \left|\frac{1}{k}\sum_{j=1}^k T_{n,j}(\mathrm{id})\right| > B_k\right) =\P\left( \exists k \le K:\, \left|\frac{\sqrt{\sigma_X^2+\sigma_Y^2}}{k}\sum_{j=1}^kW_j + \sqrt{n}(\mu_X-\mu_Y)\right| > b_k\right) + o_P(1).$$
+This approximation of the power can be computed approximately using Monte-Carlo methods, using gaussian concentration inequality to know how many Monte-Carlo iteration are necessary to approximate the power.
+% One way to bound this is to state that
+% \begin{align*}
+% \P&\left( \exists k \le K:\, \left| \frac{\sqrt{\sigma_X^2+\sigma_Y^2}}{k}\sum_{j=1}^kW_j + \sqrt{n}(\mu_X-\mu_Y)\right| > b_k\right)\\
+% & \ge  \P\left( \exists k \le K:\,\left| \frac{\sqrt{\sigma_X^2+\sigma_Y^2}}{k}\sum_{j=1}^kW_j \right|  < -b_k+\sqrt{n}|\mu_X-\mu_Y|\right)\\
+% & \ge  \P\left(  \frac{\sqrt{\sigma_X^2+\sigma_Y^2}}{K}\left|\sum_{j=1}^KW_j \right| +b_K < \sqrt{n}|\mu_X-\mu_Y|\right)\\
+% \end{align*}
+
 \end{itemize}
-\todoT{Rk: an asymptotic expansion would be good for the power computation}
 \section{Proof of Theorem~\ref{th:conv_boundary}}
 \paragraph{Convergence of $B_1$}
-$$B_1 = \min \left\{ b>0 : \P_\sigma(\sqrt{n}|T_{n,1}(\sigma_1)|\ge b) \le \alpha\left(\frac{1}{K}\right)\right\} $$
+$$B_1 = \min \left\{ b>0 : \P_\sigma(|T_{n,1}(\sigma_1)|\ge b) \le \alpha\left(\frac{1}{K}\right)\right\} $$
 This implies
-$$\P_\sigma(\sqrt{n}|T_{n,1}(\sigma_1)|\le B_1) = \widehat{R}_{n,1}\left(B_1\right)-\widehat{R}_{n,1}\left(-B_1\right) \ge 1-\alpha\left( \frac{1}{K} \right) $$
+$$\P_\sigma(|T_{n,1}(\sigma_1)|\le B_1) = \widehat{R}_{n,1}\left(B_1\right)-\widehat{R}_{n,1}\left(-B_1\right) \ge 1-\alpha\left( \frac{1}{K} \right) $$
 and for any $b < B_1$, we have
-$$\P_\sigma(\sqrt{n}|T_{n,1}(\sigma_1)|\le b)=\widehat{R}_{n,1}\left(b\right)-\widehat{R}_{n,1}\left(b\right) < 1- \alpha\left( \frac{1}{K} \right) $$
+$$\P_\sigma(|T_{n,1}(\sigma_1)|\le b)=\widehat{R}_{n,1}\left(b\right)-\widehat{R}_{n,1}\left(b\right) < 1- \alpha\left( \frac{1}{K} \right) $$
 Then,
 \begin{align*}
 \Phi&\left( \frac{B_1}{\tau(P,Q)}\right)-\Phi\left(-\frac{B_1}{\tau(P,Q)}\right)\\
@@ -248,27 +284,27 @@ $$ \P\left(\left|W \right|\ge \frac{b_1}{\tau(P,Q)}  \right)=\alpha\left( \frac{
 We proceed by induction. Suppose that for all $l <k$, $B_l$ converges to $b_l$ defined by
 
 \begin{equation}\label{eq:induction_hyp}
-\P\left( \left|\sum_{j=1}^l W_j\right| > \frac{b_l}{\tau(P,Q)}, \quad \forall i<l,\, \left|\sum_{i=1}^j W_i\right| \le \frac{b_j}{\tau(P,Q)} \right)=\alpha\left(\frac{l}{K} \right) - \alpha\left( \frac{l-1}{K}\right).
+\P\left( \left|\frac{1}{l}\sum_{j=1}^l W_j\right| > \frac{b_l}{\tau(P,Q)}, \quad \forall j<l,\, \left|\frac{1}{j}\sum_{i=1}^j W_i\right| \le \frac{b_j}{\tau(P,Q)} \right)=\alpha\left(\frac{l}{K} \right) - \alpha\left( \frac{l-1}{K}\right).
 \end{equation}
 
 We have
-$$B_k = \min \left\{ b>0 : \P_{\sigma_1^k}\left(n\left|\sum_{j=0}^k T_{n,j}\left(\sigma_j\right)\right|\ge b \sqrt{n}, \quad \forall j < k,\,  n\left|\sum_{i=0}^j T_{n,i}\left(\sigma_i\right)\right|\le  B_j\sqrt{n}  \right)+\sum_{i=1}^{k-1}q_i \le\alpha\left(\frac{k}{K}\right)\right\}.$$
+$$B_k = \min \left\{ b>0 : \P_{\sigma_1^k}\left(\left|\frac{1}{k}\sum_{j=0}^k T_{n,j}\left(\sigma_j\right)\right|\ge b, \quad \forall j < k,\,  \left|\frac{1}{j}\sum_{i=0}^j T_{n,i}\left(\sigma_i\right)\right|\le  B_j  \right)+\sum_{i=1}^{k-1}q_i \le\alpha\left(\frac{k}{K}\right)\right\}.$$
 
 By the recurrence hypothesis, we have $q_i \xrightarrow[n \to \infty]{}\alpha\left( \frac{i}{K} \right)-\alpha\left( \frac{i-1}{K} \right)$ and $q_1\xrightarrow[n \to \infty]{}\alpha\left( \frac{1}{K} \right)$.
 
 Let $W_1,\dots,W_k$ be i.i.d $\mathcal{N}(0,1)$ random variables. Denote
-$$\Psi_k(b) = \P\left( \sum_{j=1}^k W_j \le \frac{b}{\tau(P,Q)}, \quad \forall i<k,\, \left|\sum_{i=1}^j W_i\right| \le \frac{b_j}{\tau(P,Q)} \right) $$
+$$\Psi_k(b) = \P\left( \frac{1}{k}\sum_{j=1}^k W_j \le \frac{b}{\tau(P,Q)}, \quad \forall j<k,\, \left|\frac{1}{j}\sum_{i=1}^j W_i\right| \le \frac{b_j}{\tau(P,Q)} \right) $$
 We will need the following lemma, proved in Section~\ref{sec:proof_lem_conv}.
 \begin{Lemma}\label{lem:convergence_conditional}
 Suppose Equation~\eqref{eq:induction_hyp} is true. Then,
-$$\sup_{b}\left|\P_{\sigma_1^{k}}\left(n\sum_{j=1}^k T_{n,j}\left(\sigma_j\right)\le b \sqrt{n}, \quad \forall j < k,\,  n\left|\sum_{i=1}^j T_{n,i}\left(\sigma_i\right)\right|\le  B_j\sqrt{n} \right)-\Psi_k(b) \right|\xrightarrow[n \to \infty]{}0$$
+$$\sup_{b}\left|\P_{\sigma_1^{k}}\left(\frac{1}{k}\sum_{j=1}^k T_{n,j}\left(\sigma_j\right)\le b \sqrt{n}, \quad \forall j < k,\,  \left|\frac{1}{j}\sum_{i=1}^j T_{n,i}\left(\sigma_i\right)\right|\le  B_j\sqrt{n} \right)-\Psi_k(b) \right|\xrightarrow[n \to \infty]{}0$$
 \end{Lemma}
 We have, conditionally on $B_k$,
 \begin{align*}
-\Psi_k(B_k)-\Psi_k(-B_k)\ge&  \P_{\sigma_1^{k}}\left(n\left|\sum_{j=1}^k T_{n,j}\left(\sigma_j\right)\right|\le B_k \sqrt{n}, \quad \forall j < k,\,  n\left|\sum_{i=1}^j T_{n,i}\left(\sigma_i\right)\right|\le  B_j\sqrt{n} \right)\\
-&+ 2 \sup_{b}\left|\P_{\sigma_1^{k}}\left(n\sum_{j=1}^k T_{n,j}\left(\sigma_j\right)\le b \sqrt{n}, \quad \forall j < k,\,  n\left|\sum_{i=1}^j T_{n,i}\left(\sigma_i\right)\right|\le  B_j\sqrt{n} \right)-\Psi_k(b) \right|\\
+\Psi_k(B_k)-\Psi_k(-B_k)\ge&  \P_{\sigma_1^{k}}\left(\left|\frac{1}{k}\sum_{j=1}^k T_{n,j}\left(\sigma_j\right)\right|\le B_k \sqrt{n}, \quad \forall j < k,\,  \left|\frac{1}{j}\sum_{i=1}^j T_{n,i}\left(\sigma_i\right)\right|\le  B_j \right)\\
+&+ 2 \sup_{b}\left|\P_{\sigma_1^{k}}\left(\frac{1}{k}\sum_{j=1}^k T_{n,j}\left(\sigma_j\right)\le b , \quad \forall j < k,\,  \left|\frac{1}{j}\sum_{i=1}^j T_{n,i}\left(\sigma_i\right)\right|\le  B_j \right)-\Psi_k(b) \right|\\
 &\ge 1-\left(\alpha\left( \frac{k}{K}\right)-\sum_{i=1}^{k-1}q_i\right) \\
-&+ 2 \sup_{b}\left|\P_{\sigma_1^{k}}\left(n\sum_{j=1}^k T_{n,j}\left(\sigma_j\right)\le b \sqrt{n}, \quad \forall j < k,\,  n\left|\sum_{i=1}^j T_{n,i}\left(\sigma_i\right)\right|\le  B_j\sqrt{n} \right)-\Psi_k(b) \right|
+&+ 2 \sup_{b}\left|\P_{\sigma_1^{k}}\left(\frac{1}{k}\sum_{j=1}^k T_{n,j}\left(\sigma_j\right)\le b , \quad \forall j < k,\,  \left|\frac{1}{j}\sum_{i=1}^j T_{n,i}\left(\sigma_i\right)\right|\le  B_j \right)-\Psi_k(b) \right|
 \end{align*}
 We use Lemma~\ref{lem:convergence_conditional} and the convergence of the $q_i$'s to conclude that
 $$\liminf_{n \to \infty}\Psi_k(B_k)-\Psi_k(-B_k) \ge 1-\left(\alpha\left( \frac{k}{K}\right)-\alpha\left( \frac{k-1}{K}\right)\right).$$
@@ -279,22 +315,23 @@ and by continuity of $\Psi_k$ we conclude that $B_k$ converges almost surely to 
 \section{Proof of Lemmas}
 \subsection{Proof of Lemma~\ref{lem:convergence_conditional}}\label{sec:proof_lem_conv}
 \begin{align*}
-\P_\sigma&\left(n\sum_{j=1}^k T_{n,j}\left(\sigma_j\right)\le b \sqrt{n}, \quad \forall j < k,\,  n\left|\sum_{i=1}^j T_{n,i}\left(\sigma_i\right)\right|\le  B_j\sqrt{n}  \right)\\
-&= \E_{\sigma_1^{k-1}} \left[ \P_{\sigma_k}\left(n\sum_{j=0}^k T_{n,j}\left(\sigma_j\right)\le b \sqrt{n}\right)\1\left\{ \forall j < k,\,  n\left|\sum_{i=1}^j T_{n,i}\left(\sigma_j\right)\right|\le  B_j\sqrt{n}\right\}\right]
+\P_\sigma&\left(\frac{1}{k}\sum_{j=1}^k T_{n,j}\left(\sigma_j\right)\le b , \quad \forall j < k,\,  \left|\frac{1}{j}\sum_{i=1}^j T_{n,i}\left(\sigma_i\right)\right|\le  B_j  \right)\\
+&= \E_{\sigma_1^{k-1}} \left[ \P_{\sigma_k}\left(\frac{1}{k}\sum_{j=0}^k T_{n,j}\left(\sigma_j\right)\le b \right)\1\left\{ \forall j < k,\,  \left|\frac{1}{j}\sum_{i=1}^j T_{n,i}\left(\sigma_j\right)\right|\le  B_j\right\}\right]
 \end{align*}
 Now, conditionally on the permutations $\sigma_1^{k-1}=\sigma_1,\dots,\sigma_{k-1}$, we have
 \begin{align*}
-\P_{\sigma_k}\left(n\sum_{j=0}^k T_{n,j}\left(\sigma_j\right)\le b \sqrt{n}\right) &= \P_{\sigma_k}\left(n T_{n,k}\left(\sigma_k\right)\le b \sqrt{n}-n\sum_{j=1}^{k-1}T_{n,j}\left(\sigma_j\right) \right)\\
-&= \widehat{R}_{n,k}\left(b \sqrt{n}-n\sum_{j=1}^{k-1}T_{n,j}\left(\sigma_j\right)\right)
+\P_{\sigma_k}\left(\frac{1}{k}\sum_{j=0}^k T_{n,j}\left(\sigma_j\right)\le b \sqrt{n}\right) &= \P_{\sigma_k}\left( \frac{1}{k}T_{n,k}\left(\sigma_k\right)\le b -\frac{1}{k}\sum_{j=1}^{k-1}T_{n,j}\left(\sigma_j\right) \right)\\
+&= \widehat{R}_{n,k}\left(bk-n\sum_{j=1}^{k-1}T_{n,j}\left(\sigma_j\right)\right)
 \end{align*}
 We have, because the convergence is uniform,
 \begin{align*}
-&\hspace{-3em}\left|\E_{\sigma_1^{k-1}} \left[ \P_{\sigma_k}\left(n\sum_{j=0}^k T_{n,j}\left(\sigma_j\right)\le b \sqrt{n}\right)\1\left\{ \forall j < k,\,  n\left|\sum_{i=1}^j T_{n,i}\left(\sigma_j\right)\right|\le  B_j\sqrt{n}\right\}\right]\right.\\
-&\hspace{-1em}\left.- \E_{\sigma_1^{k-1}} \left[ \Phi\left( b - \sqrt{n}\sum_{j=1}^{k-1}T_{n,j}(\sigma_j) \right)\1\left\{ \forall j < k,\,  n\left|\sum_{i=1}^j T_{n,i}\left(\sigma_j\right)\right|\le  B_j\sqrt{n}\right\}\right] \right|\\
-&\le \E_{\sigma_1^{k-1}} \left[ \left|\P_{\sigma_k}\left(n\sum_{j=0}^k T_{n,j}\left(\sigma_j\right)\le b \sqrt{n}\right)- \Phi\left( \frac{b - \sqrt{n}\sum_{j=1}^{k-1}T_{n,j}(\sigma_j) }{\tau(P,Q)}\right)\right|\right]\\
+&\hspace{-3em}\left|\E_{\sigma_1^{k-1}} \left[ \P_{\sigma_k}\left(\frac{1}{k}\sum_{j=0}^k T_{n,j}\left(\sigma_j\right)\le b\right)\1\left\{ \forall j < k,\,  \left|\frac{1}{j}\sum_{i=1}^j T_{n,i}\left(\sigma_j\right)\right|\le  B_j\right\}\right]\right.\\
+&\hspace{-1em}\left.- \E_{\sigma_1^{k-1}} \left[ \Phi\left( bk - \sum_{j=1}^{k-1}T_{n,j}(\sigma_j) \right)\1\left\{ \forall j < k,\,  \left|\frac{1}{j}\sum_{i=1}^j T_{n,i}\left(\sigma_j\right)\right|\le  B_j\right\}\right] \right|\\
+&\le \E_{\sigma_1^{k-1}} \left[ \left|\P_{\sigma_k}\left(\frac{1}{k}\sum_{j=0}^k T_{n,j}\left(\sigma_j\right)\le b \right)- \Phi\left( \frac{bk - \sum_{j=1}^{k-1}T_{n,j}(\sigma_j) }{\tau(P,Q)}\right)\right|\right]\\
+&= \E_{\sigma_1^{k-1}} \left[ \left|\P_{\sigma_k}\left( T_{n,k}\left(\sigma_k\right)\le bk - \sum_{j=1}^{k-1} T_{n,j}(\sigma_j) \right)- \Phi\left( \frac{bk - \sum_{j=1}^{k-1}T_{n,j}(\sigma_j) }{\tau(P,Q)}\right)\right|\right]\\
 &\le \sup_t \left|\widehat{R}_n(t)-\Phi\left( \frac{t}{\tau(P,Q)}\right)\right|  \xrightarrow[n \to \infty]{}0
 \end{align*}
-Finally, use that by hypothesis, $B_j \to b_j$ and $\sqrt{n}T_{n,j} \to W_j$ to conclude that the lemma is true by dominated convergence.
+Finally, use that by hypothesis, $B_j \to b_j$ and $T_{n,j} \to W_j$ to conclude that the lemma is true by dominated convergence.
 \todoT{Maybe explain this further}
 \newpage
 \section{Simulation study}
