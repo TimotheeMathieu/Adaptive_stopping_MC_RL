@@ -14,6 +14,7 @@
   headsep=25pt,
   footskip=30pt
 }
+\setlength{\parskip}{0.5em} % blank lines between paragraphs
 \usepackage{tikz}
 \usepackage{pgfplots}
 
@@ -44,9 +45,13 @@
 \usepackage{todonotes}
 \newcommand{\todoT}[1]{\todo[inline,color=blue!40]{{\textbf{T:}~}#1}}
 
+\usepackage{enumitem}
 
+% Have descriptions with italic and bullets:
+\setlist[description]{font=\normalfont\itshape\textbullet\space}
 % To include the section number in the equation numbering:
 \numberwithin{equation}{section}
+
 \title{Adaptive stopping in Monte-Carlo evaluation for Deep RL}
 \date{}
 \begin{document}
@@ -56,13 +61,34 @@ In Reinforcement Learning, we often use Monte-Carlo methods to evaluate the perf
 $$S(A)=\frac{1}{N}\sum_{i=1}^N e_i(A) $$
 where $e_1(A), \dots,e_N(A)$ are the evaluation of the algorithm $A$ on $N$ different seeds (i.e. $e_1(A),\dots,e_N(A)$ are supposed i.i.d).
 
-The goal of this article is to evaluate how high $N$ must be to have a good control on $S(A)$. In particular, when we compare two algorithms $A_1$ and $A_2$, how can we choose the value of $N$ that is large enough to compare $S(A_1)$ and $S(A_2)$? This is a trade-off between computational time and the need to assess correctly the scores of $A_1$ and $A_2$.
+\subsection{Goal and requirements for the algorithm}
 
-For now, we suppose that $e(A)$ is a continuous random variable, in particular $\P(e_i(A)=e_j(A))=0$ for any $i \neq j$.
+The goal of this article is, given two agents $A_1$ and $A_2$, to evaluate how high $N$ must be to be certain that either $\E[e_1(A_1)]=\E[e_2(A_2)]$ or $\E[e_1(A_1)]\neq \E[e_2(A_2)]$, i.e. do the two algorithms perform similarly or is one better than the other ? This is a trade-off between computational time and the need to assess correctly the scores of $A_1$ and $A_2$. The main properties that we want for our algorithm are as follows:
+
+\begin{description}
+\item[Multiprocessing] The algorithm should be able to treat batch of datas.
+\item[Non-Parametric] The algorithm should be non-parametric.
+\item[Fixed Budget] The algorithm should have a fixed maximum number of iterations used.
+\item[Sample efficient] The algorithm should stop as soon as possible in practice.
+\end{description}
+
+One algorithm that verifies all the properties listed above is a group sequential permutation test that we will describe in this article.
+
+\subsection{Alternative approaches}
+
+\paragraph{Fully Sequential testing}
+In the sequential testing setting, the data are handled one after the other, there is no batch of data. This is not adapted to our problem because in practice, one is often capable of training several agents in parallel, hence the evaluations are received by batch.
+
+\paragraph{SPR/GLR test}
+A particular class of sequential test often used are the Sequential Probability Ratio test and the Generalized Likelihood Ratio test. Both of these tests could be generalized to a group-sequential context but they both depend strongly on a parametric model for the data. However, the reward distribution of RL algorithms is often heavy-tail and multi-modal and as a consequence it is difficult to use a parametric model to represent all of them efficiently and simultaneously for several agents, each with a different reward distribution. Moreover, because we want to deal with small sample-sizes, the asymptotic of the central limit theorem is not adapted.
+
+\paragraph{Bandits (Best arm identification or Ranking)} Our objective is close to the objective of ranking bandits algorithms. However compared to bandits we want to at the same time \textit{minimize the stopping time} (similar to fixed-confidence setting) of the algorithm and have a \textit{fixed maximum budget} (similar to fixed-budget setting). In our algorithm we allow for a type I error of $\alpha \in (0,1)$, which is very similar to the fixed confidence setting while still having a fixed budget. Then, compared to the fixed budget setting we allow a larger error rate and as a consequence we are more sample efficient than bandits algorithms.
+
+
 
 \section{Adaptive stopping using Group Sequential Testing}
 \subsection{Group sequential testing}
-\todoT{Explain why must be careful when doing GST and that we can't just do several tests. Maybe also motivate using the confidence interval approach from NIPS article.}
+\todoT{Explain why must be careful when doing GIT and that we can't just do several tests. Maybe also motivate using the confidence interval approach from NIPS article.}
 
 To choose $N$ adaptively, we propose to use group sequential testing (GST). GST are used in particular in clinical trials in which case an early stopping is desirable when comparing two drugs. We choose to use GST in particular and not sequential testing because the data are often naturally grouped due to the parallelization of the computation.
 
@@ -71,6 +97,9 @@ GST often suppose strong models on the data, in particular it is often supposed 
 \todoT{Explain why several modes and give examples of distributions of DeepRL algos on classical environments. Ref https://arxiv.org/pdf/1806.08295.pdf on this also.}
 
 The presence of several modes in the distributions of the evaluations and the difficulty to make any distributional assumption justify a non-parametric approach of the problem, but to further justify this approach we did a study of the effect of model misspecification on simulated data when using Gaussian GST algorithm.
+
+
+For now, we suppose that $e(A)$ is a continuous random variable, in particular $\P(e_i(A)=e_j(A))=0$ for any $i \neq j$.
 
 \subsection{Algorithm}
 
@@ -97,11 +126,11 @@ If $k=K$ then accept the equality of the agents' evaluation, otherwise continue.
 }
 }
 If the test was never rejected, return accept. Else return reject.
-\caption{Adaptive Stopping.}\label{alg:adastop}
+\caption{Adaptive Stopping.}\label{alg:adastop_2}
 \end{algorithm}
 \todoT{Write a small algorithm to explain how to compute $B_k$ using Equation~\eqref{eq:def_Bk}, with an alternative version for the random permutation version.}
 
-An illustration of the group sequential test is given in figure~\ref{fig:gst}. The boundary in blue is computed sequentially to have a final level $1-\alpha$ for the test, the red points are the observed values of the test statistic (denoted $w_i$). The algorithm stops at the third iteration $k=3$ because the observed value of $w_i$ is outside of the boundary.
+An illustration of the group sequential test is given in figure~\ref{fig:gst}. The boundary in blue is computed sequentially to have a final level $1-\alpha$ for the test, the red points are the observed values of the test statistic (denoted $w_i$). The algorithm stops at the third iteration $k=3$ because the observed value of $w_i$ is outside the boundary.
 
 \begin{figure}
 \begin{center}
@@ -142,9 +171,38 @@ Define $\textbf{K}=\textbf{K} \setminus \{j_{max}\}$
 }
 }
 If the test was never rejected, return accept. Else return reject.
-\caption{Adaptive Stopping.}\label{alg:multiple_test_1}
+\caption{Multiple testing, non-sequential.}\label{alg:multiple_test_1}
 \end{algorithm}
 The Algorithm~\ref{alg:multiple_test_1} is consistent (i.e. $\mathrm{FWE}\le \alpha$) for the equality of distribution hypotheses.
+\subsection{Sequential Step-Down method (Main algorithm)}
+For some $\textbf{K} \subset \{1,\dots,J\}$, denote
+$$T_{n,k}^{(\textbf{K})}(\sigma)= \max\left(\sum_{i=1}^kT_{n,i}^{(j)}(\sigma_i),\quad j \in \textbf{K}\right)$$
+where
+$$T_{n,i}^{(j)}(\sigma_i)= \sum_{l=1}^{n} e_{\sigma_i(l)+2ni}-\sum_{l=n+1}^{2n} e_{\sigma_i(l)+2ni} $$
+is the mean difference on block $i$ after permutation by $\sigma_i$
+\todoT{Add algorithm here}
+% \begin{algorithm}[h]
+% \SetAlgoLined
+% \SetKwInput{KwParameter}{Parameters}
+% \KwParameter{Agents $A_1,A_2$, environment $\mathcal{E}$, number of blocks $K \in \N^*$, size of a block $n$, level of the test $\alpha\in (0,1)$.}
+% Define $2nK$ different seeds $s_{1,1},\dots,s_{1,n},s_{2,1},\dots,s_{2,n}$.\\
+% \For{$k=1,\dots,K$}{
+% \For{$i=1,2$}{
+% Train agent $A_i$ on environment $\mathcal{E}$ with the seeds $s_{i,kn},\dots,s_{i,(k+1)n}$.\\
+% Collect evaluations $e_{kn}(A_i),\dots,e_{(k+1)n}(A_i)$.\\
+% Compute $S_t(A_i)=\frac{1}{nk}\sum_{j=1}^{nk}e_{j}(A_i)$.\\
+% }
+% Compute $T$.\\
+% \If{$|S_t(A_1)-S_t(A_2)| \ge B_k$}{
+% Reject the equality of the agents' evaluation, break the loop and returns the answer
+% }
+% \Else{
+% If $k=K$ then accept the equality of the agents' evaluation, otherwise continue.
+% }
+% }
+% If the test was never rejected, return accept. Else return reject.
+% \caption{Adastop for multiple agents}\label{alg:adastop_2}
+% \end{algorithm}
 \section{Asymptotic study}
 \subsection{Case of a non-sequential permutation test}
 
@@ -212,7 +270,7 @@ is the difference of the means on the $k^{th}$ bloc when the block have been per
 
 Remark that on the first step, because the conditional distribution of $T_n(\sigma S_1^{2n})$ knowing $S_1^{2n}$ is symmetric, there is no need to compute the lower boundary and the decision can be made solely by testing $|T_n(S_1^{2n})|\ge B_1$ for some $B_1$. The same reasoning can be used for the remaining steps.
 
-The boundary are the minimal values of $B_1,\dots, B_K$ such that
+The boundaries are the minimal values of $B_1,\dots, B_K$ such that
 
 $$\P_{\sigma_1}(|T_{n,1}(\sigma_1)|\ge B_1) = q_1 \le \alpha\left(\frac{1}{K}\right) $$
 
