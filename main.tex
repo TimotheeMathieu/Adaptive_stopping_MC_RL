@@ -3,7 +3,7 @@
 \usepackage{enumitem}
 \usepackage{hyperref}
 \usepackage{bbm}
-\usepackage{algorithm2e}
+\usepackage[ruled,linesnumbered]{algorithm2e}
 
 \usepackage[verbose=true,letterpaper]{geometry}
 \newgeometry{
@@ -180,29 +180,37 @@ $$T_{n,k}^{(\textbf{K})}(\sigma)= \max\left(\sum_{i=1}^kT_{n,i}^{(j)}(\sigma_i),
 where
 $$T_{n,i}^{(j)}(\sigma_i)= \sum_{l=1}^{n} e_{\sigma_i(l)+2ni}-\sum_{l=n+1}^{2n} e_{\sigma_i(l)+2ni} $$
 is the mean difference on block $i$ after permutation by $\sigma_i$
-\todoT{Add algorithm here}
-% \begin{algorithm}[h]
-% \SetAlgoLined
-% \SetKwInput{KwParameter}{Parameters}
-% \KwParameter{Agents $A_1,A_2$, environment $\mathcal{E}$, number of blocks $K \in \N^*$, size of a block $n$, level of the test $\alpha\in (0,1)$.}
-% Define $2nK$ different seeds $s_{1,1},\dots,s_{1,n},s_{2,1},\dots,s_{2,n}$.\\
-% \For{$k=1,\dots,K$}{
-% \For{$i=1,2$}{
-% Train agent $A_i$ on environment $\mathcal{E}$ with the seeds $s_{i,kn},\dots,s_{i,(k+1)n}$.\\
-% Collect evaluations $e_{kn}(A_i),\dots,e_{(k+1)n}(A_i)$.\\
-% Compute $S_t(A_i)=\frac{1}{nk}\sum_{j=1}^{nk}e_{j}(A_i)$.\\
-% }
-% Compute $T$.\\
-% \If{$|S_t(A_1)-S_t(A_2)| \ge B_k$}{
-% Reject the equality of the agents' evaluation, break the loop and returns the answer
-% }
-% \Else{
-% If $k=K$ then accept the equality of the agents' evaluation, otherwise continue.
-% }
-% }
-% If the test was never rejected, return accept. Else return reject.
-% \caption{Adastop for multiple agents}\label{alg:adastop_2}
-% \end{algorithm}
+\begin{algorithm}[h]
+\SetAlgoLined
+\SetKwInput{KwParameter}{Parameters}
+\KwParameter{Agents $A_1,A_2,\dots, A_m$, environment $\mathcal{E}$, comparison pairs $C=(c_1,\dots, c_l)$ where $c_i$ is a couple of two agents that we want to compare. Number of blocks $K \in \N^*$, size of a block $n$, level of the test $\alpha\in (0,1)$.}
+Define $mnK$ different seeds $(s_{i,j})_{i\le m,j\le n}$.\\
+Define $\textbf{K}=\{1, \dots,l\}$ the set of comparisons we want to do.\\
+\For{$k=1,\dots,K$}{
+\For{$i=1...m$}{
+Train agent $A_i$ on environment $\mathcal{E}$ with the seeds $s_{i,kn},\dots,s_{i,(k+1)n}$.\\
+Collect evaluations $e_{kn}(A_i),\dots,e_{(k+1)n}(A_i)$.\\
+}
+Compute $T_{n,k}^{(\textbf{K})}(\sigma)$ for every tuple of permutation $\sigma = (\sigma_1, \dots, \sigma_k)$, $\sigma_i \in S_n$.\\
+Compute $\widehat{c}_{n}^{(\textbf{K})}(1-\alpha)$ the quantile of order $1-\alpha$ of the permutation law of $T_{n}^{(\textbf{K})}(\sigma)$:
+$$\sum_{\sigma \in S_n} \1\{T_{n}^{(\textbf{K})}(\sigma) \ge  \widehat{c}_{n}^{(\textbf{K})}(1-\alpha)\} = \lfloor \alpha n! \rfloor .$$
+\If{$T_{n}^{(\textbf{K})}(\mathrm{id}) \le \widehat{c}_{n}^{(\textbf{K})}(1-\alpha)$}{
+Accept all the hypotheses $H_j, j\in \textbf{K}$ and continue.}
+\Else{
+Reject $H_{j_{\max}}$ where $j_{\max} =  \arg\max\left(T_n^{(j)}(\sigma),\quad j \in \textbf{K}\right)$.\\
+Update $\textbf{K}=\textbf{K} \setminus \{j_{max}\}$ and go to line 8.
+}
+\If{$\textbf{K}=\emptyset$}{
+Break the loop and returns the answer: all comparisons are rejected.
+}
+\Else{
+\If{ $k=K$}{
+ Then accept the equality in the comparison not yet rejected and return the answer
+}
+}
+}
+\caption{Main algorithm}
+\end{algorithm}
 \section{Asymptotic study}
 \subsection{Case of a non-sequential permutation test}
 
