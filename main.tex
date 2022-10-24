@@ -152,22 +152,21 @@ $$\mathrm{FWE} = \P_{H_1,\dots,H_J}\left(\exists 1\le j\le J:\quad  \text{reject
 
 \paragraph{Bonferroni procedure:} a first approach is obtained by taking a threshold for $H_j$ vs $H_j'$ equal to a quantile of order $1-\alpha/J$ of the permutation distribution of $T_n^{(j)}$, this is the Bonferroni procedure and it can be very conservative.
 
-\paragraph{Step-down procedure:} another approach proposed by \cite{Romano_2003} is to consider a step-down procedure defined as follows: for some $\textbf{K} \subset \{1,\dots,J\}$, denote
-$$T_{n}^{(\textbf{K})}(\sigma)= \max\left(T_n^{(j)}(\sigma),\quad j \in \textbf{K}\right)$$
-
+\paragraph{Step-down procedure:} another approach proposed by \cite{Romano_2003} is to consider a step-down procedure defined as follows: for some $\textbf{C} \subset \{1,\dots,J\}$, denote
+$$T_{n}^{(\textbf{C})}(\sigma)= \max\left(T_n^{(j)}(\sigma),\quad j \in \textbf{C}\right)$$
 \begin{algorithm}[h]
 \SetAlgoLined
 \SetKwInput{KwParameter}{Parameters}
 \KwParameter{$\alpha \in (0,1)$}
-Initialize $\textbf{K}=\{1,\dots,J\}$\\
-\While{$\textbf{K} \neq \emptyset$}{
-Compute $\widehat{c}_{n}^{(\textbf{K})}(1-\alpha)$ the quantile of order $1-\alpha$ of the permutation law of $T_{n}^{(\textbf{K})}(\sigma)$:
-$$\sum_{\sigma \in S_n} \1\{T_{n}^{(\textbf{K})}(\sigma) \ge  \widehat{c}_{n}^{(\textbf{K})}(1-\alpha)\} = \lfloor \alpha n! \rfloor .$$
-\If{$T_{n}^{(\textbf{K})}(\mathrm{id}) \le \widehat{c}_{n}^{(\textbf{K})}(1-\alpha)$}{
-Accept all the hypotheses $H_j, j\in \textbf{K}$ and break the loop.}
+Initialize $\textbf{C}=\{1,\dots,J\}$\\
+\While{$\textbf{C} \neq \emptyset$}{
+Compute $\widehat{c}_{n}^{(\textbf{C})}(1-\alpha)$ the quantile of order $1-\alpha$ of the permutation law of $T_{n}^{(\textbf{C})}(\sigma)$:
+$$\sum_{\sigma \in S_n} \1\{T_{n}^{(\textbf{C})}(\sigma) \ge  \widehat{c}_{n}^{(\textbf{C})}(1-\alpha)\} = \lfloor \alpha n! \rfloor .$$
+\If{$T_{n}^{(\textbf{C})}(\mathrm{id}) \le \widehat{c}_{n}^{(\textbf{C})}(1-\alpha)$}{
+Accept all the hypotheses $H_j, j\in \textbf{C}$ and break the loop.}
 \Else{
-Reject $H_{j_{\max}}$ where $j_{\max} =  \arg\max\left(T_n^{(j)}(\sigma),\quad j \in \textbf{K}\right)$.\\
-Define $\textbf{K}=\textbf{K} \setminus \{j_{max}\}$
+Reject $H_{j_{\max}}$ where $j_{\max} =  \arg\max\left(T_n^{(j)}(\sigma),\quad j \in \textbf{C}\right)$.\\
+Define $\textbf{C}=\textbf{C} \setminus \{j_{max}\}$
 }
 }
 If the test was never rejected, return accept. Else return reject.
@@ -175,8 +174,8 @@ If the test was never rejected, return accept. Else return reject.
 \end{algorithm}
 The Algorithm~\ref{alg:multiple_test_1} is consistent (i.e. $\mathrm{FWE}\le \alpha$) for the equality of distribution hypotheses.
 \subsection{Sequential Step-Down method (Main algorithm)}
-For some $\textbf{K} \subset \{1,\dots,J\}$, denote
-$$T_{n,k}^{(\textbf{K})}(\sigma)= \max\left(\sum_{i=1}^kT_{n,i}^{(j)}(\sigma_i),\quad j \in \textbf{K}\right)$$
+For some $\textbf{C} \subset \{1,\dots,J\}$, denote
+$$T_{n,k}^{(\textbf{C})}(\sigma)= \max\left(\sum_{i=1}^kT_{n,i}^{(j)}(\sigma_i),\quad j \in \textbf{C}\right)$$
 where
 $$T_{n,i}^{(j)}(\sigma_i)= \sum_{l=1}^{n} e_{\sigma_i(l)+2ni}-\sum_{l=n+1}^{2n} e_{\sigma_i(l)+2ni} $$
 is the mean difference on block $i$ after permutation by $\sigma_i$
@@ -185,22 +184,22 @@ is the mean difference on block $i$ after permutation by $\sigma_i$
 \SetKwInput{KwParameter}{Parameters}
 \KwParameter{Agents $A_1,A_2,\dots, A_m$, environment $\mathcal{E}$, comparison pairs $C=(c_1,\dots, c_l)$ where $c_i$ is a couple of two agents that we want to compare. Number of blocks $K \in \N^*$, size of a block $n$, level of the test $\alpha\in (0,1)$.}
 Define $mnK$ different seeds $(s_{i,j})_{i\le m,j\le n}$.\\
-Define $\textbf{K}=\{1, \dots,l\}$ the set of comparisons we want to do.\\
+Define $\textbf{C}=\{1, \dots,l\}$ the set of comparisons we want to do.\\
 \For{$k=1,\dots,K$}{
 \For{$i=1...m$}{
 Train agent $A_i$ on environment $\mathcal{E}$ with the seeds $s_{i,kn},\dots,s_{i,(k+1)n}$.\\
 Collect evaluations $e_{kn}(A_i),\dots,e_{(k+1)n}(A_i)$.\\
 }
-Compute $T_{n,k}^{(\textbf{K})}(\sigma)$ for every tuple of permutation $\sigma = (\sigma_1, \dots, \sigma_k)$, $\sigma_i \in S_n$.\\
-Compute $\widehat{c}_{n}^{(\textbf{K})}(1-\alpha)$ the quantile of order $1-\alpha$ of the permutation law of $T_{n}^{(\textbf{K})}(\sigma)$:
-$$\sum_{\sigma \in S_n} \1\{T_{n}^{(\textbf{K})}(\sigma) \ge  \widehat{c}_{n}^{(\textbf{K})}(1-\alpha)\} = \lfloor \alpha n! \rfloor .$$
-\If{$T_{n}^{(\textbf{K})}(\mathrm{id}) \le \widehat{c}_{n}^{(\textbf{K})}(1-\alpha)$}{
-Accept all the hypotheses $H_j, j\in \textbf{K}$ and continue.}
+Compute $T_{n,k}^{(\textbf{C})}(\sigma)$ for every tuple of permutation $\sigma = (\sigma_1, \dots, \sigma_k)$, $\sigma_i \in S_n$.\\
+Compute $\widehat{c}_{n}^{(\textbf{C})}(1-\alpha)$ the quantile of order $1-\alpha$ of the permutation law of $T_{n}^{(\textbf{C})}(\sigma)$:
+$$\sum_{\sigma \in S_n} \1\{T_{n}^{(\textbf{C})}(\sigma) \ge  \widehat{c}_{n}^{(\textbf{C})}(1-\alpha)\} = \lfloor \alpha n! \rfloor .$$
+\If{$T_{n}^{(\textbf{C})}(\mathrm{id}) \le \widehat{c}_{n}^{(\textbf{C})}(1-\alpha)$}{
+Accept all the hypotheses $H_j, j\in \textbf{C}$ and continue.}
 \Else{
-Reject $H_{j_{\max}}$ where $j_{\max} =  \arg\max\left(T_n^{(j)}(\sigma),\quad j \in \textbf{K}\right)$.\\
-Update $\textbf{K}=\textbf{K} \setminus \{j_{max}\}$ and go to line 8.
+Reject $H_{j_{\max}}$ where $j_{\max} =  \arg\max\left(T_n^{(j)}(\sigma),\quad j \in \textbf{C}\right)$.\\
+Update $\textbf{C}=\textbf{C} \setminus \{j_{max}\}$ and go to line 8.
 }
-\If{$\textbf{K}=\emptyset$}{
+\If{$\textbf{C}=\emptyset$}{
 Break the loop and returns the answer: all comparisons are rejected.
 }
 \Else{
@@ -211,6 +210,7 @@ Break the loop and returns the answer: all comparisons are rejected.
 }
 \caption{Main algorithm}
 \end{algorithm}
+\newpage
 \section{Asymptotic study}
 \subsection{Case of a non-sequential permutation test}
 
