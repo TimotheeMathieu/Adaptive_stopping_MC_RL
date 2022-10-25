@@ -312,7 +312,7 @@ class Two_AgentsComparator:
         """
         assert (
             len(self.boundary) > 0
-        ), "Boundary not found. Did you do execute the comparison?"
+        ), "Boundary not found. Did you do the comparison?"
 
         y1 = np.array(self.boundary)
         y2 = -y1
@@ -546,10 +546,6 @@ class MultipleAgentsComparator():
             else:
                 break
 
-        import pdb; breakpoint()
-
-
-
         self.boundary.append(bk)
 
         self._writer.add_scalar("Stat_val", T, k)
@@ -577,11 +573,6 @@ class MultipleAgentsComparator():
         self.comparisons = comparisons
         Z = [ np.array([]) for _ in managers]
 
-        agent_classes = [ manager[0] for manager in managers]
-        kwargs_list = [ manager[1] for manager in managers]
-        for k in kwargs_list:
-            k["n_fit"] = self.n
-
         # Initialization of the permutation distribution
         self.sum_diffs = []
         self.n_iters = [0]*len(managers)
@@ -592,24 +583,12 @@ class MultipleAgentsComparator():
         decisions = np.array(["continue"]*len(comparisons))
         id_tracked = np.arange(len(decisions))
         for k in range(self.K):
-            managers_in = []
-            for i in range(len(agent_classes)):
-                if i in np.array(comparisons).ravel():
-                    agent_class = agent_classes[i]
-                    kwargs = kwargs_list[i]
-                    seeder = seeders[i]
-                    managers_in.append( AgentManager(agent_class, **kwargs, seed=seeder))
-                    managers_in[-1].fit()
-                    self.n_iters[i]+=self.n
-                    Z[i] = np.hstack([Z[i], self._get_evals(managers_in[-1])])
-
-
+            
+            Z = self._fit(managers, comparisons, Z, k, seeders, clean_after)
             self.decisions, T, bk = self.partial_compare(Z,  comparisons, k)
 
             self.test_stats.append(T)
-            if clean_after:
-                for m in managers_in:
-                    m.clear_output_dir()
+
 
             id_rejected = np.array(self.decisions) == 'reject'
             decisions[id_tracked[id_rejected]]='reject'
@@ -633,6 +612,28 @@ class MultipleAgentsComparator():
         self.eval_values = Z
         self.mean_eval_values = [np.mean(z) for z in Z]
         return decisions
+
+
+    def _fit(self, managers, comparisons, Z, k, seeders, clean_after):
+        agent_classes = [ manager[0] for manager in managers]
+        kwargs_list = [ manager[1] for manager in managers]
+        for kwarg in kwargs_list:
+            kwarg["n_fit"] = self.n
+        managers_in = []
+        for i in range(len(agent_classes)):
+            if i in np.array(comparisons).ravel():
+                agent_class = agent_classes[i]
+                kwargs = kwargs_list[i]
+                seeder = seeders[i]
+                managers_in.append( AgentManager(agent_class, **kwargs, seed=seeder) )
+                managers_in[-1].fit()
+                self.n_iters[i] += self.n
+                Z[i] = np.hstack([Z[i], self._get_evals(managers_in[-1])])
+
+        if clean_after:
+            for m in managers_in:
+                m.clear_output_dir()
+        return Z
 
     def _get_evals(self, manager):
         """
@@ -658,3 +659,44 @@ class MultipleAgentsComparator():
             )
         else:
             raise RuntimeError("name not implemented")
+        
+    def plot_boundary(self):
+        """
+        Graphical representation of the boundary and the test statistics as it was computed during the self.compare execution.
+        self.compare must have been executed prior to executing plot_boundary.
+        """
+        assert (
+            len(self.boundary) > 0
+        ), "Boundary not found. Did you do the comparison?"
+
+        y1 = np.array(self.boundary)
+        y2 = -y1
+
+        # boundary plot
+        x = np.arange(1, len(y1) + 1)
+        p2 = plt.plot(x, y1, "o-", label="Boundary", alpha=0.7)
+        plt.plot(x, y2, "o-", color=p2[0].get_color(), alpha=0.7)
+
+        # test stats plot
+        for i,c in enumerate(self.comparisons):
+            Ti = []
+            Z1 = self.eval_values[c[0]]
+            Z2 = self.eval_values[c[1]]
+
+            K1 = self.n_iters[c[0]] // self.n
+            K2 = self.n_iters[c[1]] // self.n
+
+            for k in range(min(K1,K2)):
+                T = np.sum(Z1[:((k+1)*self.n)])-np.sum(Z2[:((k+1)*self.n)])
+                if np.abs(T) <= self.boundary[k] :
+                    Ti.append( np.sum(Z1[:((k+1)*self.n)])-np.sum(Z2[:((k+1)*self.n)]))
+                else:
+                    Ti.append( np.sum(Z1[:((k+1)*self.n)])-np.sum(Z2[:((k+1)*self.n)]))
+                    break
+
+            plt.scatter(x[:len(Ti)], Ti, label=str(c))
+
+        plt.legend()
+
+        plt.xlabel("$k$")
+        plt.ylabel("test stat.")
