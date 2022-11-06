@@ -30,7 +30,7 @@ class TwentyOneWithDice(gym.Env):
 
         elif action == 1: #throw
             self.state += np.random.randint(1, 7)
-            if self.state == 27:
+            if self.state >= 21:
                 done = True
 
         return self.state-1, reward, done, {}

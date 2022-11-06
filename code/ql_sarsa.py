@@ -133,9 +133,29 @@ class SARSAAgent(AgentWithSimplePolicy):
 if __name__ == "__main__":
 
     from gym_stochastic import TwentyOneWithDice
+    from rlberry.manager import AgentManager, evaluate_agents
 
-    env = TwentyOneWithDice()
-    ql = QLAgent(env)
-    sarsa = SARSAAgent(env)
-    ql.fit(100)
-    sarsa.fit(100)
+    env = TwentyOneWithDice
+    # ql = QLAgent(env)
+    # sarsa = SARSAAgent(env)
+
+    ql_manager = AgentManager(
+        QLAgent,
+        (env, {}),
+        fit_budget=10000,
+        eval_kwargs=dict(eval_horizon=4),
+        n_fit=50,)
+
+    ql_manager.fit()
+
+    sarsa_manager = AgentManager(
+        SARSAAgent,
+        (env, {}),
+        fit_budget=10000,
+        eval_kwargs=dict(eval_horizon=4),
+        n_fit=50,)
+
+    sarsa_manager.fit()
+
+
+    output = evaluate_agents([ql_manager, sarsa_manager], n_simulations=100)
