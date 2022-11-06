@@ -2,6 +2,7 @@ from gym_stochastic import TwentyOneWithDice
 from ql_sarsa import QLAgent, SARSAAgent
 from compare_agents import MultipleAgentsComparator
 import numpy as np
+import matplotlib.pyplot as plt
 
 manager1 = (
     QLAgent,
