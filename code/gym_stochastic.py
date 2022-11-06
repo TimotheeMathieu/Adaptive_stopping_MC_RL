@@ -4,6 +4,39 @@ from typing import Union
 
 Noise = Union[float, list]
 
+class TwentyOneWithDice(gym.Env):
+    """
+    Simple stochastic MDP. Goal is to get as close as 21 by repeatidly throwing a dice.
+    reward is the final sum of throws
+    """
+    def __init__(self):
+        super().__init__()
+        self.action_space = gym.spaces.Discrete(2) #stop, play
+        self.observation_space = gym.spaces.Box(low=np.array([1]), high=np.array([27]))
+        self.state = None
+
+    def reset(self):
+        self.state = np.random.randint(1, 7) #from 1 to 6
+        return self.state
+
+    def step(self,action):
+        reward = 0
+        done = False
+
+        if action == 0: #stop throwing
+            if self.state <= 21:
+                reward = self.state
+            done = True
+
+        elif action == 1: #throw
+            self.state += np.random.randint(1, 7)
+            if self.state == 27:
+                done = True
+
+        return self.state, reward, done, {}
+
+
+
 
 class StochasticWrapper(gym.Wrapper):
     """
@@ -49,6 +82,8 @@ class StochasticWrapper(gym.Wrapper):
         return next_state, reward, done, info
 
 
+
+
 if __name__ == "__main__":
     env = gym.make("Acrobot-v1")
     env = StochasticWrapper(env, prob_wrg_act = 0.2, noise_obs=0.1, noise_rew = 0)
@@ -84,4 +119,18 @@ if __name__ == "__main__":
         if ep >= 100:
             break
 
+    print(tot/100)
+
+    env = TwentyOneWithDice()
+    s = env.reset()
+    ep = 0
+    tot = 0
+    while True:
+        s, r, done, _ = env.step(env.action_space.sample())
+        tot += r
+        if done:
+            s = env.reset()
+            ep += 1
+        if ep >= 100:
+            break
     print(tot/100)
