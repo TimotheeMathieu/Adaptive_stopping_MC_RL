@@ -17,7 +17,7 @@ class TwentyOneWithDice(gym.Env):
 
     def reset(self):
         self.state = np.random.randint(1, 7) #from 1 to 6
-        return self.state
+        return self.state-1
 
     def step(self,action):
         reward = 0
@@ -33,7 +33,7 @@ class TwentyOneWithDice(gym.Env):
             if self.state == 27:
                 done = True
 
-        return self.state, reward, done, {}
+        return self.state-1, reward, done, {}
 
 
 
