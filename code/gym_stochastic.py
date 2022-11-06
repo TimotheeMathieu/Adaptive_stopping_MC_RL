@@ -12,7 +12,7 @@ class TwentyOneWithDice(gym.Env):
     def __init__(self):
         super().__init__()
         self.action_space = gym.spaces.Discrete(2) #stop, play
-        self.observation_space = gym.spaces.Box(low=np.array([1]), high=np.array([27]))
+        self.observation_space = gym.spaces.Discrete(27)
         self.state = None
 
     def reset(self):
