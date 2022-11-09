@@ -2,6 +2,7 @@ import numpy as np
 from rlberry.agents import AgentWithSimplePolicy
 import rlberry
 from gym import spaces
+from scipy.special import softmax
 
 logger = rlberry.logger
 
@@ -14,7 +15,8 @@ class QLAgent(AgentWithSimplePolicy):
         env,
         gamma=0.99,
         alpha=0.1,
-        epsilon=0.3,
+        epsilon=None,
+        tau=None,
         **kwargs
     ):
         # init base class
@@ -22,10 +24,12 @@ class QLAgent(AgentWithSimplePolicy):
 
         self.gamma = gamma
         self.eps = epsilon
+        self.tau = tau
         self.alpha = alpha
         # check environment
         assert isinstance(self.env.observation_space, spaces.Discrete)
         assert isinstance(self.env.action_space, spaces.Discrete)
+        assert (self.eps is not None and self.tau is None) or (self.tau is not None and self.eps is None)
         # initialize
         self.reset()
 
@@ -39,6 +43,16 @@ class QLAgent(AgentWithSimplePolicy):
         s= observation
         return self.Q[s].argmax()
 
+    def get_action(self, s):
+        if self.eps:
+            if np.random.random() <= self.eps:
+                a = np.random.choice(self.env.action_space.n)
+            else:
+                a = self.Q[s].argmax()
+        else:
+            a = np.random.choice(self.env.action_space.n, p = softmax(self.tau* self.Q[s]))
+        return a
+
     def fit(self, budget: int, **kwargs):
         """
         Train the agent using the provided environment.
@@ -50,14 +64,14 @@ class QLAgent(AgentWithSimplePolicy):
         del kwargs
         s = self.env.reset()
         for i in range(budget):
-            if np.random.random() <= self.eps:
-                a = np.random.choice(self.env.action_space.n)
-            else:
-                a = self.Q[s].argmax()
+            a = self.get_action(s)
             snext, r , done, _ = self.env.step(a)
             if self.writer is not None:
                 self.writer.add_scalar("reward", r, i)
-            self.Q[s,a] = self.Q[s,a] + self.alpha * (r + self.gamma * np.amax(self.Q[snext]) - self.Q[s,a])
+            if done:
+                self.Q[s,a] = r
+            else:
+                self.Q[s,a] = self.Q[s,a] + self.alpha * (r + self.gamma * np.amax(self.Q[snext]) - self.Q[s,a])
             s = snext
             if done:
                 s = self.env.reset()
@@ -71,7 +85,8 @@ class SARSAAgent(AgentWithSimplePolicy):
         env,
         gamma=0.99,
         alpha=0.1,
-        epsilon=0.3,
+        epsilon=None,
+        tau=None,
         **kwargs
     ):
         # init base class
@@ -79,10 +94,12 @@ class SARSAAgent(AgentWithSimplePolicy):
 
         self.gamma = gamma
         self.eps = epsilon
+        self.tau = tau
         self.alpha = alpha
         # check environment
         assert isinstance(self.env.observation_space, spaces.Discrete)
         assert isinstance(self.env.action_space, spaces.Discrete)
+        assert (self.eps is not None and self.tau is None) or (self.tau is not None and self.eps is None)
         # initialize
         self.reset()
 
@@ -96,6 +113,17 @@ class SARSAAgent(AgentWithSimplePolicy):
         s= observation
         return self.Q[s].argmax()
 
+    def get_action(self, s):
+        if self.eps:
+            if np.random.random() <= self.eps:
+                a = np.random.choice(self.env.action_space.n)
+            else:
+                a = self.Q[s].argmax()
+        else:
+            a = np.random.choice(self.env.action_space.n, p = softmax(self.tau* self.Q[s]))
+        return a
+
+
 
     def fit(self, budget: int, **kwargs):
         """
@@ -108,24 +136,18 @@ class SARSAAgent(AgentWithSimplePolicy):
         del kwargs
         s = self.env.reset()
         for i in range(budget):
-
-            if np.random.random() <= self.eps:
-                a = np.random.choice(self.env.action_space.n)
-            else:
-                a = self.Q[s].argmax()
-
-
+            a = self.get_action(s)
             snext, r , done, _ = self.env.step(a)
 
-            if np.random.random() <= self.eps:
-                anext = np.random.choice(self.env.action_space.n)
-            else:
-                anext = self.Q[snext].argmax()
-
+            anext = self.get_action(snext)
 
             if self.writer is not None:
                 self.writer.add_scalar("reward", r, i)
-            self.Q[s,a] = self.Q[s,a] + self.alpha * (r + self.gamma * self.Q[snext, anext] - self.Q[s,a])
+
+            if done:
+                self.Q[s,a] = r
+            else:
+                self.Q[s,a] = self.Q[s,a] + self.alpha * (r + self.gamma * self.Q[snext, anext] - self.Q[s,a])
             s = snext
             if done:
                 s = self.env.reset()
@@ -142,6 +164,7 @@ if __name__ == "__main__":
     ql_manager = AgentManager(
         QLAgent,
         (env, {}),
+        init_kwargs = dict(epsilon=0.3),
         fit_budget=10000,
         eval_kwargs=dict(eval_horizon=4),
         n_fit=50,)
@@ -151,6 +174,7 @@ if __name__ == "__main__":
     sarsa_manager = AgentManager(
         SARSAAgent,
         (env, {}),
+        init_kwargs = dict(epsilon=0.3),
         fit_budget=10000,
         eval_kwargs=dict(eval_horizon=4),
         n_fit=50,)
