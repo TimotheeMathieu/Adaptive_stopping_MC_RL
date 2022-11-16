@@ -51,12 +51,13 @@ def build_maze(width, height, walls, hit=False):
     return maze.mdp, maze.nb_states + 1
 
 
-def create_random_maze(width, height, ratio, hit=False):
+def create_random_maze(width, height, ratio, seed, hit=False):
     size = width * height
     n_walls = round(ratio * size)
 
     stop = False
     mdp = None
+    random.seed(seed)
     # the loop below is used to check that the maze has a solution
     # if one of the values after check_navigability is null, then another maze should be produced
     while not stop:
