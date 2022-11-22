@@ -63,11 +63,14 @@ class QLAgent(AgentWithSimplePolicy):
         """
         del kwargs
         s = self.env.reset()
+        cumul_r = 0
         for i in range(budget):
             a = self.get_action(s)
             snext, r , done, _ = self.env.step(a)
+            cumul_r += r
             if self.writer is not None:
-                self.writer.add_scalar("reward", r, i)
+                self.writer.add_scalar("cumul_reward", cumul_r, i)
+
             if done:
                 self.Q[s,a] = r
             else:
@@ -75,7 +78,7 @@ class QLAgent(AgentWithSimplePolicy):
             s = snext
             if done:
                 s = self.env.reset()
-
+                cumul_r = 0
 
 class SARSAAgent(AgentWithSimplePolicy):
     name = "SARSA"
@@ -135,14 +138,15 @@ class SARSAAgent(AgentWithSimplePolicy):
         """
         del kwargs
         s = self.env.reset()
+        cumul_r = 0
         for i in range(budget):
             a = self.get_action(s)
             snext, r , done, _ = self.env.step(a)
-
+            cumul_r += r
             anext = self.get_action(snext)
 
             if self.writer is not None:
-                self.writer.add_scalar("reward", r, i)
+                self.writer.add_scalar("cumul_reward", cumul_r, i)
 
             if done:
                 self.Q[s,a] = r
@@ -151,6 +155,7 @@ class SARSAAgent(AgentWithSimplePolicy):
             s = snext
             if done:
                 s = self.env.reset()
+                cumul_r = 0
 
 if __name__ == "__main__":
 
@@ -165,9 +170,9 @@ if __name__ == "__main__":
         QLAgent,
         (env, {}),
         init_kwargs = dict(epsilon=0.3),
-        fit_budget=10000,
-        eval_kwargs=dict(eval_horizon=4),
-        n_fit=50,)
+        fit_budget=100,
+        eval_kwargs=dict(eval_horizon=100),
+        n_fit=2,)
 
     ql_manager.fit()
 
@@ -175,9 +180,9 @@ if __name__ == "__main__":
         SARSAAgent,
         (env, {}),
         init_kwargs = dict(epsilon=0.3),
-        fit_budget=10000,
-        eval_kwargs=dict(eval_horizon=4),
-        n_fit=50,)
+        fit_budget=100,
+        eval_kwargs=dict(eval_horizon=100),
+        n_fit=2,)
 
     sarsa_manager.fit()
 
