@@ -305,6 +305,63 @@ class Two_AgentsComparator:
         self.p_val = p_val
         logger.info("p value is " + str(p_val))
 
+
+    def compare_scalars(self, scalar_list1, scalar_list2, names = ["SAC", "TD3"]):
+        """
+        Compare two lists of performances sclaras
+        Parameters
+        ----------
+        scalar_list1 : list of evaluation means of an agent fitted len(scalar_list1) times.
+        scalar_list2 : list of evaluation means of an agent fitted len(scalar_list2) times.
+        clean_after: boolean
+        """
+        assert len(scalar_list1) == len(scalar_list2), "Scalar lists should have same size."
+
+        Z = np.array([])  # concatenated values of evaluation
+        X = np.array([])  # assignement vector of 0 and 1
+
+        # Initialization of the permutation distribution
+        self.sum_diffs = [0]
+
+        # spawn independent seeds, one for each fit and one for the comparator.
+        seeders = self.seeder.spawn(2 * self.K + 1)
+        self.rng = seeders[-1].rng
+
+        for k in range(self.K):
+            self.n_iter += 2 * self.n
+            print(self.n_iter)
+
+            Z = np.hstack([Z, scalar_list1[k * self.n: (k+1) * self.n], scalar_list2[k * self.n: (k+1) * self.n]])
+            X = np.hstack([X, np.zeros(self.n), np.ones(self.n)])
+
+            self.decision, Tsigned, bk, p_val = self.partial_compare(Z, X, k)
+
+            self.test_stats.append(Tsigned)
+            if self.decision == "reject":
+                logger.info("Reject the null after " + str(k + 1) + " groups")
+                if Tsigned <= 0:
+                    print(names[0] + " is better than " + names[1])
+                else:
+                    print(names[1] + " is better than " + names[0])
+
+                break
+            else:
+                logger.info("Did not reject on interim " + str(k + 1))
+        if self.decision == "accept":
+            logger.info(
+                "Did not reject the null hypothesis: either K, n are too small or the agents perform similarly"
+            )
+
+        self.eval_1 = Z[X == 0]
+        self.eval_2 = Z[X == 1]
+        self.agent1_name = names[0]
+        self.agent2_name = names[1]
+        self.eval_values = Z
+        self.affectations = X
+
+        self.p_val = p_val
+        logger.info("p value is " + str(p_val))
+
     def plot_boundary(self):
         """
         Graphical representation of the boundary and the test statistics as it was computed during the self.compare execution.
@@ -613,6 +670,70 @@ class MultipleAgentsComparator():
         self.mean_eval_values = [np.mean(z) for z in Z]
         return decisions
 
+    def compare_scalars(self, scalars, comparisons = None, clean_after = True):
+        """
+        Compare the managers pair by pair using Bonferroni correction.
+
+        Parameters
+        ----------
+        scalars : list of list of scalars.
+        comparisons: list of tuple of indices or None
+                if None, all the pairwise comparison are done.
+                If = [(0,1), (0,2)] for instance, the compare only 0 vs 1  and 0 vs 2
+
+        """
+        if comparisons is None:
+            comparisons = np.array([(i,j) for i in range(len(scalars)) for j in range(len(scalars)) if i<j])
+        self.comparisons = comparisons
+        Z = [ np.array([]) for _ in scalars]
+
+        # Initialization of the permutation distribution
+        self.sum_diffs = []
+        self.n_iters = [0]*len(scalars)
+
+        # spawn independent seeds, one for each fit and one for the comparator.
+        seeders = self.seeder.spawn(len(scalars) * self.K + 1)
+        self.rng = seeders[-1].rng
+        decisions = np.array(["continue"]*len(comparisons))
+        id_tracked = np.arange(len(decisions))
+        for k in range(self.K):
+
+            Z = self._get_z_scalars(scalars, comparisons, Z, k, seeders, clean_after)
+            self.decisions, T, bk = self.partial_compare(Z,  comparisons, k)
+
+            self.test_stats.append(T)
+
+
+            id_rejected = np.array(self.decisions) == 'reject'
+            decisions[id_tracked[id_rejected]]='reject'
+            id_tracked = id_tracked[~id_rejected]
+            comparisons = comparisons[~id_rejected]
+            self.sum_diffs = np.array(self.sum_diffs)[:, ~id_rejected]
+
+            if np.all(self.decisions == "reject"):
+                logger.info("Reject all the null after " + str(k + 1) + " groups")
+                break
+            else:
+                logger.info("Rejected "+str(np.sum(np.array(self.decisions) == "reject"))+" on interim " + str(k + 1))
+
+
+        if (k == self.K-1):
+            decisions[decisions == 'continue']="accept"
+            logger.info(
+                "Did not reject all the null hypothesis: either K, n are too small or the agents perform similarly"
+            )
+        self.decisions = decisions
+        self.eval_values = Z
+        self.mean_eval_values = [np.mean(z) for z in Z]
+        return decisions
+
+
+    def _get_z_scalars(self, scalars, comparisons, Z, k, seeders, clean_after):
+        for i in range(len(scalars)):
+            if i in np.array(comparisons).ravel():
+                self.n_iters[i] += self.n
+                Z[i] = np.hstack([Z[i], scalars[i][k*self.n : (k+1)*self.n]])
+        return Z
 
     def _fit(self, managers, comparisons, Z, k, seeders, clean_after):
         agent_classes = [ manager[0] for manager in managers]
@@ -700,3 +821,19 @@ class MultipleAgentsComparator():
 
         plt.xlabel("$k$")
         plt.ylabel("test stat.")
+
+    # def power(self, M, delta, sigma, n_comparisons):
+    #     """
+    #     Estimation of the power using M MC estimation.
+    #     """
+
+    #     W = np.random.normal(size=(n_comparisons,self.K,M))
+    #     boundary = self.asym_boundary(M)
+
+    #     delta = np.abs(mup - muq)/np.sqrt(sigmap**2+sigmaq**2)
+    #     boundary_factor = np.sqrt(sigmap**2+sigmaq**2+(mup-muq)**2/2)/np.sqrt(sigmap**2+sigmaq**2)
+
+    #     events = []
+    #     for m in tqdm(range(M)):
+    #         events.append(np.any([ np.abs(np.mean(W[:(j+1),m]) + np.sqrt(self.n)*delta)> boundary[j]*boundary_factor for j in range(self.K)]))
+    #     return np.mean(events)
