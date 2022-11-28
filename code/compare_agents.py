@@ -8,13 +8,16 @@ from scipy.stats import norm
 import matplotlib.pyplot as plt
 
 import rlberry
+from rlberry.agents import Agent
+from rlberry.envs import Model
+import rlberry.spaces as spaces
 from rlberry.manager import AgentManager
 from rlberry.envs.interface import Model
 from rlberry.seeding import Seeder
 from rlberry.utils.writers import DefaultWriter
 
 import itertools
-
+from joblib import Parallel, delayed
 from tqdm import tqdm
 
 logger = logging.getLogger()
@@ -22,9 +25,6 @@ logger = logging.getLogger()
 
 # TO DO:
 # * Be careful about ties
-
-
-
 
 
 class Two_AgentsComparator:
@@ -159,7 +159,7 @@ class Two_AgentsComparator:
 
         return self.sum_diffs
 
-    def partial_compare(self, Z, X, k):
+    def partial_compare(self, Z, X, k, verbose=True):
         """
         Do the test of the k^th interim.
         Parameters
@@ -170,6 +170,7 @@ class Two_AgentsComparator:
             {0,1} array with the affectation of each value of Z to either Agent 1 (0) or Agent 2 (1)
         k: int
             index of the interim, in {0,...,K-1}
+        verbose: boolean
         Returns
         -------
         decision: str in {'accept', 'reject', 'continue'}
@@ -232,7 +233,7 @@ class Two_AgentsComparator:
 
         return decision, np.sum(Z * (-1) ** X), bk, p_value
 
-    def compare(self, manager1, manager2, clean_after = True):
+    def compare(self, manager1, manager2, clean_after=True, verbose=True):
         """
         Compare manager1 and manager2 performances
         Parameters
@@ -240,6 +241,7 @@ class Two_AgentsComparator:
         manager1 : tuple of agent_class and init_kwargs for the agent.
         manager2 : tuple of agent_class and init_kwargs for the agent.
         clean_after: boolean
+        verbose: boolean
         """
         X = np.array([])
         Z = np.array([])
@@ -274,7 +276,7 @@ class Two_AgentsComparator:
             Z = np.hstack([Z, self._get_evals(m1), self._get_evals(m2)])
             X = np.hstack([X, np.zeros(self.n), np.ones(self.n)])
 
-            self.decision, Tsigned, bk, p_val = self.partial_compare(Z, X, k)
+            self.decision, Tsigned, bk, p_val = self.partial_compare(Z, X, k, verbose)
 
             self.test_stats.append(Tsigned)
             if clean_after:
@@ -282,7 +284,7 @@ class Two_AgentsComparator:
                 m2.clear_output_dir()
             if self.decision == "reject":
                 logger.info("Reject the null after " + str(k + 1) + " groups")
-                if Tsigned <= 0:
+                if Tsigned >= 0:
                     logger.info(m1.agent_name + " is better than " + m2.agent_name)
                 else:
                     logger.info(m2.agent_name + " is better than " + m1.agent_name)
@@ -305,8 +307,7 @@ class Two_AgentsComparator:
         self.p_val = p_val
         logger.info("p value is " + str(p_val))
 
-
-    def compare_scalars(self, scalar_list1, scalar_list2, names = ["SAC", "TD3"]):
+    def compare_scalars(self, scalar_list1, scalar_list2, names=["SAC", "TD3"]):
         """
         Compare two lists of performances sclaras
         Parameters
@@ -315,7 +316,9 @@ class Two_AgentsComparator:
         scalar_list2 : list of evaluation means of an agent fitted len(scalar_list2) times.
         clean_after: boolean
         """
-        assert len(scalar_list1) == len(scalar_list2), "Scalar lists should have same size."
+        assert len(scalar_list1) == len(
+            scalar_list2
+        ), "Scalar lists should have same size."
 
         Z = np.array([])  # concatenated values of evaluation
         X = np.array([])  # assignement vector of 0 and 1
@@ -331,7 +334,13 @@ class Two_AgentsComparator:
             self.n_iter += 2 * self.n
             print(self.n_iter)
 
-            Z = np.hstack([Z, scalar_list1[k * self.n: (k+1) * self.n], scalar_list2[k * self.n: (k+1) * self.n]])
+            Z = np.hstack(
+                [
+                    Z,
+                    scalar_list1[k * self.n : (k + 1) * self.n],
+                    scalar_list2[k * self.n : (k + 1) * self.n],
+                ]
+            )
             X = np.hstack([X, np.zeros(self.n), np.ones(self.n)])
 
             self.decision, Tsigned, bk, p_val = self.partial_compare(Z, X, k)
@@ -367,9 +376,7 @@ class Two_AgentsComparator:
         Graphical representation of the boundary and the test statistics as it was computed during the self.compare execution.
         self.compare must have been executed prior to executing plot_boundary.
         """
-        assert (
-            len(self.boundary) > 0
-        ), "Boundary not found. Did you do the comparison?"
+        assert len(self.boundary) > 0, "Boundary not found. Did you do the comparison?"
 
         y1 = np.array(self.boundary)
         y2 = -y1
@@ -394,52 +401,63 @@ class Two_AgentsComparator:
             )
         return eval_values
 
-
-    def asym_boundary(self, M = 100000):
+    def asym_boundary(self, M=100000):
         """
         Compute the asymptotic boundary of b_1,...,b_K using M Monte-Carlo approximation, with \tau(P,Q)=1.
 
         M is int, number of MC used to approximate
         """
-        W = np.random.normal(size=(self.K,M))
+        W = np.random.normal(size=(self.K, M))
 
         # computation of b_1 is exact and don't need Monte-Carlo approximation
         spending_fun = self.get_spending_fun()
 
-        alphas = [ spending_fun((k + 1) / self.K) for k in range(self.K)]
-        boundary = [ norm.ppf(1-alphas[0])]
+        alphas = [spending_fun((k + 1) / self.K) for k in range(self.K)]
+        boundary = [norm.ppf(1 - alphas[0])]
 
         # computation of b_k, k > 1
-        for k in range(1,self.K):
+        for k in range(1, self.K):
             res = 0
             values = []
             for m in range(M):
                 # condition on the past
-                event = np.all([ np.abs(np.mean(W[:(j+1),m]))< boundary[j] for j in range(k)])
+                event = np.all(
+                    [np.abs(np.mean(W[: (j + 1), m])) < boundary[j] for j in range(k)]
+                )
                 if event:
-                    values.append(np.abs(np.mean(W[:(k+1),m])))
-            boundary.append(np.quantile(values, 1-(alphas[k]-alphas[k-1])))
+                    values.append(np.abs(np.mean(W[: (k + 1), m])))
+            boundary.append(np.quantile(values, 1 - (alphas[k] - alphas[k - 1])))
 
         return boundary
+
     def power(self, M, mup, muq, sigmap, sigmaq):
         """
         Estimation of the power using M MC estimation. mup, muq are the mean of the two agents and sigmap, sigmaq are their respective stds.
         """
 
-        W = np.random.normal(size=(self.K,M))
+        W = np.random.normal(size=(self.K, M))
         boundary = self.asym_boundary(M)
 
-        delta = np.abs(mup - muq)/np.sqrt(sigmap**2+sigmaq**2)
-        boundary_factor = np.sqrt(sigmap**2+sigmaq**2+(mup-muq)**2/2)/np.sqrt(sigmap**2+sigmaq**2)
+        delta = np.abs(mup - muq) / np.sqrt(sigmap**2 + sigmaq**2)
+        boundary_factor = np.sqrt(
+            sigmap**2 + sigmaq**2 + (mup - muq) ** 2 / 2
+        ) / np.sqrt(sigmap**2 + sigmaq**2)
 
         events = []
         for m in tqdm(range(M)):
-            events.append(np.any([ np.abs(np.mean(W[:(j+1),m]) + np.sqrt(self.n)*delta)> boundary[j]*boundary_factor for j in range(self.K)]))
+            events.append(
+                np.any(
+                    [
+                        np.abs(np.mean(W[: (j + 1), m]) + np.sqrt(self.n) * delta)
+                        > boundary[j] * boundary_factor
+                        for j in range(self.K)
+                    ]
+                )
+            )
         return np.mean(events)
 
 
-
-class MultipleAgentsComparator():
+class MultipleAgentsComparator:
     """
     Compare sequentially agents, with possible early stopping.
     At maximum, there can be n times K fits done.
@@ -466,6 +484,9 @@ class MultipleAgentsComparator():
 
     seed: int or None, default = None
 
+    joblib_backend: str, default = "threading"
+        backend to use to parallelize on multi-agents. Use "multiprocessing" or "loky" for a true parallelization.
+
     Attributes
     ----------
 
@@ -477,7 +498,15 @@ class MultipleAgentsComparator():
     """
 
     def __init__(
-        self, n=5, K=5, B=None, alpha=0.05, name="PK", n_evaluations=1, seed=None
+        self,
+        n=5,
+        K=5,
+        B=None,
+        alpha=0.05,
+        name="PK",
+        n_evaluations=1,
+        seed=None,
+        joblib_backend="threading",
     ):
         self.n = n
         self.K = K
@@ -491,6 +520,8 @@ class MultipleAgentsComparator():
         self.seeder = Seeder(seed)
         self._writer = DefaultWriter("Comparator")
         self.rejected_decision = []
+        self.rejected_sign = []
+        self.joblib_backend = joblib_backend
 
     def compute_sum_diffs(self, k, Z, comparisons, boundary):
         """
@@ -501,7 +532,7 @@ class MultipleAgentsComparator():
             for _ in range(self.B):
                 sum_diff = []
                 for i, comp in enumerate(comparisons):
-                    Zi = np.hstack([Z[comp[0]][ :  self.n], Z[comp[1]][ :  self.n]])
+                    Zi = np.hstack([Z[comp[0]][: self.n], Z[comp[1]][: self.n]])
                     id_pos = self.rng.choice(2 * self.n, self.n, replace=False)
                     mask = np.zeros(2 * self.n)
                     mask[list(id_pos)] = 1
@@ -522,7 +553,12 @@ class MultipleAgentsComparator():
             for j in range(len(self.sum_diffs)):
                 id_pos = self.rng.choice(2 * self.n, self.n, replace=False)
                 for i, comp in enumerate(comparisons):
-                    Zk = np.hstack([Z[comp[0]][(k* self.n) : ((k+1)* self.n)], Z[comp[1]][(k* self.n) :  ((k+1)*self.n)]])
+                    Zk = np.hstack(
+                        [
+                            Z[comp[0]][(k * self.n) : ((k + 1) * self.n)],
+                            Z[comp[1]][(k * self.n) : ((k + 1) * self.n)],
+                        ]
+                    )
                     mask = np.zeros(2 * self.n)
                     mask[list(id_pos)] = 1
                     mask = mask == 1
@@ -530,7 +566,7 @@ class MultipleAgentsComparator():
 
         return self.sum_diffs
 
-    def partial_compare(self, Z,  comparisons,  k):
+    def partial_compare(self, Z, comparisons, k, verbose):
         """
         Do the test of the k^th interim.
 
@@ -540,7 +576,8 @@ class MultipleAgentsComparator():
             Concatenation All the evaluations of Agent 1 and Agent2 up till interim k
         k: int
             index of the interim, in {0,...,K-1}
-
+        verbose: bool
+            print Steps
         Returns
         -------
         decision: str in {'accept', 'reject', 'continue'}
@@ -557,11 +594,12 @@ class MultipleAgentsComparator():
         clevel = spending_fun((k + 1) / self.K)
 
         rs = np.abs(np.array(self.compute_sum_diffs(k, Z, comparisons, self.boundary)))
-        decisions = np.array(['continue']*len(comparisons))
+        decisions = np.array(["continue"] * len(comparisons))
 
-        print('Step {}'.format(k))
+        if verbose:
+            print("Step {}".format(k))
         for j in range(len(decisions)):
-            rs_now = rs[:, decisions == 'continue']
+            rs_now = rs[:, decisions == "continue"]
             values = np.sort(
                 np.max(rs_now, axis=1)
             )  # for now, don't care about ties. And there are ties, for instance when B is None, there are at least two of every values !
@@ -572,8 +610,9 @@ class MultipleAgentsComparator():
 
             # Compute admissible values, i.e. values that would not be rejected.
 
-            admissible_values_sup = values[self.level_spent + icumulative_probas <= clevel]
-
+            admissible_values_sup = values[
+                self.level_spent + icumulative_probas <= clevel
+            ]
 
             if len(admissible_values_sup) > 0:
                 bk = admissible_values_sup[0]  # the minimum admissible value
@@ -589,17 +628,27 @@ class MultipleAgentsComparator():
             # Test statistic
             T = 0
             Tsigned = 0
-            for i, comp in enumerate(comparisons[decisions == 'continue']):
-                Ti = np.abs(np.sum(Z[comp[0]][:((k+1)* self.n)]- Z[comp[1]][:((k+1)*self.n)]))
+            for i, comp in enumerate(comparisons[decisions == "continue"]):
+                Ti = np.abs(
+                    np.sum(
+                        Z[comp[0]][: ((k + 1) * self.n)]
+                        - Z[comp[1]][: ((k + 1) * self.n)]
+                    )
+                )
                 if Ti > T:
                     T = Ti
                     imax = i
-                    Tsigned = np.sum(Z[comp[0]][:((k+1)* self.n)]- Z[comp[1]][:((k+1)*self.n)])
+                    Tsigned = np.sum(
+                        Z[comp[0]][: ((k + 1) * self.n)]
+                        - Z[comp[1]][: ((k + 1) * self.n)]
+                    )
 
-            if T > bk :
-                id_reject = np.arange(len(decisions))[decisions == 'continue'][imax]
-                decisions[id_reject] = 'reject'
+            if T > bk:
+                id_reject = np.arange(len(decisions))[decisions == "continue"][imax]
+                decisions[id_reject] = "reject"
                 self.rejected_decision.append(comparisons[id_reject])
+                self.rejected_sign.append(Tsigned > 0)
+
             else:
                 break
 
@@ -612,7 +661,7 @@ class MultipleAgentsComparator():
 
         return decisions, Tsigned, bk
 
-    def compare(self, managers, comparisons = None, clean_after = True):
+    def compare(self, managers, comparisons=None, clean_after=True, verbose=True):
         """
         Compare the managers pair by pair using Bonferroni correction.
 
@@ -622,33 +671,35 @@ class MultipleAgentsComparator():
         comparisons: list of tuple of indices or None
                 if None, all the pairwise comparison are done.
                 If = [(0,1), (0,2)] for instance, the compare only 0 vs 1  and 0 vs 2
+        verbose: boolean
 
         """
         n_managers = len(managers)
         if comparisons is None:
-            comparisons = np.array([(i,j) for i in range(n_managers) for j in range(n_managers) if i<j])
+            comparisons = np.array(
+                [(i, j) for i in range(n_managers) for j in range(n_managers) if i < j]
+            )
         self.comparisons = comparisons
-        Z = [ np.array([]) for _ in managers]
+        Z = [np.array([]) for _ in managers]
 
         # Initialization of the permutation distribution
         self.sum_diffs = []
-        self.n_iters = [0]*len(managers)
+        self.n_iters = [0] * len(managers)
 
         # spawn independent seeds, one for each fit and one for the comparator.
         seeders = self.seeder.spawn(len(managers) * self.K + 1)
         self.rng = seeders[-1].rng
-        decisions = np.array(["continue"]*len(comparisons))
+        decisions = np.array(["continue"] * len(comparisons))
         id_tracked = np.arange(len(decisions))
         for k in range(self.K):
-            
+
             Z = self._fit(managers, comparisons, Z, k, seeders, clean_after)
-            self.decisions, T, bk = self.partial_compare(Z,  comparisons, k)
+            self.decisions, T, bk = self.partial_compare(Z, comparisons, k, verbose)
 
             self.test_stats.append(T)
 
-
-            id_rejected = np.array(self.decisions) == 'reject'
-            decisions[id_tracked[id_rejected]]='reject'
+            id_rejected = np.array(self.decisions) == "reject"
+            decisions[id_tracked[id_rejected]] = "reject"
             id_tracked = id_tracked[~id_rejected]
             comparisons = comparisons[~id_rejected]
             self.sum_diffs = np.array(self.sum_diffs)[:, ~id_rejected]
@@ -657,11 +708,15 @@ class MultipleAgentsComparator():
                 logger.info("Reject all the null after " + str(k + 1) + " groups")
                 break
             else:
-                logger.info("Rejected "+str(np.sum(np.array(self.decisions) == "reject"))+" on interim " + str(k + 1))
+                logger.info(
+                    "Rejected "
+                    + str(np.sum(np.array(self.decisions) == "reject"))
+                    + " on interim "
+                    + str(k + 1)
+                )
 
-
-        if (k == self.K-1):
-            decisions[decisions == 'continue']="accept"
+        if k == self.K - 1:
+            decisions[decisions == "continue"] = "accept"
             logger.info(
                 "Did not reject all the null hypothesis: either K, n are too small or the agents perform similarly"
             )
@@ -669,75 +724,10 @@ class MultipleAgentsComparator():
         self.eval_values = Z
         self.mean_eval_values = [np.mean(z) for z in Z]
         return decisions
-
-    def compare_scalars(self, scalars, comparisons = None, clean_after = True):
-        """
-        Compare the managers pair by pair using Bonferroni correction.
-
-        Parameters
-        ----------
-        scalars : list of list of scalars.
-        comparisons: list of tuple of indices or None
-                if None, all the pairwise comparison are done.
-                If = [(0,1), (0,2)] for instance, the compare only 0 vs 1  and 0 vs 2
-
-        """
-        if comparisons is None:
-            comparisons = np.array([(i,j) for i in range(len(scalars)) for j in range(len(scalars)) if i<j])
-        self.comparisons = comparisons
-        Z = [ np.array([]) for _ in scalars]
-
-        # Initialization of the permutation distribution
-        self.sum_diffs = []
-        self.n_iters = [0]*len(scalars)
-
-        # spawn independent seeds, one for each fit and one for the comparator.
-        seeders = self.seeder.spawn(len(scalars) * self.K + 1)
-        self.rng = seeders[-1].rng
-        decisions = np.array(["continue"]*len(comparisons))
-        id_tracked = np.arange(len(decisions))
-        for k in range(self.K):
-
-            Z = self._get_z_scalars(scalars, comparisons, Z, k, seeders, clean_after)
-            self.decisions, T, bk = self.partial_compare(Z,  comparisons, k)
-
-            self.test_stats.append(T)
-
-
-            id_rejected = np.array(self.decisions) == 'reject'
-            decisions[id_tracked[id_rejected]]='reject'
-            id_tracked = id_tracked[~id_rejected]
-            comparisons = comparisons[~id_rejected]
-            self.sum_diffs = np.array(self.sum_diffs)[:, ~id_rejected]
-
-            if np.all(self.decisions == "reject"):
-                logger.info("Reject all the null after " + str(k + 1) + " groups")
-                break
-            else:
-                logger.info("Rejected "+str(np.sum(np.array(self.decisions) == "reject"))+" on interim " + str(k + 1))
-
-
-        if (k == self.K-1):
-            decisions[decisions == 'continue']="accept"
-            logger.info(
-                "Did not reject all the null hypothesis: either K, n are too small or the agents perform similarly"
-            )
-        self.decisions = decisions
-        self.eval_values = Z
-        self.mean_eval_values = [np.mean(z) for z in Z]
-        return decisions
-
-
-    def _get_z_scalars(self, scalars, comparisons, Z, k, seeders, clean_after):
-        for i in range(len(scalars)):
-            if i in np.array(comparisons).ravel():
-                self.n_iters[i] += self.n
-                Z[i] = np.hstack([Z[i], scalars[i][k*self.n : (k+1)*self.n]])
-        return Z
 
     def _fit(self, managers, comparisons, Z, k, seeders, clean_after):
-        agent_classes = [ manager[0] for manager in managers]
-        kwargs_list = [ manager[1] for manager in managers]
+        agent_classes = [manager[0] for manager in managers]
+        kwargs_list = [manager[1] for manager in managers]
         for kwarg in kwargs_list:
             kwarg["n_fit"] = self.n
         managers_in = []
@@ -746,11 +736,20 @@ class MultipleAgentsComparator():
                 agent_class = agent_classes[i]
                 kwargs = kwargs_list[i]
                 seeder = seeders[i]
-                managers_in.append( AgentManager(agent_class, **kwargs, seed=seeder) )
-                managers_in[-1].fit()
-                self.n_iters[i] += self.n
-                Z[i] = np.hstack([Z[i], self._get_evals(managers_in[-1])])
+                managers_in.append(AgentManager(agent_class, **kwargs, seed=seeder))
 
+        # For now, paralellize only training because _get_evals not pickleable
+        managers_in = Parallel(n_jobs=-1, backend=self.joblib_backend)(
+            delayed(_fit_agent)(manager) for manager in managers_in
+        )
+
+        idz = 0
+        for i in range(len(agent_classes)):
+            if i in np.array(comparisons).ravel():
+
+                self.n_iters[i] += self.n
+                Z[i] = np.hstack([Z[i], self._get_evals(managers_in[idz])])
+                idz += 1
         if clean_after:
             for m in managers_in:
                 m.clear_output_dir()
@@ -767,6 +766,7 @@ class MultipleAgentsComparator():
                 np.mean(manager.eval_agents(self.n_evaluations, agent_id=idx))
             )
         return eval_values
+
     def get_spending_fun(self):
         """
         Return the spending function corresponding to self.name
@@ -780,15 +780,13 @@ class MultipleAgentsComparator():
             )
         else:
             raise RuntimeError("name not implemented")
-        
+
     def plot_boundary(self):
         """
         Graphical representation of the boundary and the test statistics as it was computed during the self.compare execution.
         self.compare must have been executed prior to executing plot_boundary.
         """
-        assert (
-            len(self.boundary) > 0
-        ), "Boundary not found. Did you do the comparison?"
+        assert len(self.boundary) > 0, "Boundary not found. Did you do the comparison?"
 
         y1 = np.array(self.boundary)
         y2 = -y1
@@ -799,7 +797,7 @@ class MultipleAgentsComparator():
         plt.plot(x, y2, "o-", color=p2[0].get_color(), alpha=0.7)
 
         # test stats plot
-        for i,c in enumerate(self.comparisons):
+        for i, c in enumerate(self.comparisons):
             Ti = []
             Z1 = self.eval_values[c[0]]
             Z2 = self.eval_values[c[1]]
@@ -807,33 +805,28 @@ class MultipleAgentsComparator():
             K1 = self.n_iters[c[0]] // self.n
             K2 = self.n_iters[c[1]] // self.n
 
-            for k in range(min(K1,K2)):
-                T = np.sum(Z1[:((k+1)*self.n)])-np.sum(Z2[:((k+1)*self.n)])
-                if np.abs(T) <= self.boundary[k] :
-                    Ti.append( np.sum(Z1[:((k+1)*self.n)])-np.sum(Z2[:((k+1)*self.n)]))
+            for k in range(min(K1, K2)):
+                T = np.sum(Z1[: ((k + 1) * self.n)]) - np.sum(Z2[: ((k + 1) * self.n)])
+                if np.abs(T) <= self.boundary[k]:
+                    Ti.append(
+                        np.sum(Z1[: ((k + 1) * self.n)])
+                        - np.sum(Z2[: ((k + 1) * self.n)])
+                    )
                 else:
-                    Ti.append( np.sum(Z1[:((k+1)*self.n)])-np.sum(Z2[:((k+1)*self.n)]))
+                    Ti.append(
+                        np.sum(Z1[: ((k + 1) * self.n)])
+                        - np.sum(Z2[: ((k + 1) * self.n)])
+                    )
                     break
 
-            plt.scatter(x[:len(Ti)], Ti, label=str(c))
+            plt.scatter(x[: len(Ti)], Ti, label=str(c))
 
         plt.legend()
 
         plt.xlabel("$k$")
         plt.ylabel("test stat.")
 
-    # def power(self, M, delta, sigma, n_comparisons):
-    #     """
-    #     Estimation of the power using M MC estimation.
-    #     """
 
-    #     W = np.random.normal(size=(n_comparisons,self.K,M))
-    #     boundary = self.asym_boundary(M)
-
-    #     delta = np.abs(mup - muq)/np.sqrt(sigmap**2+sigmaq**2)
-    #     boundary_factor = np.sqrt(sigmap**2+sigmaq**2+(mup-muq)**2/2)/np.sqrt(sigmap**2+sigmaq**2)
-
-    #     events = []
-    #     for m in tqdm(range(M)):
-    #         events.append(np.any([ np.abs(np.mean(W[:(j+1),m]) + np.sqrt(self.n)*delta)> boundary[j]*boundary_factor for j in range(self.K)]))
-    #     return np.mean(events)
+def _fit_agent(manager):
+    manager.fit()
+    return manager
