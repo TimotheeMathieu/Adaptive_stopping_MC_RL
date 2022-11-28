@@ -725,6 +725,80 @@ class MultipleAgentsComparator:
         self.mean_eval_values = [np.mean(z) for z in Z]
         return decisions
 
+    def compare_scalars(self, scalars, comparisons=None, clean_after=True):
+        """
+        Compare the managers pair by pair using Bonferroni correction.
+
+        Parameters
+        ----------
+        scalars : list of list of scalars.
+        comparisons: list of tuple of indices or None
+                if None, all the pairwise comparison are done.
+                If = [(0,1), (0,2)] for instance, the compare only 0 vs 1  and 0 vs 2
+
+        """
+        if comparisons is None:
+            comparisons = np.array(
+                [
+                    (i, j)
+                    for i in range(len(scalars))
+                    for j in range(len(scalars))
+                    if i < j
+                ]
+            )
+        self.comparisons = comparisons
+        Z = [np.array([]) for _ in scalars]
+
+        # Initialization of the permutation distribution
+        self.sum_diffs = []
+        self.n_iters = [0] * len(scalars)
+
+        # spawn independent seeds, one for each fit and one for the comparator.
+        seeders = self.seeder.spawn(len(scalars) * self.K + 1)
+        self.rng = seeders[-1].rng
+        decisions = np.array(["continue"] * len(comparisons))
+        id_tracked = np.arange(len(decisions))
+        for k in range(self.K):
+
+            Z = self._get_z_scalars(scalars, comparisons, Z, k, seeders, clean_after)
+            self.decisions, T, bk = self.partial_compare(Z, comparisons, k)
+
+            self.test_stats.append(T)
+
+            id_rejected = np.array(self.decisions) == "reject"
+            decisions[id_tracked[id_rejected]] = "reject"
+            id_tracked = id_tracked[~id_rejected]
+            comparisons = comparisons[~id_rejected]
+            self.sum_diffs = np.array(self.sum_diffs)[:, ~id_rejected]
+
+            if np.all(self.decisions == "reject"):
+                logger.info("Reject all the null after " + str(k + 1) + " groups")
+                break
+            else:
+                logger.info(
+                    "Rejected "
+                    + str(np.sum(np.array(self.decisions) == "reject"))
+                    + " on interim "
+                    + str(k + 1)
+                )
+
+        if k == self.K - 1:
+            decisions[decisions == "continue"] = "accept"
+            logger.info(
+                "Did not reject all the null hypothesis: either K, n are too small or the agents perform similarly"
+            )
+        self.decisions = decisions
+        self.eval_values = Z
+        self.mean_eval_values = [np.mean(z) for z in Z]
+        return decisions
+
+    def _get_z_scalars(self, scalars, comparisons, Z, k, seeders, clean_after):
+        for i in range(len(scalars)):
+            if i in np.array(comparisons).ravel():
+                self.n_iters[i] += self.n
+                Z[i] = np.hstack([Z[i], scalars[i][k * self.n : (k + 1) * self.n]])
+        return Z
+
     def _fit(self, managers, comparisons, Z, k, seeders, clean_after):
         agent_classes = [manager[0] for manager in managers]
         kwargs_list = [manager[1] for manager in managers]
