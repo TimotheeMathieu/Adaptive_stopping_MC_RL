@@ -36,6 +36,7 @@
 
 \newcommand{\sign}{\text{sign}}
 \newcommand{\1}{\mathbbm{1}}
+\newcommand{\id}{\mathrm{id}}
 
 \newcommand{\argmin}{\arg\min}
 
@@ -84,11 +85,9 @@ A particular class of sequential test often used are the Sequential Probability 
 
 \paragraph{Bandits (Best arm identification or Ranking)} Our objective is close to the objective of ranking bandits algorithms. However compared to bandits we want to at the same time \textit{minimize the stopping time} (similar to fixed-confidence setting) of the algorithm and have a \textit{fixed maximum budget} (similar to fixed-budget setting). In our algorithm we allow for a type I error of $\alpha \in (0,1)$, which is very similar to the fixed confidence setting while still having a fixed budget. Then, compared to the fixed budget setting we allow a larger error rate and as a consequence we are more sample efficient than bandits algorithms.
 
-
-
 \section{Adaptive stopping using Group Sequential Testing}
 \subsection{Group sequential testing}
-\todoT{Explain why must be careful when doing GIT and that we can't just do several tests. Maybe also motivate using the confidence interval approach from NIPS article.}
+\todoT{Explain why must be careful when doing GST and that we can't just do several tests. Maybe also motivate using the confidence interval approach from NIPS article.}
 
 To choose $N$ adaptively, we propose to use group sequential testing (GST). GST are used in particular in clinical trials in which case an early stopping is desirable when comparing two drugs. We choose to use GST in particular and not sequential testing because the data are often naturally grouped due to the parallelization of the computation.
 
@@ -101,10 +100,9 @@ The presence of several modes in the distributions of the evaluations and the di
 
 For now, we suppose that $e(A)$ is a continuous random variable, in particular $\P(e_i(A)=e_j(A))=0$ for any $i \neq j$.
 
-\subsection{Algorithm}
-
+ 
 \subsection{High level description of the algorithm}
-We use the following algorithm.
+In the case where only two agents are compared, we use the following algorithm (see Section~\ref{sec:multi} for the multi-agent algorithm).
 
 \begin{algorithm}[h]
 \SetAlgoLined
@@ -142,38 +140,15 @@ An illustration of the group sequential test is given in figure~\ref{fig:gst}. T
 \todoT{For now, the illustration is done using toy model, with gaussian of drift 0.7. Real agent would be better.}
 
 
-\subsection{Speeding up permutation tests}
+\paragraph{Speeding up permutation tests}
 We use Monte-Carlo approximation, using random permutation instead of enumerating all the permutations.
 
-\section{Multiple testing}
-\subsection{Case of non-sequential permutation test}
+\paragraph{Multiple testing}
 When dealing with multiple testing, particular care must be taken so as not to decrease the error of the test. Suppose that we want to test $H_j$ versus $H_j'$ for $1\le j\le J$ using a test statistic $T_{n}^{(j)}$. Instead of the type I error considered in two-sample testing, we consider the family-wise error rate (FWE) which is defined as the probability of making at least one type I error:
 $$\mathrm{FWE} = \P_{H_1,\dots,H_J}\left(\exists 1\le j\le J:\quad  \text{reject }H_j \right).$$
 
-\paragraph{Bonferroni procedure:} a first approach is obtained by taking a threshold for $H_j$ vs $H_j'$ equal to a quantile of order $1-\alpha/J$ of the permutation distribution of $T_n^{(j)}$, this is the Bonferroni procedure and it can be very conservative.
 
-\paragraph{Step-down procedure:} another approach proposed by \cite{Romano_2003} is to consider a step-down procedure defined as follows: for some $\textbf{C} \subset \{1,\dots,J\}$, denote
-$$T_{n}^{(\textbf{C})}(\sigma)= \max\left(T_n^{(j)}(\sigma),\quad j \in \textbf{C}\right)$$
-\begin{algorithm}[h]
-\SetAlgoLined
-\SetKwInput{KwParameter}{Parameters}
-\KwParameter{$\alpha \in (0,1)$}
-Initialize $\textbf{C}=\{1,\dots,J\}$\\
-\While{$\textbf{C} \neq \emptyset$}{
-Compute $\widehat{c}_{n}^{(\textbf{C})}(1-\alpha)$ the quantile of order $1-\alpha$ of the permutation law of $T_{n}^{(\textbf{C})}(\sigma)$:
-$$\sum_{\sigma \in S_n} \1\{T_{n}^{(\textbf{C})}(\sigma) \ge  \widehat{c}_{n}^{(\textbf{C})}(1-\alpha)\} = \lfloor \alpha n! \rfloor .$$
-\If{$T_{n}^{(\textbf{C})}(\mathrm{id}) \le \widehat{c}_{n}^{(\textbf{C})}(1-\alpha)$}{
-Accept all the hypotheses $H_j, j\in \textbf{C}$ and break the loop.}
-\Else{
-Reject $H_{j_{\max}}$ where $j_{\max} =  \arg\max\left(T_n^{(j)}(\sigma),\quad j \in \textbf{C}\right)$.\\
-Define $\textbf{C}=\textbf{C} \setminus \{j_{max}\}$
-}
-}
-If the test was never rejected, return accept. Else return reject.
-\caption{Multiple testing, non-sequential.}\label{alg:multiple_test_1}
-\end{algorithm}
-The Algorithm~\ref{alg:multiple_test_1} is consistent (i.e. $\mathrm{FWE}\le \alpha$) for the equality of distribution hypotheses.
-\subsection{Sequential Step-Down method (Main algorithm)}
+\subsection{AdaStop: adaptive stopping algorithm using step-down method and group sequential permutation tests}
 For some $\textbf{C} \subset \{1,\dots,J\}$, denote
 $$T_{n,k}^{(\textbf{C})}(\sigma)= \max\left(\sum_{i=1}^kT_{n,i}^{(j)}(\sigma_i),\quad j \in \textbf{C}\right)$$
 where
@@ -191,12 +166,13 @@ Train agent $A_i$ on environment $\mathcal{E}$ with the seeds $s_{i,kn},\dots,s_
 Collect evaluations $e_{kn}(A_i),\dots,e_{(k+1)n}(A_i)$.\\
 }
 Compute $T_{n,k}^{(\textbf{C})}(\sigma)$ for every tuple of permutation $\sigma = (\sigma_1, \dots, \sigma_k)$, $\sigma_i \in S_n$.\\
-Compute $\widehat{c}_{n}^{(\textbf{C})}(1-\alpha)$ the quantile of order $1-\alpha$ of the permutation law of $T_{n}^{(\textbf{C})}(\sigma)$:
-$$\sum_{\sigma \in S_n} \1\{T_{n}^{(\textbf{C})}(\sigma) \ge  \widehat{c}_{n}^{(\textbf{C})}(1-\alpha)\} = \lfloor \alpha n! \rfloor .$$
-\If{$T_{n}^{(\textbf{C})}(\mathrm{id}) \le \widehat{c}_{n}^{(\textbf{C})}(1-\alpha)$}{
+Compute $\lambda = \alpha \left(\frac{k}{K}\right)- \alpha \left( \frac{k-1}{K}\right)$ the level of the test.
+Compute $\widehat{c}_{n,k}^{(\textbf{C})}(1-\alpha)$ the quantile of order $1-\lambda$ of the permutation law of $T_{n,k}^{(\textbf{C})}(\sigma)$:
+$$\sum_{\sigma \in S_n} \1\{T_{n,k}^{(\textbf{C})}(\sigma) \ge  \widehat{c}_{n,k}^{(\textbf{C})}(1-\alpha)\} = \lfloor \lambda n! \rfloor .$$
+\If{$T_{n,k}^{(\textbf{C})}(\mathrm{id}) \le \widehat{c}_{n,k}^{(\textbf{C})}(1-\alpha)$}{
 Accept all the hypotheses $H_j, j\in \textbf{C}$ and continue.}
 \Else{
-Reject $H_{j_{\max}}$ where $j_{\max} =  \arg\max\left(T_n^{(j)}(\sigma),\quad j \in \textbf{C}\right)$.\\
+Reject $H_{j_{\max}}$ where $j_{\max} =  \arg\max\left(T_{n,k}^{(j)}(\sigma),\quad j \in \textbf{C}\right)$.\\
 Update $\textbf{C}=\textbf{C} \setminus \{j_{max}\}$ and go to line 8.
 }
 \If{$\textbf{C}=\emptyset$}{
@@ -208,46 +184,13 @@ Break the loop and returns the answer: all comparisons are rejected.
 }
 }
 }
-\caption{Main algorithm}
+\caption{Main algorithm\label{algo:main}}
 \end{algorithm}
+
 \newpage
-\section{Asymptotic study}
-\subsection{Case of a non-sequential permutation test}
 
-Foor a sample $Z_1^n=(Z_1,\dots,Z_n)$, denote $\sigma Z_1^n$ the permuted sample using the permutation $\sigma$: $\sigma Z_1^n=(Z_{\sigma(1)},\dots,Z_{\sigma(n)})$.\\
-For $T_n$ the difference of empirical mean, we have the following property.
-
-\begin{Proposition}\label{prop:asym_perm_test}
-Let $T_n(Z_1,\dots,Z_{2n})=\frac{1}{\sqrt{n}}\sum_{i=1}^n Z_i -\frac{1}{n}\sum_{i=n+1}^{2n} Z_i$.
-
-Suppose $X_1,\dots,X_n$ are i.i.d from $P$ and $Y_1,\dots,Y_n$ are i.i.d from $Q$ and both $P$ and $Q$ has finite variance. Denote $Z_1,\dots,Z_{2n}=X_1,\dots,X_n, Y_1,\dots,Y_n$ the concatenation of the two samples. Then, we have
-$$\sup_{t}\left|\frac{1}{n!}\sum_{\sigma \in S_n} \1\{T_n(\sigma Z_{1}^{2n}) \le t\}- \Phi\left(t/\tau(P,Q) \right)\right|\xrightarrow[n \to \infty]{P} 0$$
-where $\tau(P,Q)^2=\sigma_P^2+\sigma_Q^2+\frac{(\mu_P- \mu_Q)^2}{2} $.
-\end{Proposition}
-Remark: this proposition can be extended to other $T_n$ statistics using Theorem 2.1 in \cite{Chung_2013} or Theorem 15.2.5 of \cite{lehmann2005testing}.
-%\todoT{Maybe I could do an edgeworth expansion to show that the convergence is with speed $1/n$ (under $H_0$ ?) because of the symmetry of $T$. Using \cite{Romano_1990} and \cite[Theorem 7]{Petrov_1975}. The expansion could be used to derive an approximation of the power that could be used to set K beforehand.}
-%\todoT{Another possible interesting result would be to show how many random permutations we need to estimate the true permutation distribution. Concentration inequalities could be used here.}
-
-Using Proposition~\ref{prop:asym_perm_test}, we have that the empirical quantile defined by
-$$Q_{1-\alpha}(T_n) = \inf\left\{t \in \R:\quad \frac{1}{n!}\sum_{\sigma \in S_n} \1\{T_n(\sigma Z_{1}^{2n}) \le t\} \ge 1-\alpha\right\} $$
-converges to the quantiles of a Gaussian with variance $\tau^2$
-$$Q_{1-\alpha}(T_n)\xrightarrow[n \to \infty]{P} \tau(P,Q)\Phi^{-1}(1-\alpha) $$
-
- Hence, if $\mu_P = \mu_Q$ is true, in which case $T_n$ converges in distribution to $T_\infty\sim \mathcal{N}(0,\sigma_P^2+\sigma_Q^2 )$ and then
-$$\P\left( T_n \ge Q_{1-\alpha}(T_n)\right) \xrightarrow[n \to \infty]{} \P(T_\infty\ge \tau(P,Q)\Phi^{-1}(1-\alpha)) \ge  1-\Phi\left(\tau(P,Q)\frac{\Phi^{-1}(1-\alpha)}{\sigma_P^2+\sigma_Q^2 } \right)=\alpha  $$
-
-On the other hand, if $\mu_P > \mu_Q$, then $T_n \simeq \mathcal{N}(\sqrt{n}(\mu_P-\mu_Q),\sigma_P^2+\sigma_Q^2 ) $
-
-\begin{align*}
-\P\left( T_n \ge Q_{1-\alpha}(T_n)\right)&\simeq  1-\Phi\left(\tau(P,Q)\frac{\Phi^{-1}(1-\alpha)}{\sigma_P^2+\sigma_Q^2 }-  \sqrt{n}\frac{\mu_P-\mu_Q}{\sqrt{\sigma_P^2+\sigma_Q^2}} \right)  \\
-&\simeq  1-\Phi\left(\Phi^{-1}(1-\alpha)\left(1+\frac{(\mu_P-\mu_Q)^2}{\sigma_P^2+\sigma_Q^2 }\right)-  \sqrt{n}\frac{\mu_P-\mu_Q}{\sqrt{\sigma_P^2+\sigma_Q^2}} \right)
-\end{align*}
-For a given drift $\mu_P-\mu_Q$, we can solve for $n$ to get a sample size required in order to converge to a given power.
-
-Example: suppose we want to detect a drift $\mu_P-\mu_Q=\sqrt{\sigma_P^2+\sigma_Q^2}$ in with probability $0.9$. Then we solve $1-\Phi\left(\Phi^{-1}(1-\alpha)\left(1+\frac{(\mu_P-\mu_Q)^2}{\sigma_P^2+\sigma_Q^2 }\right)-  \sqrt{n}\frac{\mu_P-\mu_Q}{\sqrt{\sigma_P^2+\sigma_Q^2}} \right) = 0.9$ and get that $n$ must be larger than $21$.
-
-\subsection{Permutation Group Sequential tests}
-
+\section{Theoretical guarentees}
+\todoT{Goal: Show 1) FWE is controlled 2) early accept is also OK for some definition of power 3) asymptotically (maybe for 2 agents only) we control more than $P=Q$ vs $P\neq Q$.} 
 Denote $S_{i}^{i+j}=(S_i, S_{i+1},\dots, S_{i+j})$ and let $T_n(S_1^n)=T(S_1,\dots,S_{2n})=\frac{1}{\sqrt{n}}\sum_{i=1}^n S_i -\frac{1}{n}\sum_{i=n+1}^{2n} S_i$. Denote by
 $$\widehat{R}_{n,k}(t)=\frac{1}{n!}\sum_{\sigma \in S_{2n}} \1\{\sqrt{n}T_n(\sigma S_{2nk}^{2n(k+1)}) \le t\} $$
 the randomization distribution of $T_n$ where for any permutation $\sigma \in S_n$,
@@ -313,14 +256,122 @@ $$\P\left( |T_n(\mathrm{id}S_1^{2n})| > B_1\right) = \P\left( \left|W_1\sqrt{\si
 Proceeding similarly, we have that there exists $W_1,\dots,W_K$ i.i.d. $\mathcal{N}(0,1)$ random variables such that
 $$\P\left( \exists k \le K:\, \left|\frac{1}{k}\sum_{j=1}^k T_{n,j}(\mathrm{id})\right| > B_k\right) =\P\left( \exists k \le K:\, \left|\frac{\sqrt{\sigma_X^2+\sigma_Y^2}}{k}\sum_{j=1}^kW_j + \sqrt{n}(\mu_X-\mu_Y)\right| > b_k\right) + o_P(1).$$
 This approximation of the power can be computed approximately using Monte-Carlo methods, using gaussian concentration inequality to know how many Monte-Carlo iteration are necessary to approximate the power.
-% One way to bound this is to state that
-% \begin{align*}
-% \P&\left( \exists k \le K:\, \left| \frac{\sqrt{\sigma_X^2+\sigma_Y^2}}{k}\sum_{j=1}^kW_j + \sqrt{n}(\mu_X-\mu_Y)\right| > b_k\right)\\
-% & \ge  \P\left( \exists k \le K:\,\left| \frac{\sqrt{\sigma_X^2+\sigma_Y^2}}{k}\sum_{j=1}^kW_j \right|  < -b_k+\sqrt{n}|\mu_X-\mu_Y|\right)\\
-% & \ge  \P\left(  \frac{\sqrt{\sigma_X^2+\sigma_Y^2}}{K}\left|\sum_{j=1}^KW_j \right| +b_K < \sqrt{n}|\mu_X-\mu_Y|\right)\\
-% \end{align*}
 
 \end{itemize}
+
+\subsection{Multiple testing}
+\begin{Theorem}
+The test resulting from Algorithm~\ref{algo:main} has a strong control on the FWE: we have $\mathrm{FWE}\le\alpha$.
+\end{Theorem}
+\begin{proof}
+Let $\textbf{I}$ be the set of true hypotheses. Consider the event where a true hypothesis $H_j$ is rejected for some $j \in \textbf{I}$, let $\widehat{j}$ the the (random) indice of the first hypothesis which is rejected.
+
+We have 
+\begin{equation}\label{eq:multi1}
+\mathrm{FWE} = \P\left(\text{reject }H_{\widehat{j}} \right)= \sum_{k=1}^K \P\left(\text{reject }H_{\widehat{j}} \text{ at interim k} \Big| \text{did not reject }H_{\widehat{j}} \text{ before interim k} \right) 
+\end{equation}
+
+\paragraph{First interim:}
+
+At the first interim, we have
+$$\P\left(\text{reject }H_{\widehat{j}} \text{ at interim 1}\right)= \P\left(\exists \textbf{C}: \, T_{n,1}^{\widehat{j}}(\id) = T_{n,1}^{(\textbf{C})}(\id) > \widehat{c}_{n,1}^{(\textbf{C})}(1-\alpha) \right) $$
+Then, because $\widehat{j}$ is the first hypothesis of $I$ rejected, we have $\textbf{I} \subset \textbf{C}$, hence for any $\sigma \in S_n$, $ T_{n,1}^{(\textbf{C})}(\sigma)\ge T_{n,1}^{(\textbf{I})}(\sigma)$ and the quantiles verify $ \widehat{c}_{n,1}^{(\textbf{C})}(1-\alpha) \ge \widehat{c}_{n,1}^{(\textbf{I})}(1-\alpha)$,
+ and moreover again because $\widehat{j} \in \textbf{I}$ we have
+$$T_{n,1}^{\widehat{j}}(\id)=\max(T_{n,1}^{j}(\id), j \in  \textbf{C}) = \max(T_{n,1}^{j}(\id), j \in  \textbf{I}) = T_{n,1}^{(\textbf{I})}(\id).$$
+Hence,
+\begin{equation}\label{eq:interim1_multi}
+\P\left(\text{reject }H_{\widehat{j}} \text{ at interim 1}\right)\le \P\left( T_{n,1}^{(\textbf{I})}(\id) > \widehat{c}_{n,1}^{(\textbf{I})}(1-\alpha) \right) \le  \alpha(1/K) 
+\end{equation}
+the last inequality is by definition of $\widehat{c}_{n,1}^{(\textbf{I})}(1-\alpha)$
+
+\paragraph{Interim $1<k\le  K$:}
+
+At interim $k$, if we have that none of the hypotheses in $\textbf{I}$ have been rejected, then we are reasoning conditionally on not having rejected before, i.e. we have 
+$$ \forall m < k, \, \exists \textbf{C}_j \supset \textbf{I}  : T_{n,m}^{(\textbf{C}_j)}(\id) \le \widehat{c}_{n,m}^{(\textbf{C}_j)}(1-\alpha).$$
+and by definition of $\widehat{c}_{n,k}^{(\textbf{I})}(1-\alpha)$, we have
+$$\P\left( T_{n,k}^{(\textbf{I})}(\id)> \widehat{c}_{n,k}^{(\textbf{I})}(1-\alpha)  \Big|  \forall m < k, \, \exists \textbf{C}_m \supset \textbf{I}  : T_{n,m}^{(\textbf{C}_m)}(\id) \le \widehat{c}_{n,m}^{(\textbf{C}_m)}(1-\alpha)\right) = \alpha\left(\frac{k}{K}\right)-\alpha\left(\frac{k-1}{K}\right) $$
+and similarly to interim 1, we have 
+$$T_{n,k}^{(\textbf{C}_{\widehat{j}})}(\id)> \widehat{c}_{n,k}^{(\textbf{C}_{\widehat{j}})}(1-\alpha)\, \Leftrightarrow \,
+ T_{n,k}^{(\textbf{I})}(\id) > \widehat{c}_{n,k}^{(\textbf{I})}(1-\alpha)  $$
+Hence, 
+ \begin{multline*}
+\P\left(\text{reject }H_{\widehat{j}} \text{ at interim k} \Big| \text{did not reject }H_{\widehat{j}} \text{ before interim k}\right)\\
+= \P\left( T_{n,k}^{(\textbf{C}_{\widehat{j}})}(\id)> \widehat{c}_{n,k}^{(\textbf{C}_{\widehat{j}})}(1-\alpha)  \Big|  \forall m < k, \, \exists \textbf{C}_m \supset \textbf{I}  : T_{n,m}^{(\textbf{C}_m)}(\id) \le \widehat{c}_{n,m}^{(\textbf{C}_m)}(1-\alpha)\right)\\
+= \P\left(T_{n,k}^{(\textbf{I})}(\id) > \widehat{c}_{n,k}^{(\textbf{I})}(1-\alpha)  \Big|  \forall m < k, \, \exists \textbf{C}_m \supset \textbf{I}  : T_{n,m}^{(\textbf{C}_m)}(\id) \le \widehat{c}_{n,m}^{(\textbf{C}_m)}(1-\alpha) \right)
+ = \alpha\left(\frac{k}{K}\right)-\alpha\left(\frac{k-1}{K}\right)
+\end{multline*}
+which together with Equation~\eqref{eq:interim1_multi} and \eqref{eq:multi1} gives strong FWE control.
+\end{proof}
+\newpage
+\section{Simulation study}
+\todoT{Misspecification study of Gaussian GST on uniform and maybe on multi-modal distributions}
+\todoT{Comparison of GST algorithms on gaussian Data.}
+\section{Experimental results}
+\todoT{Apply to some classical algorithms on classical environments. Maybe also try to
+replicate adaptively the results of the NIPS article : do we also stop around 20 iterations when comparing two agents on an Atari environment?}
+\todoT{Compare with article https://arxiv.org/pdf/1806.08295.pdf on environments that are simpler than Atari. Maybe show that depending on the environment the number of seeds needed can vary a lot.}
+\appendix
+
+\section{Non-sequential permutation test}
+
+Foor a sample $Z_1^n=(Z_1,\dots,Z_n)$, denote $\sigma Z_1^n$ the permuted sample using the permutation $\sigma$: $\sigma Z_1^n=(Z_{\sigma(1)},\dots,Z_{\sigma(n)})$.\\
+For $T_n$ the difference of empirical mean, we have the following property.
+
+\begin{Proposition}\label{prop:asym_perm_test}
+Let $T_n(Z_1,\dots,Z_{2n})=\frac{1}{\sqrt{n}}\sum_{i=1}^n Z_i -\frac{1}{n}\sum_{i=n+1}^{2n} Z_i$.
+
+Suppose $X_1,\dots,X_n$ are i.i.d from $P$ and $Y_1,\dots,Y_n$ are i.i.d from $Q$ and both $P$ and $Q$ has finite variance. Denote $Z_1,\dots,Z_{2n}=X_1,\dots,X_n, Y_1,\dots,Y_n$ the concatenation of the two samples. Then, we have
+$$\sup_{t}\left|\frac{1}{n!}\sum_{\sigma \in S_n} \1\{T_n(\sigma Z_{1}^{2n}) \le t\}- \Phi\left(t/\tau(P,Q) \right)\right|\xrightarrow[n \to \infty]{P} 0$$
+where $\tau(P,Q)^2=\sigma_P^2+\sigma_Q^2+\frac{(\mu_P- \mu_Q)^2}{2} $.
+\end{Proposition}
+Remark: this proposition can be extended to other $T_n$ statistics using Theorem 2.1 in \cite{Chung_2013} or Theorem 15.2.5 of \cite{lehmann2005testing}.
+%\todoT{Maybe I could do an edgeworth expansion to show that the convergence is with speed $1/n$ (under $H_0$ ?) because of the symmetry of $T$. Using \cite{Romano_1990} and \cite[Theorem 7]{Petrov_1975}. The expansion could be used to derive an approximation of the power that could be used to set K beforehand.}
+%\todoT{Another possible interesting result would be to show how many random permutations we need to estimate the true permutation distribution. Concentration inequalities could be used here.}
+
+Using Proposition~\ref{prop:asym_perm_test}, we have that the empirical quantile defined by
+$$Q_{1-\alpha}(T_n) = \inf\left\{t \in \R:\quad \frac{1}{n!}\sum_{\sigma \in S_n} \1\{T_n(\sigma Z_{1}^{2n}) \le t\} \ge 1-\alpha\right\} $$
+converges to the quantiles of a Gaussian with variance $\tau^2$
+$$Q_{1-\alpha}(T_n)\xrightarrow[n \to \infty]{P} \tau(P,Q)\Phi^{-1}(1-\alpha) $$
+
+ Hence, if $\mu_P = \mu_Q$ is true, in which case $T_n$ converges in distribution to $T_\infty\sim \mathcal{N}(0,\sigma_P^2+\sigma_Q^2 )$ and then
+$$\P\left( T_n \ge Q_{1-\alpha}(T_n)\right) \xrightarrow[n \to \infty]{} \P(T_\infty\ge \tau(P,Q)\Phi^{-1}(1-\alpha)) \ge  1-\Phi\left(\tau(P,Q)\frac{\Phi^{-1}(1-\alpha)}{\sigma_P^2+\sigma_Q^2 } \right)=\alpha  $$
+
+On the other hand, if $\mu_P > \mu_Q$, then $T_n \simeq \mathcal{N}(\sqrt{n}(\mu_P-\mu_Q),\sigma_P^2+\sigma_Q^2 ) $
+
+\begin{align*}
+\P\left( T_n \ge Q_{1-\alpha}(T_n)\right)&\simeq  1-\Phi\left(\tau(P,Q)\frac{\Phi^{-1}(1-\alpha)}{\sigma_P^2+\sigma_Q^2 }-  \sqrt{n}\frac{\mu_P-\mu_Q}{\sqrt{\sigma_P^2+\sigma_Q^2}} \right)  \\
+&\simeq  1-\Phi\left(\Phi^{-1}(1-\alpha)\left(1+\frac{(\mu_P-\mu_Q)^2}{\sigma_P^2+\sigma_Q^2 }\right)-  \sqrt{n}\frac{\mu_P-\mu_Q}{\sqrt{\sigma_P^2+\sigma_Q^2}} \right)
+\end{align*}
+For a given drift $\mu_P-\mu_Q$, we can solve for $n$ to get a sample size required in order to converge to a given power.
+
+Example: suppose we want to detect a drift $\mu_P-\mu_Q=\sqrt{\sigma_P^2+\sigma_Q^2}$ in with probability $0.9$. Then we solve $1-\Phi\left(\Phi^{-1}(1-\alpha)\left(1+\frac{(\mu_P-\mu_Q)^2}{\sigma_P^2+\sigma_Q^2 }\right)-  \sqrt{n}\frac{\mu_P-\mu_Q}{\sqrt{\sigma_P^2+\sigma_Q^2}} \right) = 0.9$ and get that $n$ must be larger than $21$.
+\section{Non-sequential multiple tests}
+
+\paragraph{Bonferroni procedure:} a first approach is obtained by taking a threshold for $H_j$ vs $H_j'$ equal to a quantile of order $1-\alpha/J$ of the permutation distribution of $T_n^{(j)}$, this is the Bonferroni procedure and it can be very conservative.
+
+\paragraph{Step-down procedure:} another approach proposed by \cite{Romano_2003} is to consider a step-down procedure defined as follows: for some $\textbf{C} \subset \{1,\dots,J\}$, denote
+$$T_{n}^{(\textbf{C})}(\sigma)= \max\left(T_n^{(j)}(\sigma),\quad j \in \textbf{C}\right)$$
+\begin{algorithm}[h]
+\SetAlgoLined
+\SetKwInput{KwParameter}{Parameters}
+\KwParameter{$\alpha \in (0,1)$}
+Initialize $\textbf{C}=\{1,\dots,J\}$\\
+\While{$\textbf{C} \neq \emptyset$}{
+Compute $\widehat{c}_{n}^{(\textbf{C})}(1-\alpha)$ the quantile of order $1-\alpha$ of the permutation law of $T_{n}^{(\textbf{C})}(\sigma)$:
+$$\sum_{\sigma \in S_n} \1\{T_{n}^{(\textbf{C})}(\sigma) \ge  \widehat{c}_{n}^{(\textbf{C})}(1-\alpha)\} = \lfloor \alpha n! \rfloor .$$
+\If{$T_{n}^{(\textbf{C})}(\mathrm{id}) \le \widehat{c}_{n}^{(\textbf{C})}(1-\alpha)$}{
+Accept all the hypotheses $H_j, j\in \textbf{C}$ and break the loop.}
+\Else{
+Reject $H_{j_{\max}}$ where $j_{\max} =  \arg\max\left(T_n^{(j)}(\sigma),\quad j \in \textbf{C}\right)$.\\
+Define $\textbf{C}=\textbf{C} \setminus \{j_{max}\}$
+}
+}
+If the test was never rejected, return accept. Else return reject.
+\caption{Multiple testing, non-sequential.}\label{alg:multiple_test_1}
+\end{algorithm}
+The Algorithm~\ref{alg:multiple_test_1} is consistent (i.e. $\mathrm{FWE}\le \alpha$) for the equality of distribution hypotheses.
+
+
 \section{Proof of Theorem~\ref{th:conv_boundary}}
 \paragraph{Convergence of $B_1$}
 $$B_1 = \min \left\{ b>0 : \P_\sigma(|T_{n,1}(\sigma_1)|\ge b) \le \alpha\left(\frac{1}{K}\right)\right\} $$
@@ -399,14 +450,7 @@ We have, because the convergence is uniform,
 \end{align*}
 Finally, use that by hypothesis, $B_j \to b_j$ and $T_{n,j} \to W_j$ to conclude that the lemma is true by dominated convergence.
 \todoT{Maybe explain this further}
-\newpage
-\section{Simulation study}
-\todoT{Misspecification study of Gaussian GST on uniform and maybe on multi-modal distributions}
-\todoT{Comparison of GST algorithms on gaussian Data.}
-\section{Experimental results}
-\todoT{Apply to some classical algorithms on classical environments. Maybe also try to
-replicate adaptively the results of the NIPS article : do we also stop around 20 iterations when comparing two agents on an Atari environment?}
-\todoT{Compare with article https://arxiv.org/pdf/1806.08295.pdf on environments that are simpler than Atari. Maybe show that depending on the environment the number of seeds needed can vary a lot.}
+
 % \section{Other possible algorithms}
 % \begin{algorithm}[h]
 % \SetAlgoLined
