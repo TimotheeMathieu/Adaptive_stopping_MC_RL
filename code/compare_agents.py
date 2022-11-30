@@ -26,6 +26,7 @@ logger = logging.getLogger()
 # TO DO:
 # * Be careful about ties
 
+
 class Two_AgentsComparator:
     """
     Compare sequentially two agents, with possible early stopping.
@@ -185,9 +186,9 @@ class Two_AgentsComparator:
         """
         spending_fun_a = self.get_spending_fun(self.alpha)
         spending_fun_b = self.get_spending_fun(self.beta)
-        
+
         clevel = spending_fun((k + 1) / self.K)
-        dlevel = spending_fun_b((k+1)/self.K)
+        dlevel = spending_fun_b((k + 1) / self.K)
 
         rs = np.abs(np.array(self.compute_sum_diffs(k, Z, self.boundary)))
 
@@ -213,9 +214,9 @@ class Two_AgentsComparator:
             bk_sup = np.inf
             level_to_add = 0
 
-            cumulative_probas = np.arange(len(rs_now))/ len(
+            cumulative_probas = np.arange(len(rs_now)) / len(
                 rs_now
-            )# corresponds to P(T < t)
+            )  # corresponds to P(T < t)
             admissible_values_inf = values[
                 self.power_spent + cumulative_probas < dlevel
             ]
@@ -223,19 +224,18 @@ class Two_AgentsComparator:
             if len(admissible_values_inf) > 0:
                 bk_inf = admissible_values_inf[-1]  # the maximum admissible value
                 power_to_add = cumulative_probas[
-                     self.power_spent + cumulative_probas <= dlevel
+                    self.power_spent + cumulative_probas <= dlevel
                 ][-1]
             else:
                 bk_inf = -np.inf
                 power_to_add = 0
 
-            
         # Test statistic
         T = np.abs(np.sum(Z * (-1) ** X))
 
         self.level_spent += level_to_add  # level effectively used at this point
         self.power_to_add += power_to_add
-        
+
         self.boundary.append((bk_inf, bk_sup))
 
         self._writer.add_scalar("Stat_val", T, k)
@@ -295,7 +295,9 @@ class Two_AgentsComparator:
             Z = np.hstack([Z, self._get_evals(m1), self._get_evals(m2)])
             X = np.hstack([X, np.zeros(self.n), np.ones(self.n)])
 
-            self.decision, Tsigned, bk_inf, bk_sup, p_val = self.partial_compare(Z, X, k, verbose)
+            self.decision, Tsigned, bk_inf, bk_sup, p_val = self.partial_compare(
+                Z, X, k, verbose
+            )
 
             self.test_stats.append(Tsigned)
             if clean_after:
@@ -362,7 +364,9 @@ class Two_AgentsComparator:
             )
             X = np.hstack([X, np.zeros(self.n), np.ones(self.n)])
 
-            self.decision, Tsigned, bk_inf, bk_sup, p_val = self.partial_compare(Z, X, k)
+            self.decision, Tsigned, bk_inf, bk_sup, p_val = self.partial_compare(
+                Z, X, k
+            )
 
             self.test_stats.append(Tsigned)
             if self.decision == "reject":
@@ -406,9 +410,9 @@ class Two_AgentsComparator:
         x = np.arange(1, len(y1) + 1)
         p2 = plt.plot(x, y1, "o-", label="Boundary inf", alpha=0.7)
         plt.plot(x, y2, "o-", color=p2[0].get_color(), alpha=0.7)
-        p3 = plt.plot(x, y3, "o-",label="Boundary sup", alpha=0.7)
+        p3 = plt.plot(x, y3, "o-", label="Boundary sup", alpha=0.7)
         plt.plot(x, y4, "o-", color=p3[0].get_color(), alpha=0.7)
-        
+
         plt.scatter(x, self.test_stats, color="red", label="observations")
         plt.legend()
         plt.xlabel("$k$")
@@ -555,7 +559,6 @@ class MultipleAgentsComparator:
         self.joblib_backend = joblib_backend
         self.agent_names = []
 
-
     def compute_sum_diffs(self, k, Z, comparisons, boundary):
         """
         Compute the absolute value of the sum differences.
@@ -626,7 +629,7 @@ class MultipleAgentsComparator:
         spending_fun_b = self.get_spending_fun(self.beta)
 
         clevel = spending_fun_a((k + 1) / self.K)
-        dlevel = spending_fun_b((k+1)/self.K)
+        dlevel = spending_fun_b((k + 1) / self.K)
 
         rs = np.abs(np.array(self.compute_sum_diffs(k, Z, comparisons, self.boundary)))
         decisions = np.array(["continue"] * len(comparisons))
@@ -660,9 +663,9 @@ class MultipleAgentsComparator:
                 bk_sup = np.inf
                 level_to_add = 0
 
-            cumulative_probas = np.arange(len(rs_now))/ len(
+            cumulative_probas = np.arange(len(rs_now)) / len(
                 rs_now
-            )# corresponds to P(T < t)
+            )  # corresponds to P(T < t)
             admissible_values_inf = values[
                 self.power_spent + cumulative_probas < dlevel
             ]
@@ -670,12 +673,11 @@ class MultipleAgentsComparator:
             if len(admissible_values_inf) > 0:
                 bk_inf = admissible_values_inf[-1]  # the maximum admissible value
                 power_to_add = cumulative_probas[
-                     self.power_spent + cumulative_probas <= dlevel
+                    self.power_spent + cumulative_probas <= dlevel
                 ][-1]
             else:
                 bk_inf = -np.inf
                 power_to_add = 0
-                
 
             # Test statistic
             Tmax = 0
@@ -710,15 +712,14 @@ class MultipleAgentsComparator:
                 decisions[id_reject] = "reject"
                 self.rejected_decision.append(comparisons[id_reject])
                 self.rejected_sign.append(Tmaxsigned > 0)
-                print('reject')
+                print("reject")
             elif Tmin < bk_inf:
                 id_accept = np.arange(len(decisions))[decisions == "continue"][imin]
                 decisions[id_accept] = "accept"
             else:
                 break
-            
-        self.boundary.append((bk_inf,bk_sup))
-        
+
+        self.boundary.append((bk_inf, bk_sup))
 
         self._writer.add_scalar("Stat_val_max", Tmax, k)
         self._writer.add_scalar("Stat_val_min", Tmin, k)
@@ -764,7 +765,9 @@ class MultipleAgentsComparator:
         for k in range(self.K):
 
             Z = self._fit(managers, comparisons, Z, k, seeders, clean_after)
-            self.decisions, T, bk_sup, bk_inf = self.partial_compare(Z, comparisons, k, verbose)
+            self.decisions, T, bk_sup, bk_inf = self.partial_compare(
+                Z, comparisons, k, verbose
+            )
             self.test_stats.append(T)
 
             id_decided = np.array(self.decisions) != "continue"
@@ -774,12 +777,11 @@ class MultipleAgentsComparator:
             decisions[id_tracked[id_rejected]] = "reject"
             decisions[id_tracked[id_accepted]] = "accept"
 
-
             id_tracked = id_tracked[~id_decided]
             comparisons = comparisons[~id_decided]
             self.sum_diffs = np.array(self.sum_diffs)[:, ~id_decided]
 
-            if np.all([ d in ["accept", "reject"] for d in self.decisions]):
+            if np.all([d in ["accept", "reject"] for d in self.decisions]):
                 break
             else:
                 logger.info(
@@ -843,10 +845,10 @@ class MultipleAgentsComparator:
 
             id_tracked = id_tracked[~id_decided]
             comparisons = comparisons[~id_decided]
-            
+
             self.sum_diffs = np.array(self.sum_diffs)[:, ~id_decided]
 
-            if np.all([ d in ["accept", "reject"] for d in self.decisions]):
+            if np.all([d in ["accept", "reject"] for d in self.decisions]):
                 break
             else:
                 logger.info(
@@ -946,7 +948,7 @@ class MultipleAgentsComparator:
         x = np.arange(1, len(y1) + 1)
         p2 = plt.plot(x, y1, "o-", label="Boundary inf", alpha=0.7)
         plt.plot(x, y2, "o-", color=p2[0].get_color(), alpha=0.7)
-        p3 = plt.plot(x, y3, "o-",label="Boundary sup", alpha=0.7)
+        p3 = plt.plot(x, y3, "o-", label="Boundary sup", alpha=0.7)
         plt.plot(x, y4, "o-", color=p3[0].get_color(), alpha=0.7)
 
         # test stats plot
@@ -978,50 +980,79 @@ class MultipleAgentsComparator:
 
         plt.xlabel("$k$")
         plt.ylabel("test stat.")
-    def plot_results(self, agent_names = None):
+
+    def plot_results(self, agent_names=None):
         """
-        For now, not very scalable and works for up to 6~7 agents
+        visual representation of results.
         """
-        
+
         id_sort = np.argsort(self.mean_eval_values)
         Z = np.array(self.eval_values)[id_sort]
 
         if agent_names is None:
             agent_name = self.agent_names
 
-        
-        def make_link(couple, ax,  colors, xshift=0, yshift=0, lengths= None,  i = 0):
-            color = colors(1-lengths[i]/(np.max(lengths)*2))
+        def make_link(couple, ax, xshift=0, yshift=0, current_y=0, lengths=None, i=0):
+            if self.decisions[i] == "accept":
+                colors = plt.cm.Blues
+            else:
+                colors = plt.cm.Reds
+
+            color = colors(1 - 0.4 * lengths[i] / np.max(lengths))
             profondeur = len(set(lengths)) - lengths[i]
             num_smaller = np.sum(lengths < lengths[i])
-            xs = [ 1+c+xshift for c in couple]
+            xs = [1 + c + xshift for c in couple]
             xs = np.sort(xs)
-            xs = [xs[0]+0.03*profondeur, xs[1]-0.03*profondeur]
-            ax.vlines( xs, 0 , yshift + (i-num_smaller)  * 0.04 + lengths[i]*0.1, colors=color,  alpha = 0.85)
-            ax.hlines([yshift + (i-num_smaller)*0.04 + lengths[i]*0.1 ], xs[0], xs[1], colors=color,  alpha=0.85)
+            xs = [xs[0] + 0.03 * profondeur, xs[1] - 0.03 * profondeur]
+            ax.vlines(
+                xs,
+                0,
+                current_y + yshift,
+                colors="k",
+                alpha=1,
+                linewidth=0.5,
+                linestyle="--",
+            )
+            ax.hlines(
+                [current_y + yshift], xs[0], xs[1], colors=color, alpha=1, linewidth=1
+            )
+            return current_y + yshift
 
-        def sort_smallest_first(couples):
-            lengths = [np.abs(c[1]-c[0]) for c in couples]
-            return np.array(couples)[np.argsort(lengths)], np.sort(lengths)
+        def argsort_smallest_first(couples):
+            lengths = [np.abs(c[1] - c[0]) for c in couples]
+            return np.sort(lengths), np.argsort(lengths)
 
-        fig, (ax1, ax2) = plt.subplots(2,1, gridspec_kw={'height_ratios': [1, 2], "hspace":0}, sharex = True)
+        fig, (ax1, ax2) = plt.subplots(
+            2, 1, gridspec_kw={"height_ratios": [1, 2], "hspace": 0}, sharex=True
+        )
 
-        accepted = self.comparisons[self.decisions == "accept"]
-        rejected = self.comparisons[self.decisions == "reject"]
+        the_table = ax1.table(
+            cellText=[self.n_iters], rowLabels=["n_iter"], loc="top", cellLoc="center"
+        )
 
-        accepted, la = sort_smallest_first(accepted)
-        rejected, lr = sort_smallest_first(rejected)
+        for cell in the_table.get_children():
+            cell.set_edgecolor("#AAA9AD")
+
+        plt.subplots_adjust(left=0.1, top=0.9)
+
+        lengths, idsort = argsort_smallest_first(self.comparisons)
 
         ax1.get_yaxis().set_ticks([])
 
-        for i, couple in enumerate(accepted):
-            make_link(couple, ax1, colors=plt.cm.Blues, xshift = 0, yshift = 0, lengths = la, i = i)
-            
-        for i, couple in enumerate(rejected):
-            make_link(couple, ax1, colors=plt.cm.Reds, xshift=0.05, yshift = 0.13, lengths = lr, i = i)
-        ax2.boxplot(Z, labels=  np.array(agent_names)[id_sort])
-        
-        
+        current_y = 0.02
+        for i, couple in enumerate(np.array(self.comparisons)[idsort]):
+            current_y = make_link(
+                couple,
+                ax1,
+                xshift=0,
+                yshift=0.05,
+                current_y=current_y,
+                lengths=lengths,
+                i=i,
+            )
+        ax1.set_ylim(0, current_y + 0.1) 
+
+        ax2.boxplot(Z, labels=np.array(agent_names)[id_sort])
 
 
 def _fit_agent(manager):
