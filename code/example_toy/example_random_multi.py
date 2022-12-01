@@ -37,7 +37,6 @@ class RandomAgent(Agent):
 class DummyEnv(Model):
     def __init__(self, **kwargs):
         Model.__init__(self, **kwargs)
-        self.n_arms = 2
         self.action_space = spaces.Discrete(1)
 
     def step(self, action):
@@ -53,9 +52,9 @@ if __name__ == "__main__":
         RandomAgent,
         dict(
             train_env=(DummyEnv, {}),
-            init_kwargs={"drift": k},
+            init_kwargs={"drift": 0},
             fit_budget=1,
-            agent_name="Agent1",
+            agent_name="Agent"+str(k),
         ),
     ) for k in range(4)]
 
@@ -67,11 +66,12 @@ if __name__ == "__main__":
     p_vals = []
 
     def decision(seed):
-        comparator = MultipleAgentsComparator(n, K,B,  alpha, seed=seed)
+        comparator = MultipleAgentsComparator(n, K,B,  alpha, seed=seed, beta = 0.5, joblib_backend = "multiprocessing")
         comparator.compare(managers)
+        print(comparator.n_iters)
         return comparator.decisions
     #res = Parallel(n_jobs=6, backend="multiprocessing")(delayed(decision)(i) for i in tqdm(range(500)))
-    res = [decision(i) for i in tqdm(range(500))]
+    res = [decision(i) for i in tqdm(range(200))]
 
     idxs = [ 'reject' in a for a in res]
     print("proba to reject", np.mean(idxs))
