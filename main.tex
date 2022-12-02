@@ -111,8 +111,8 @@ In the case where only two agents are compared, we use the following algorithm (
 \begin{algorithm}[h]
 \SetAlgoLined
 \SetKwInput{KwParameter}{Parameters}
-\KwParameter{Agents $A_1,A_2$, environment $\mathcal{E}$, number of blocks $K \in \N^*$, size of a block $n$, level of the test $\alpha\in (0,1)$.}
-Define $2nK$ different seeds $s_{1,1},\dots,s_{1,n},s_{2,1},\dots,s_{2,n}$.\\
+\KwParameter{Agents $A_1,A_2$, environment $\mathcal{E}$, number of blocks $K \in \N^*$, size of a block $N$, level of the test $\alpha\in (0,1)$.}
+Define $2NK$ different seeds $s_{1,1},\dots,s_{1,n},s_{2,1},\dots,s_{2,n}$.\\
 \For{$k=1,\dots,K$}{
 \For{$i=1,2$}{
 Train agent $A_i$ on environment $\mathcal{E}$ with the seeds $s_{i,kn},\dots,s_{i,(k+1)n}$.\\
@@ -127,7 +127,7 @@ If $k=K$ then accept, otherwise continue.
 }
 }
 If the test was never rejected, return accept. Else return reject.
-\caption{Adaptive Stopping.}\label{alg:adastop_2}
+\caption{Adaptive Stopping, two agents without early accept.}\label{alg:adastop_2}
 \end{algorithm}
 
 An illustration of the group sequential test is given in figure~\ref{fig:gst}. The boundary in blue is computed sequentially to have a final level $1-\alpha$ for the test, the red points are the observed values of the test statistic (denoted $w_i$). The algorithm stops at the third iteration $k=3$ because the observed value of $w_i$ is outside the boundary.
@@ -151,28 +151,40 @@ $$\mathrm{FWE} = \P_{H_j, j \in \textbf{I}}\left(\exists j \in \textbf{I}:\quad 
 Usually, we say that an algorithm has a weak FWE control if the FWE is smaller than $\alpha$ when $\textbf{I}=\{1,\dots,J\}$ and we say that the algorithm has strong FWE control if FWE is smaller than $\alpha$ for any $\textbf{I}\neq \emptyset$· 
 \end{description}
 
-\
-\subsection{AdaStop: adaptive stopping algorithm using step-down method and group sequential permutation tests}
+\subsection{Notations}
+We consider $L\ge 2$ agents $A_1,\dots,A_L$. The $k^{th}$ step of the algorithm is called the $k^{th}$ interim for some $k \in \{1,\dots,K\}$. Let $c_1,\dots,c_J$ be the comparisons we want to make. For any $i$, $c_i$ is a couple of agent's indices: $c_i=(c_{i,1},c_{i,2}) \in \{1,\dots,L\}^2$. We denote $e_{k,n}(A_i)$ the $n^{th}$ evaluation of agent $A_i$ during interim $k$.
+
 For some $\textbf{C} \subset \{1,\dots,J\}$, denote
-$$T_{n,k}^{(\textbf{C}^+)}(\sigma)= \max\left(\sum_{i=1}^kT_{n,i}^{(j)}(\sigma_i),\quad j \in \textbf{C}\right)$$
-$$T_{n,k}^{(\textbf{C}^-)}(\sigma)= \min\left(\sum_{i=1}^kT_{n,i}^{(j)}(\sigma_i),\quad j \in \textbf{C}\right)$$
+$$T_{n,k}^{(\textbf{C}^+)}(\sigma)= \max\left(\sum_{i=1}^kT_{n,i}^{(j)}(\sigma_i),\quad j \in \textbf{C}\right) \quad \text{and}\quad T_{n,k}^{(\textbf{C}^-)}(\sigma)= \min\left(\sum_{i=1}^kT_{n,i}^{(j)}(\sigma_i),\quad j \in \textbf{C}\right)$$
 
 where 
-$$T_{n,i}^{(j)}(\sigma_i)= \sum_{l=1}^{n} e_{\sigma_i(l)+2ni}-\sum_{l=n+1}^{2n} e_{\sigma_i(l)+2ni} $$
-is the mean difference on block $i$ after permutation by $\sigma_i$. The algorithm is given in Algorithm~\ref{algo:main}
-\todoT{Redo the algorithm for better rendering and more concise writing}
+$$T_{n,i}^{(j)}(\sigma_i)= \sum_{l=1}^{n} e_{\sigma_i(l)+2ni}(A_{1,j})-\sum_{l=n+1}^{2n} e_{\sigma_i(l)+2ni} $$
+is the mean difference on block $i$ after permutation by $\sigma_i$.
+ 
+$\textbf{I}$ denotes the set of indices of the true hypotheses among $\{1,\dots,J\}$. Let $\alpha, \beta \in [0,1]$, the algorithm depends on a level spending function $f^+:[0,1]\to[0,\alpha]$ and a power spending function $f^-:[0,1]\to [0,\beta]$, both non-decreasing functions verifying $f^+(0)=f^-(0)=0$, $f^+(1)=\alpha$, $f^-(1)=\beta$. We define the boundaries of the algorithm by 
+$$\frac{1}{n!}\sum_{\sigma \in S_n} \1\{T_{n,k}^{(\textbf{C}^+)}(\sigma) \ge  \widehat{b}_{n,k}^{(\textbf{C}^+)}\} \le  \lambda^+ \quad \text{and}\quad \frac{1}{n!}\sum_{\sigma \in S_n} \1\{T_{n,k}^{(\textbf{C}^-)}(\sigma) \leq   \widehat{b}_{n,k}^{(\textbf{C}^-)}\} \le  \lambda^- .$$
+where $\lambda^+ = f^+ \left(\frac{k}{K}\right)- f^+ \left( \frac{k-1}{K}\right)$ and $\lambda^- = f^- \left(\frac{k}{K}\right)- f^- \left( \frac{k-1}{K}\right)$.
+
+If $\textbf{I} \neq \emptyset$, we denote 
+$$\mathrm{FWE}(\alpha) = \P\left(\exists j \in \textbf{I}:\quad  \text{reject }H_j \right),$$
+and if $\textbf{I}^c \neq \emptyset$, we denote 
+$$\mathrm{POW}(\beta) =  1-\P\left(\exists j \notin \textbf{I}:\quad  \text{accept }H_j \right)= \P\left(\forall j \notin \textbf{I}, \quad \text{reject }H_j\right) $$
+where both these probabilities are taken with respect to the random permutation, conditioned on the data.
+\subsection{AdaStop: adaptive stopping algorithm using step-down method and group sequential permutation tests}
+
+The algorithm is given in Algorithm~\ref{algo:main}
 \begin{algorithm}[h]
 \SetAlgoLined
 \SetKwInput{KwParameter}{Parameters}
-\KwParameter{Agents $A_1,A_2,\dots, A_m$, environment $\mathcal{E}$, comparison pairs $(c_i)_{i \le J}$ where $c_i$ is a couple of two agents that we want to compare. Integers $K,n \in \N^*$, test parameters $\alpha,\beta$.}
-Define $mnK$ different seeds $(s_{i,j})_{i\le m,j\le n}$.\\
-Set $\textbf{C}=\{1, \dots,J\}$ the set of indices for the comparisons we want to do.\\
+\KwParameter{Agents $A_1,A_2,\dots, A_L$, environment $\mathcal{E}$, comparison pairs $(c_i)_{i \le L}$ where $c_i$ is a couple of two agents that we want to compare. Integers $K,N \in \N^*$, test parameters $\alpha,\beta$.}
+Define $mnK$ different seeds $(s_{i,j})_{i\le L,j\le N}$.\\
+Set $\textbf{C}=\{1, \dots,L\}$ the set of indices for the comparisons we want to do.\\
 \For{$k=1,\dots,K$}{
 \For{$i=1...m$}{
 Train agent $A_i$ on environment $\mathcal{E}$ with the seeds $s_{i,kn},\dots,s_{i,(k+1)n}$.\\
 Collect evaluations $e_{kn}(A_i),\dots,e_{(k+1)n}(A_i)$.\\
 }
-Set $\lambda^+ = \alpha \left(\frac{k}{K}\right)- \alpha \left( \frac{k-1}{K}\right)$ and $\lambda^- = \beta \left(\frac{k}{K}\right)- \beta \left( \frac{k-1}{K}\right)$.\\
+Set $\lambda^+ = f^+ \left(\frac{k}{K}\right)- f^+ \left( \frac{k-1}{K}\right)$ and $\lambda^- = f^- \left(\frac{k}{K}\right)- f^- \left( \frac{k-1}{K}\right)$.\\
 \While{}{
 Compute the boundary $\widehat{b}_{n,k}^{(\textbf{C}^+)}$ and $\widehat{b}_{n,k}^{(\textbf{C}^-)}$ such that
 $$\frac{1}{n!}\sum_{\sigma \in S_n} \1\{T_{n,k}^{(\textbf{C}^+)}(\sigma) \ge  \widehat{b}_{n,k}^{(\textbf{C}^+)}\} \le  \lambda^+ \quad \text{and}\quad \frac{1}{n!}\sum_{\sigma \in S_n} \1\{T_{n,k}^{(\textbf{C}^-)}(\sigma) \leq   \widehat{b}_{n,k}^{(\textbf{C}^-)}\} \le  \lambda^-  .$$
@@ -181,7 +193,7 @@ $$\frac{1}{n!}\sum_{\sigma \in S_n} \1\{T_{n,k}^{(\textbf{C}^+)}(\sigma) \ge  \w
 Reject $H_{j_{\max}}$ where $j_{\max} =  \arg\max\left(T_{n,k}^{(j)}(\sigma),\quad j \in \textbf{C}\right)$.\\
 Update $\textbf{C}=\textbf{C} \setminus \{j_{\max }\}$
 }
-\If{$T_{n,k}^{(\textbf{C})}(\mathrm{id}) < \widehat{b}_{n,k}^{(\textbf{C}^-)}$}{
+\If{$T_{n,k}^{(\textbf{C}^-)}(\mathrm{id}) < \widehat{b}_{n,k}^{(\textbf{C}^-)}$}{
 Accept $H_{j_{\min}}$ where $j_{\min} =  \arg\min\left(T_{n,k}^{(j)}(\sigma),\quad j \in \textbf{C}\right)$.\\
 Update $\textbf{C}=\textbf{C} \setminus \{j_{\min }\}$
 }
@@ -191,7 +203,7 @@ Break the loop and returns the answers
 }
 {
 \lIf{ $k=K$}{
- Then accept all hypotheses remaining in $\textbf{C}$
+ Then accept all hypotheses remaining in $\textbf{C}$ and break the loop
 }
 }
 }
@@ -209,32 +221,80 @@ TODO:\\
 } 
 
 \subsection{Multiple testing}
-First we prove that the multiple testing scheme is correct for testing $H_{j,k}: P_j = P_k$ against $\overline{H}_{j,k}: P_j \neq P_k$ for all the couples $j \neq k$.
+First we prove that the multiple testing scheme is correct for testing $ P_j = P_k$ against $ P_j \neq P_k$ for all the couples $j \neq k$.
 \todoT{Maybe prove that asymptotically, the multiple test is ok for stronger hypotheses.}
-\begin{Theorem}
-For any power-spending function $\beta$ and level-spending function $\alpha$, the test resulting from Algorithm~\ref{algo:main} has a strong control on the FWE: we have $\mathrm{FWE}\le\alpha(1)$.
+\begin{Theorem}\label{th:multi_FWE}
+For any $\alpha \in (0,1)$ and any non-decreasing level spending function $f^+$, the test resulting from Algorithm~\ref{algo:main} has a strong control on the FWE: we have $\mathrm{FWE}(\alpha)\le\alpha$.
 \end{Theorem}
 \begin{proof}
-Let $\textbf{I}$ be the set of true hypotheses. Consider the event where a true hypothesis $H_j$ is rejected for some $j \in \textbf{I}$, let $\widehat{j}$ the the (random) indice of the first hypothesis which is rejected.
-
+Let $\textbf{I}$ be the set of true hypotheses. Let E be the following event
+$$\mathrm{E}= \{ \exists j \in \textbf{I}: \quad H_j \text{ is rejected}\}.$$
+If E is true, let $\widehat{j}$ be the (random) index of the first hypothesis which is rejected.
 We have 
 \begin{equation}\label{eq:multi1}
-\mathrm{FWE} = \P\left(\text{reject }H_{\widehat{j}} \right)= \sum_{k=1}^K \P\left(\text{reject }H_{\widehat{j}} \text{ at interim k} \Big| \text{did not reject }H_{\widehat{j}} \text{ before interim k} \right) 
+\mathrm{FWE}(\alpha) = \P\left(\text{E is true} \right)= \sum_{k=1}^K \P\left(\text{reject }H_{\widehat{j}} \text{ at interim k} \Big| \text{did not reject }H_{\widehat{j}} \text{ before interim k} \right) 
 \end{equation}
 
 
 \paragraph{First interim:}
 
 At the first interim, we look at the probability that at least one true hypothesis is rejected. Let $\widehat{\textbf{I}}_1 \subset \textbf{I}$ be the random set of true hypotheses not accepted in first interim, we have $\widehat{j}\in \widehat{\textbf{I}}_1$ (if $\widehat{\textbf{I}}_1$ is empty almost surely, then the error is $0$, we suppose $\widehat{\textbf{I}}_1$ non empty) and
-$$\P\left(\text{reject }H_{\widehat{j}} \text{ at interim 1}\right)= \P\left( \exists \textbf{C}\supset \widehat{\textbf{I}}_1: \, T_{n,1}^{\widehat{j}}(\id) = T_{n,1}^{(\textbf{C})}(\id) > \widehat{b}_{n,1}^{(\textbf{C})}(1-\alpha) \right) $$
-Then, because $\widehat{j}$ is the first hypothesis of $\textbf{I}$ rejected, we have $\widehat{\textbf{I}}_1 \subset \textbf{C}$, hence for any $\sigma \in S_n$, $ T_{n,1}^{(\textbf{C})}(\sigma)\ge T_{n,1}^{(\widehat{\textbf{I}}_1)}(\sigma)$ and the quantiles verify $ \widehat{b}_{n,1}^{(\textbf{C})}(1-\alpha) \ge \widehat{b}_{n,1}^{(\widehat{\textbf{I}}_1)}(1-\alpha)$,
+$$\P\left(\text{reject }H_{\widehat{j}} \text{ at interim 1}\right)= \P\left( \exists \textbf{C}\supset \widehat{\textbf{I}}_1: \, T_{n,1}^{\widehat{j}}(\id) = T_{n,1}^{(\textbf{C}^+)}(\id) > \widehat{b}_{n,1}^{(\textbf{C}^+)} \right) $$
+Then, because $\widehat{j}$ is the first hypothesis of $\textbf{I}$ rejected, we have $\widehat{\textbf{I}}_1 \subset \textbf{C}$, hence for any $\sigma \in S_n$, $ T_{n,1}^{(\textbf{C}^+)}(\sigma)\ge T_{n,1}^{(\widehat{\textbf{I}}_1^+)}(\sigma)$ and the quantiles verify $ \widehat{b}_{n,1}^{(\textbf{C}^+)} \ge \widehat{b}_{n,1}^{(\widehat{\textbf{I}}_1^+)}$,
  and moreover because $\widehat{j} \in \widehat{\textbf{I}}_1$ we have
-$$T_{n,1}^{\widehat{j}}(\id)=\max(T_{n,1}^{j}(\id), j \in  \textbf{C}) = \max(T_{n,1}^{j}(\id), j \in  \widehat{\textbf{I}}_1) = T_{n,1}^{(\widehat{\textbf{I}}_1)}(\id).$$
+$$T_{n,1}^{\widehat{j}}(\id)=\max(T_{n,1}^{j}(\id), j \in  \textbf{C}) = \max(T_{n,1}^{j}(\id), j \in  \widehat{\textbf{I}}_1) = T_{n,1}^{(\widehat{\textbf{I}}_1^+)}(\id).$$
 Hence,
 \begin{equation}\label{eq:interim1_multi}
-\P\left(\text{reject }H_{\widehat{j}} \text{ at interim 1}\right)\le \P\left( T_{n,1}^{(\widehat{\textbf{I}}_1)}(\id) > \widehat{b}_{n,1}^{(\widehat{\textbf{I}}_1)}(1-\alpha) \right) \le  \alpha(1/K) 
+\P\left(\text{reject }H_{\widehat{j}} \text{ at interim 1}\right)\le \P\left( T_{n,1}^{(\widehat{\textbf{I}}_1^+)}(\id) > \widehat{b}_{n,1}^{(\widehat{\textbf{I}}_1^+)} \right) \le  f^+(1/K) 
 \end{equation}
-the last inequality is by definition of $\widehat{b}_{n,1}^{(\widehat{\textbf{I}}_1)}(1-\alpha)$
+the last inequality is by definition of $\widehat{b}_{n,1}^{(\widehat{\textbf{I}}_1^+)}$
+
+\paragraph{Interim $1<k\le  K$:}
+
+At interim $k$, suppose that we do not have any true hypothesis rejected and if there are still true hypotheses not accepted yet.
+
+Let $\widehat{\textbf{I}}_k$ be the set of true hypotheses not accepted yet, then all the probabilities computed in the algorithm are conditioned on not having rejected any true hypotheses and not having accepted all true hypotheses (otherwise the error is $0$ and the result is true):
+$$\forall m < k, \, \exists \textbf{C} \supset \widehat{\textbf{I}}_m  : T_{n,m}^{(\textbf{C})}(\id) \le \widehat{b}_{n,m}^{(\textbf{C})}.$$
+and by definition of $\widehat{b}_{n,k}^{(\widehat{\textbf{I}}_k)}$, we have
+$$\P\left( T_{n,k}^{(\widehat{\textbf{I}}_k)}(\id)> \widehat{b}_{n,k}^{(\widehat{\textbf{I}}_k)} \Big|\forall m < k, \, \exists \textbf{C} \supset \widehat{\textbf{I}}_m  : T_{n,m}^{(\textbf{C})}(\id) \le \widehat{b}_{n,m}^{(\textbf{C})}\right) = f^+\left(\frac{k}{K}\right)-f^+\left(\frac{k-1}{K}\right) $$
+and similarly to interim 1, we have 
+$$T_{n,k}^{(\textbf{C})}(\id)> \widehat{b}_{n,k}^{(\textbf{C})}\, \Leftrightarrow \,
+ T_{n,k}^{(\widehat{\textbf{I}}_k)}(\id) > \widehat{b}_{n,k}^{(\widehat{\textbf{I}}_k)} $$
+ \begin{multline*}
+\P\left(\text{reject }H_{\widehat{j}} \text{ at interim k} \Big| \text{did not reject }H_{\widehat{j}} \text{ before interim k}\right)\\
+= \P\left( \exists \textbf{C} \supset \widehat{\textbf{I}}_k :\quad  T_{n,k}^{(\textbf{C})}(\id)> \widehat{b}_{n,k}^{(\textbf{C})} \Big|  \forall m < k, \, \exists \textbf{C} \supset \widehat{\textbf{I}}_m  : T_{n,m}^{(\textbf{C})}(\id) \le \widehat{b}_{n,m}^{(\textbf{C})}\right)\\
+= \P\left(T_{n,k}^{(\widehat{\textbf{I}}_k)}(\id) > \widehat{b}_{n,k}^{(\widehat{\textbf{I}}_k)}\Big|  \forall m < k, \, \exists \textbf{C} \supset \widehat{\textbf{I}}_m  : T_{n,m}^{(\textbf{C})}(\id) \le \widehat{b}_{n,m}^{(\textbf{C})} \right)
+ = f^+\left(\frac{k}{K}\right)-f^+\left(\frac{k-1}{K}\right)
+\end{multline*}
+which together with Equation~\eqref{eq:interim1_multi} and \eqref{eq:multi1} gives strong FWE control.
+\end{proof}
+
+\subsection{Effect of early accept}
+
+\begin{Theorem}
+Let $\mathrm{POW}(\beta)$ be some power function, for a given parameter $\beta$. We have
+$$\mathrm{POW}(\beta) \ge \mathrm{POW}(0) - \beta $$
+\end{Theorem}
+The proof of this theorem is an adaptation of the proof of Theorem~\ref{th:multi_FWE}.
+\begin{proof}
+Let $\textbf{I}\subset\{1,\dots,J\}$ be the indices of the set of true hypotheses and suppose that  $\textbf{I}\neq\{1,\dots,J\}$ so that at least one hypothesis is False. Then, let $\widehat{j}$ be the (random) first accepted hypothesis not in $\textbf{I}$.
+\begin{equation}\label{eq:multi2}
+\mathrm{POW}(\beta) = \P\left( \text{accept }H_{\widehat{j}}  \right)= \sum_{k=1}^K \P\left(\text{accept }H_{\widehat{j}} \text{ at interim k} \Big| \text{did not accept }H_{\widehat{j}} \text{ before interim k} \right) 
+\end{equation}
+
+
+\paragraph{First interim:}
+
+At the first interim, we look at the probability that at least one true hypothesis is rejected. Let $\widehat{\textbf{I}}_1 \subset \textbf{I}$ be the random set of true hypotheses not accepted in first interim, we have $\widehat{j}\in \widehat{\textbf{I}}_1$ (if $\widehat{\textbf{I}}_1$ is empty almost surely, then the error is $0$, we suppose $\widehat{\textbf{I}}_1$ non empty) and
+$$\P\left(\text{reject }H_{\widehat{j}} \text{ at interim 1}\right)= \P\left( \exists \textbf{C}\supset \widehat{\textbf{I}}_1: \, T_{n,1}^{\widehat{j}}(\id) = T_{n,1}^{(\textbf{C}^+)}(\id) > \widehat{b}_{n,1}^{(\textbf{C}^+)}(1-\alpha) \right) $$
+Then, because $\widehat{j}$ is the first hypothesis of $\textbf{I}$ rejected, we have $\widehat{\textbf{I}}_1 \subset \textbf{C}$, hence for any $\sigma \in S_n$, $ T_{n,1}^{(\textbf{C}^+)}(\sigma)\ge T_{n,1}^{(\widehat{\textbf{I}}_1^+)}(\sigma)$ and the quantiles verify $ \widehat{b}_{n,1}^{(\textbf{C}^+)}(1-\alpha) \ge \widehat{b}_{n,1}^{(\widehat{\textbf{I}}_1^+)}(1-\alpha)$,
+ and moreover because $\widehat{j} \in \widehat{\textbf{I}}_1$ we have
+$$T_{n,1}^{\widehat{j}}(\id)=\max(T_{n,1}^{j}(\id), j \in  \textbf{C}) = \max(T_{n,1}^{j}(\id), j \in  \widehat{\textbf{I}}_1) = T_{n,1}^{(\widehat{\textbf{I}}_1^+)}(\id).$$
+Hence,
+\begin{equation}\label{eq:interim1_multi}
+\P\left(\text{reject }H_{\widehat{j}} \text{ at interim 1}\right)\le \P\left( T_{n,1}^{(\widehat{\textbf{I}}_1^+)}(\id) > \widehat{b}_{n,1}^{(\widehat{\textbf{I}}_1^+)}(1-\alpha) \right) \le  \alpha(1/K) 
+\end{equation}
+the last inequality is by definition of $\widehat{b}_{n,1}^{(\widehat{\textbf{I}}_1^+)}(1-\alpha)$
 
 \paragraph{Interim $1<k\le  K$:}
 
@@ -254,6 +314,7 @@ $$T_{n,k}^{(\textbf{C})}(\id)> \widehat{b}_{n,k}^{(\textbf{C})}(1-\alpha)\, \Lef
  = \alpha\left(\frac{k}{K}\right)-\alpha\left(\frac{k-1}{K}\right)
 \end{multline*}
 which together with Equation~\eqref{eq:interim1_multi} and \eqref{eq:multi1} gives strong FWE control.
+
 \end{proof}
 
 
@@ -272,6 +333,7 @@ which together with Equation~\eqref{eq:interim1_multi} and \eqref{eq:multi1} giv
 % Hence, reasoning by induction, we have from Proposition~\ref{prop:asym_perm_test}
 % $$\sup_{t}\left|\prod_{k=1}^K \widehat{R}_{n,k}(t_k) - \prod_{k=1}^{K}\Phi\left( \frac{t_k}{\tau(P,Q)}\right) \right|\xrightarrow[n \to \infty]{P} 0$$
 \subsection{Convergence of the boundary and test of equality of means}
+\todoT{Expand the proof to multiple and early stopping and adapt notations.}
 Denote $S_{i}^{i+j}=(S_i, S_{i+1},\dots, S_{i+j})$ and let $T_n(S_1^n)=T(S_1,\dots,S_{2n})=\frac{1}{\sqrt{n}}\sum_{i=1}^n S_i -\frac{1}{n}\sum_{i=n+1}^{2n} S_i$. Denote by
 $$\widehat{R}_{n,k}(t)=\frac{1}{n!}\sum_{\sigma \in S_{2n}} \1\{\sqrt{n}T_n(\sigma S_{2nk}^{2n(k+1)}) \le t\} $$
 the randomization distribution of $T_n$ where for any permutation $\sigma \in S_n$,
