@@ -28,6 +28,7 @@
 \theoremstyle{remark}
 \newtheorem{Definition}{Definition}
 \newtheorem{Assumption}{Assumption}
+\newtheorem*{remark}{Remark}
 
 \renewcommand{\P}{\mathbb{P}}
 \newcommand{\E}{\mathbb{E}}
@@ -85,6 +86,9 @@ A particular class of sequential test often used are the Sequential Probability 
 
 \paragraph{Bandits (Best arm identification or Ranking)} Our objective is close to the objective of ranking bandits algorithms. However compared to bandits we want to at the same time \textit{minimize the stopping time} (similar to fixed-confidence setting) of the algorithm and have a \textit{fixed maximum budget} (similar to fixed-budget setting). In our algorithm we allow for a type I error of $\alpha \in (0,1)$, which is very similar to the fixed confidence setting while still having a fixed budget. Then, compared to the fixed budget setting we allow a larger error rate and as a consequence we are more sample efficient than bandits algorithms.
 
+% \subsection{Notations}
+% We denote by $e(A)$ the evaluations of an algorithm $A$, $T$ is the test statistic constructed using 
+
 \section{Adaptive stopping using Group Sequential Testing}
 \subsection{Group sequential testing}
 \todoT{Explain why must be careful when doing GST and that we can't just do several tests. Maybe also motivate using the confidence interval approach from NIPS article.}
@@ -102,7 +106,7 @@ For now, we suppose that $e(A)$ is a continuous random variable, in particular $
 
  
 \subsection{High level description of the algorithm}
-In the case where only two agents are compared, we use the following algorithm (see Section~\ref{sec:multi} for the multi-agent algorithm).
+In the case where only two agents are compared, we use the following algorithm (see Section~\ref{sec:multi} for the multi-agent and fully developped version of the algorithm).
 
 \begin{algorithm}[h]
 \SetAlgoLined
@@ -125,7 +129,6 @@ If $k=K$ then accept, otherwise continue.
 If the test was never rejected, return accept. Else return reject.
 \caption{Adaptive Stopping.}\label{alg:adastop_2}
 \end{algorithm}
-\todoT{Write a small algorithm to explain how to compute $B_k$ using Equation~\eqref{eq:def_Bk}, with an alternative version for the random permutation version.}
 
 An illustration of the group sequential test is given in figure~\ref{fig:gst}. The boundary in blue is computed sequentially to have a final level $1-\alpha$ for the test, the red points are the observed values of the test statistic (denoted $w_i$). The algorithm stops at the third iteration $k=3$ because the observed value of $w_i$ is outside the boundary.
 
@@ -136,17 +139,19 @@ An illustration of the group sequential test is given in figure~\ref{fig:gst}. T
 \end{center}
 \end{figure}
 
-\todoT{For now, the illustration is done using toy model, with gaussian of drift 0.7. Real agent would be better.}
 
-
-\paragraph{Speeding up permutation tests}
+\paragraph{Remarks:}
+\begin{description}
+\item[Speeding up permutation tests]
 We use Monte-Carlo approximation, using random permutation instead of enumerating all the permutations.
 
-\paragraph{Multiple testing}
+\item[Multiple testing]
 When dealing with multiple testing, particular care must be taken so as not to decrease the error of the test. Suppose that we want to test $H_j$ versus $H_j'$ for $1\le j\le J$ using a test statistic $T_{n}^{(j)}$. Instead of the type I error considered in two-sample testing, we consider the family-wise error rate (FWE) which is defined as the probability of making at least one type I error: let $\textbf{I}\subset \{1,\dots,J\}$ be the set of the true hypotheses, then 
 $$\mathrm{FWE} = \P_{H_j, j \in \textbf{I}}\left(\exists j \in \textbf{I}:\quad  \text{reject }H_j \right).$$
 Usually, we say that an algorithm has a weak FWE control if the FWE is smaller than $\alpha$ when $\textbf{I}=\{1,\dots,J\}$ and we say that the algorithm has strong FWE control if FWE is smaller than $\alpha$ for any $\textbf{I}\neq \emptyset$· 
+\end{description}
 
+\
 \subsection{AdaStop: adaptive stopping algorithm using step-down method and group sequential permutation tests}
 For some $\textbf{C} \subset \{1,\dots,J\}$, denote
 $$T_{n,k}^{(\textbf{C}^+)}(\sigma)= \max\left(\sum_{i=1}^kT_{n,i}^{(j)}(\sigma_i),\quad j \in \textbf{C}\right)$$
@@ -159,36 +164,34 @@ is the mean difference on block $i$ after permutation by $\sigma_i$. The algorit
 \begin{algorithm}[h]
 \SetAlgoLined
 \SetKwInput{KwParameter}{Parameters}
-\KwParameter{Agents $A_1,A_2,\dots, A_m$, environment $\mathcal{E}$, comparison pairs $C=(c_1,\dots, c_J)$ where $c_i$ is a couple of two agents that we want to compare. Number of blocks $K \in \N^*$, size of a block $n$, test parameters $\alpha,\beta$, .}
+\KwParameter{Agents $A_1,A_2,\dots, A_m$, environment $\mathcal{E}$, comparison pairs $(c_i)_{i \le J}$ where $c_i$ is a couple of two agents that we want to compare. Integers $K,n \in \N^*$, test parameters $\alpha,\beta$.}
 Define $mnK$ different seeds $(s_{i,j})_{i\le m,j\le n}$.\\
-Define $\textbf{C}=\{1, \dots,J\}$ the set of comparisons we want to do.\\
+Set $\textbf{C}=\{1, \dots,J\}$ the set of indices for the comparisons we want to do.\\
 \For{$k=1,\dots,K$}{
 \For{$i=1...m$}{
 Train agent $A_i$ on environment $\mathcal{E}$ with the seeds $s_{i,kn},\dots,s_{i,(k+1)n}$.\\
 Collect evaluations $e_{kn}(A_i),\dots,e_{(k+1)n}(A_i)$.\\
 }
-Set $\lambda^+ = \alpha \left(\frac{k}{K}\right)- \alpha \left( \frac{k-1}{K}\right)$.\\
-Set $\lambda^- = \beta \left(\frac{k}{K}\right)- \beta \left( \frac{k-1}{K}\right)$.\\
-Compute $\widehat{c}_{n,k}^{(\textbf{C}^+)}$ and $\widehat{c}_{n,k}^{(\textbf{C}^-)}$ the quantiles of order $1-\lambda^+$ and $\lambda^-$ respectively of the permutation law of $T_{n,k}^{(\textbf{C}^+)}(\sigma)$ and $T_{n,k}^{(\textbf{C}^-)}(\sigma)$ respectively:
-$$\sum_{\sigma \in S_n} \1\{T_{n,k}^{(\textbf{C}^+)}(\sigma) \ge  \widehat{c}_{n,k}^{(\textbf{C}^+)}\} = \lfloor \lambda^+ n! \rfloor .$$
-$$\sum_{\sigma \in S_n} \1\{T_{n,k}^{(\textbf{C}^-)}(\sigma) \leq   \widehat{c}_{n,k}^{(\textbf{C}^-)}\} = \lfloor \lambda^- n! \rfloor .$$
+Set $\lambda^+ = \alpha \left(\frac{k}{K}\right)- \alpha \left( \frac{k-1}{K}\right)$ and $\lambda^- = \beta \left(\frac{k}{K}\right)- \beta \left( \frac{k-1}{K}\right)$.\\
+\While{}{
+Compute the boundary $\widehat{b}_{n,k}^{(\textbf{C}^+)}$ and $\widehat{b}_{n,k}^{(\textbf{C}^-)}$ such that
+$$\frac{1}{n!}\sum_{\sigma \in S_n} \1\{T_{n,k}^{(\textbf{C}^+)}(\sigma) \ge  \widehat{b}_{n,k}^{(\textbf{C}^+)}\} \le  \lambda^+ \quad \text{and}\quad \frac{1}{n!}\sum_{\sigma \in S_n} \1\{T_{n,k}^{(\textbf{C}^-)}(\sigma) \leq   \widehat{b}_{n,k}^{(\textbf{C}^-)}\} \le  \lambda^-  .$$
 
-\If{$T_{n,k}^{(\textbf{C}^+)}(\mathrm{id}) > \widehat{c}_{n,k}^{(\textbf{C}^+)}$}{
+\If{$T_{n,k}^{(\textbf{C}^+)}(\mathrm{id}) > \widehat{b}_{n,k}^{(\textbf{C}^+)}$}{
 Reject $H_{j_{\max}}$ where $j_{\max} =  \arg\max\left(T_{n,k}^{(j)}(\sigma),\quad j \in \textbf{C}\right)$.\\
-Update $\textbf{C}=\textbf{C} \setminus \{j_{max}\}$
+Update $\textbf{C}=\textbf{C} \setminus \{j_{\max }\}$
 }
-\If{$T_{n,k}^{(\textbf{C})}(\mathrm{id}) < \widehat{c}_{n,k}^{(\textbf{C}^-)}$}{
+\If{$T_{n,k}^{(\textbf{C})}(\mathrm{id}) < \widehat{b}_{n,k}^{(\textbf{C}^-)}$}{
 Accept $H_{j_{\min}}$ where $j_{\min} =  \arg\min\left(T_{n,k}^{(j)}(\sigma),\quad j \in \textbf{C}\right)$.\\
-Update $\textbf{C}=\textbf{C} \setminus \{j_{max}\}$
+Update $\textbf{C}=\textbf{C} \setminus \{j_{\min }\}$
 }
-\If{\textbf{C} changed}
-{ Go to line 8.}
-\If{$\textbf{C}=\emptyset$}{
-Break the loop and returns the answers.
 }
-\Else{
-\If{ $k=K$}{
- Then accept all hypotheses remaining in $\textbf{C}$.
+\lIf{$\textbf{C}=\emptyset$}{
+Break the loop and returns the answers
+}
+{
+\lIf{ $k=K$}{
+ Then accept all hypotheses remaining in $\textbf{C}$
 }
 }
 }
@@ -223,31 +226,31 @@ We have
 \paragraph{First interim:}
 
 At the first interim, we look at the probability that at least one true hypothesis is rejected. Let $\widehat{\textbf{I}}_1 \subset \textbf{I}$ be the random set of true hypotheses not accepted in first interim, we have $\widehat{j}\in \widehat{\textbf{I}}_1$ (if $\widehat{\textbf{I}}_1$ is empty almost surely, then the error is $0$, we suppose $\widehat{\textbf{I}}_1$ non empty) and
-$$\P\left(\text{reject }H_{\widehat{j}} \text{ at interim 1}\right)= \P\left( \exists \textbf{C}\supset \widehat{\textbf{I}}_1: \, T_{n,1}^{\widehat{j}}(\id) = T_{n,1}^{(\textbf{C})}(\id) > \widehat{c}_{n,1}^{(\textbf{C})}(1-\alpha) \right) $$
-Then, because $\widehat{j}$ is the first hypothesis of $\textbf{I}$ rejected, we have $\widehat{\textbf{I}}_1 \subset \textbf{C}$, hence for any $\sigma \in S_n$, $ T_{n,1}^{(\textbf{C})}(\sigma)\ge T_{n,1}^{(\widehat{\textbf{I}}_1)}(\sigma)$ and the quantiles verify $ \widehat{c}_{n,1}^{(\textbf{C})}(1-\alpha) \ge \widehat{c}_{n,1}^{(\widehat{\textbf{I}}_1)}(1-\alpha)$,
+$$\P\left(\text{reject }H_{\widehat{j}} \text{ at interim 1}\right)= \P\left( \exists \textbf{C}\supset \widehat{\textbf{I}}_1: \, T_{n,1}^{\widehat{j}}(\id) = T_{n,1}^{(\textbf{C})}(\id) > \widehat{b}_{n,1}^{(\textbf{C})}(1-\alpha) \right) $$
+Then, because $\widehat{j}$ is the first hypothesis of $\textbf{I}$ rejected, we have $\widehat{\textbf{I}}_1 \subset \textbf{C}$, hence for any $\sigma \in S_n$, $ T_{n,1}^{(\textbf{C})}(\sigma)\ge T_{n,1}^{(\widehat{\textbf{I}}_1)}(\sigma)$ and the quantiles verify $ \widehat{b}_{n,1}^{(\textbf{C})}(1-\alpha) \ge \widehat{b}_{n,1}^{(\widehat{\textbf{I}}_1)}(1-\alpha)$,
  and moreover because $\widehat{j} \in \widehat{\textbf{I}}_1$ we have
 $$T_{n,1}^{\widehat{j}}(\id)=\max(T_{n,1}^{j}(\id), j \in  \textbf{C}) = \max(T_{n,1}^{j}(\id), j \in  \widehat{\textbf{I}}_1) = T_{n,1}^{(\widehat{\textbf{I}}_1)}(\id).$$
 Hence,
 \begin{equation}\label{eq:interim1_multi}
-\P\left(\text{reject }H_{\widehat{j}} \text{ at interim 1}\right)\le \P\left( T_{n,1}^{(\widehat{\textbf{I}}_1)}(\id) > \widehat{c}_{n,1}^{(\widehat{\textbf{I}}_1)}(1-\alpha) \right) \le  \alpha(1/K) 
+\P\left(\text{reject }H_{\widehat{j}} \text{ at interim 1}\right)\le \P\left( T_{n,1}^{(\widehat{\textbf{I}}_1)}(\id) > \widehat{b}_{n,1}^{(\widehat{\textbf{I}}_1)}(1-\alpha) \right) \le  \alpha(1/K) 
 \end{equation}
-the last inequality is by definition of $\widehat{c}_{n,1}^{(\widehat{\textbf{I}}_1)}(1-\alpha)$
+the last inequality is by definition of $\widehat{b}_{n,1}^{(\widehat{\textbf{I}}_1)}(1-\alpha)$
 
 \paragraph{Interim $1<k\le  K$:}
 
 At interim $k$, suppose that we do not have any true hypothesis rejected and if there are still true hypotheses not accepted yet.
 
 Let $\widehat{\textbf{I}}_k$ be the set of true hypotheses not accepted yet, then all the probabilities computed in the algorithm are conditioned on not having rejected any true hypotheses and not having accepted all true hypotheses (otherwise the error is $0$ and the result is true):
-$$\forall m < k, \, \exists \textbf{C} \supset \widehat{\textbf{I}}_m  : T_{n,m}^{(\textbf{C})}(\id) \le \widehat{c}_{n,m}^{(\textbf{C})}(1-\alpha).$$
-and by definition of $\widehat{c}_{n,k}^{(\widehat{\textbf{I}}_k)}(1-\alpha)$, we have
-$$\P\left( T_{n,k}^{(\widehat{\textbf{I}}_k)}(\id)> \widehat{c}_{n,k}^{(\widehat{\textbf{I}}_k)}(1-\alpha)  \Big|\forall m < k, \, \exists \textbf{C} \supset \widehat{\textbf{I}}_m  : T_{n,m}^{(\textbf{C})}(\id) \le \widehat{c}_{n,m}^{(\textbf{C})}(1-\alpha)\right) = \alpha\left(\frac{k}{K}\right)-\alpha\left(\frac{k-1}{K}\right) $$
+$$\forall m < k, \, \exists \textbf{C} \supset \widehat{\textbf{I}}_m  : T_{n,m}^{(\textbf{C})}(\id) \le \widehat{b}_{n,m}^{(\textbf{C})}(1-\alpha).$$
+and by definition of $\widehat{b}_{n,k}^{(\widehat{\textbf{I}}_k)}(1-\alpha)$, we have
+$$\P\left( T_{n,k}^{(\widehat{\textbf{I}}_k)}(\id)> \widehat{b}_{n,k}^{(\widehat{\textbf{I}}_k)}(1-\alpha)  \Big|\forall m < k, \, \exists \textbf{C} \supset \widehat{\textbf{I}}_m  : T_{n,m}^{(\textbf{C})}(\id) \le \widehat{b}_{n,m}^{(\textbf{C})}(1-\alpha)\right) = \alpha\left(\frac{k}{K}\right)-\alpha\left(\frac{k-1}{K}\right) $$
 and similarly to interim 1, we have 
-$$T_{n,k}^{(\textbf{C})}(\id)> \widehat{c}_{n,k}^{(\textbf{C})}(1-\alpha)\, \Leftrightarrow \,
- T_{n,k}^{(\widehat{\textbf{I}}_k)}(\id) > \widehat{c}_{n,k}^{(\widehat{\textbf{I}}_k)}(1-\alpha)  $$
+$$T_{n,k}^{(\textbf{C})}(\id)> \widehat{b}_{n,k}^{(\textbf{C})}(1-\alpha)\, \Leftrightarrow \,
+ T_{n,k}^{(\widehat{\textbf{I}}_k)}(\id) > \widehat{b}_{n,k}^{(\widehat{\textbf{I}}_k)}(1-\alpha)  $$
  \begin{multline*}
 \P\left(\text{reject }H_{\widehat{j}} \text{ at interim k} \Big| \text{did not reject }H_{\widehat{j}} \text{ before interim k}\right)\\
-= \P\left( \exists \textbf{C} \supset \widehat{\textbf{I}}_k :\quad  T_{n,k}^{(\textbf{C})}(\id)> \widehat{c}_{n,k}^{(\textbf{C})}(1-\alpha)  \Big|  \forall m < k, \, \exists \textbf{C} \supset \widehat{\textbf{I}}_m  : T_{n,m}^{(\textbf{C})}(\id) \le \widehat{c}_{n,m}^{(\textbf{C})}(1-\alpha)\right)\\
-= \P\left(T_{n,k}^{(\widehat{\textbf{I}}_k)}(\id) > \widehat{c}_{n,k}^{(\widehat{\textbf{I}}_k)}(1-\alpha)  \Big|  \forall m < k, \, \exists \textbf{C} \supset \widehat{\textbf{I}}_m  : T_{n,m}^{(\textbf{C})}(\id) \le \widehat{c}_{n,m}^{(\textbf{C})}(1-\alpha) \right)
+= \P\left( \exists \textbf{C} \supset \widehat{\textbf{I}}_k :\quad  T_{n,k}^{(\textbf{C})}(\id)> \widehat{b}_{n,k}^{(\textbf{C})}(1-\alpha)  \Big|  \forall m < k, \, \exists \textbf{C} \supset \widehat{\textbf{I}}_m  : T_{n,m}^{(\textbf{C})}(\id) \le \widehat{b}_{n,m}^{(\textbf{C})}(1-\alpha)\right)\\
+= \P\left(T_{n,k}^{(\widehat{\textbf{I}}_k)}(\id) > \widehat{b}_{n,k}^{(\widehat{\textbf{I}}_k)}(1-\alpha)  \Big|  \forall m < k, \, \exists \textbf{C} \supset \widehat{\textbf{I}}_m  : T_{n,m}^{(\textbf{C})}(\id) \le \widehat{b}_{n,m}^{(\textbf{C})}(1-\alpha) \right)
  = \alpha\left(\frac{k}{K}\right)-\alpha\left(\frac{k-1}{K}\right)
 \end{multline*}
 which together with Equation~\eqref{eq:interim1_multi} and \eqref{eq:multi1} gives strong FWE control.
@@ -374,9 +377,9 @@ $$T_{n}^{(\textbf{C})}(\sigma)= \max\left(T_n^{(j)}(\sigma),\quad j \in \textbf{
 \KwParameter{$\alpha \in (0,1)$}
 Initialize $\textbf{C}=\{1,\dots,J\}$\\
 \While{$\textbf{C} \neq \emptyset$}{
-Compute $\widehat{c}_{n}^{(\textbf{C})}(1-\alpha)$ the quantile of order $1-\alpha$ of the permutation law of $T_{n}^{(\textbf{C})}(\sigma)$:
-$$\sum_{\sigma \in S_n} \1\{T_{n}^{(\textbf{C})}(\sigma) \ge  \widehat{c}_{n}^{(\textbf{C})}(1-\alpha)\} = \lfloor \alpha n! \rfloor .$$
-\If{$T_{n}^{(\textbf{C})}(\mathrm{id}) \le \widehat{c}_{n}^{(\textbf{C})}(1-\alpha)$}{
+Compute $\widehat{b}_{n}^{(\textbf{C})}(1-\alpha)$ the quantile of order $1-\alpha$ of the permutation law of $T_{n}^{(\textbf{C})}(\sigma)$:
+$$\sum_{\sigma \in S_n} \1\{T_{n}^{(\textbf{C})}(\sigma) \ge  \widehat{b}_{n}^{(\textbf{C})}(1-\alpha)\} = \lfloor \alpha n! \rfloor .$$
+\If{$T_{n}^{(\textbf{C})}(\mathrm{id}) \le \widehat{b}_{n}^{(\textbf{C})}(1-\alpha)$}{
 Accept all the hypotheses $H_j, j\in \textbf{C}$ and break the loop.}
 \Else{
 Reject $H_{j_{\max}}$ where $j_{\max} =  \arg\max\left(T_n^{(j)}(\sigma),\quad j \in \textbf{C}\right)$.\\
