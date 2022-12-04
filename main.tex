@@ -168,7 +168,7 @@ where $\lambda^+ = f^+ \left(\frac{k}{K}\right)- f^+ \left( \frac{k-1}{K}\right)
 If $\textbf{I} \neq \emptyset$, we denote 
 $$\mathrm{FWE}(\alpha) = \P\left(\exists j \in \textbf{I}:\quad  \text{reject }H_j \right),$$
 and if $\textbf{I}^c \neq \emptyset$, we denote 
-$$\mathrm{POW}(\beta) =  1-\P\left(\exists j \notin \textbf{I}:\quad  \text{accept }H_j \right)= \P\left(\forall j \notin \textbf{I}, \quad \text{reject }H_j\right) $$
+$$\mathrm{POW}(\beta) =  1-\P_\sigma\left(\exists j \notin \textbf{I}:\quad  \text{accept }H_j \right)= \P_\sigma\left(\forall j \notin \textbf{I}, \quad \text{reject }H_j\right) $$
 where both these probabilities are taken with respect to the random permutation, conditioned on the data.
 \subsection{AdaStop: adaptive stopping algorithm using step-down method and group sequential permutation tests}
 
@@ -232,20 +232,20 @@ $$\mathrm{E}= \{ \exists j \in \textbf{I}: \quad H_j \text{ is rejected}\}.$$
 If E is true, let $\widehat{j}$ be the (random) index of the first hypothesis which is rejected.
 We have 
 \begin{equation}\label{eq:multi1}
-\mathrm{FWE}(\alpha) = \P\left(\text{E is true} \right)= \sum_{k=1}^K \P\left(\text{reject }H_{\widehat{j}} \text{ at interim k} \Big| \text{did not reject }H_{\widehat{j}} \text{ before interim k} \right) 
+\P_\sigma\left(\text{E is true} \right)= \sum_{k=1}^K \P_\sigma\left(\text{reject }H_{\widehat{j}} \text{ at interim k} \Big| \text{did not reject }H_{\widehat{j}} \text{ before interim k} \right) 
 \end{equation}
 
 
 \paragraph{First interim:}
 
 At the first interim, we look at the probability that at least one true hypothesis is rejected. Let $\widehat{\textbf{I}}_1 \subset \textbf{I}$ be the random set of true hypotheses not accepted in first interim, we have $\widehat{j}\in \widehat{\textbf{I}}_1$ (if $\widehat{\textbf{I}}_1$ is empty almost surely, then the error is $0$, we suppose $\widehat{\textbf{I}}_1$ non empty) and
-$$\P\left(\text{reject }H_{\widehat{j}} \text{ at interim 1}\right)= \P\left( \exists \textbf{C}\supset \widehat{\textbf{I}}_1: \, T_{n,1}^{\widehat{j}}(\id) = T_{n,1}^{(\textbf{C}^+)}(\id) > \widehat{b}_{n,1}^{(\textbf{C}^+)} \right) $$
+$$\P_\sigma\left(\text{reject }H_{\widehat{j}} \text{ at interim 1}\right)= \P_\sigma\left( \exists \textbf{C}\supset \widehat{\textbf{I}}_1: \, T_{n,1}^{\widehat{j}}(\id) = T_{n,1}^{(\textbf{C}^+)}(\id) > \widehat{b}_{n,1}^{(\textbf{C}^+)} \right) $$
 Then, because $\widehat{j}$ is the first hypothesis of $\textbf{I}$ rejected, we have $\widehat{\textbf{I}}_1 \subset \textbf{C}$, hence for any $\sigma \in S_n$, $ T_{n,1}^{(\textbf{C}^+)}(\sigma)\ge T_{n,1}^{(\widehat{\textbf{I}}_1^+)}(\sigma)$ and the quantiles verify $ \widehat{b}_{n,1}^{(\textbf{C}^+)} \ge \widehat{b}_{n,1}^{(\widehat{\textbf{I}}_1^+)}$,
  and moreover because $\widehat{j} \in \widehat{\textbf{I}}_1$ we have
 $$T_{n,1}^{\widehat{j}}(\id)=\max(T_{n,1}^{j}(\id), j \in  \textbf{C}) = \max(T_{n,1}^{j}(\id), j \in  \widehat{\textbf{I}}_1) = T_{n,1}^{(\widehat{\textbf{I}}_1^+)}(\id).$$
 Hence,
 \begin{equation}\label{eq:interim1_multi}
-\P\left(\text{reject }H_{\widehat{j}} \text{ at interim 1}\right)\le \P\left( T_{n,1}^{(\widehat{\textbf{I}}_1^+)}(\id) > \widehat{b}_{n,1}^{(\widehat{\textbf{I}}_1^+)} \right) \le  f^+(1/K) 
+\P_\sigma\left(\text{reject }H_{\widehat{j}} \text{ at interim 1}\right)\le \P_\sigma\left( T_{n,1}^{(\widehat{\textbf{I}}_1^+)}(\id) > \widehat{b}_{n,1}^{(\widehat{\textbf{I}}_1^+)} \right) \le  f^+(1/K) 
 \end{equation}
 the last inequality is by definition of $\widehat{b}_{n,1}^{(\widehat{\textbf{I}}_1^+)}$
 
@@ -254,19 +254,23 @@ the last inequality is by definition of $\widehat{b}_{n,1}^{(\widehat{\textbf{I}
 At interim $k$, suppose that we do not have any true hypothesis rejected and if there are still true hypotheses not accepted yet.
 
 Let $\widehat{\textbf{I}}_k$ be the set of true hypotheses not accepted yet, then all the probabilities computed in the algorithm are conditioned on not having rejected any true hypotheses and not having accepted all true hypotheses (otherwise the error is $0$ and the result is true):
-$$\forall m < k, \, \exists \textbf{C} \supset \widehat{\textbf{I}}_m  : T_{n,m}^{(\textbf{C})}(\id) \le \widehat{b}_{n,m}^{(\textbf{C})}.$$
+$$\forall m < k, \, \exists \textbf{C} \supset \widehat{\textbf{I}}_m  : T_{n,m}^{(\textbf{C}^+)}(\id) \le \widehat{b}_{n,m}^{(\textbf{C}^+)}.$$
 and by definition of $\widehat{b}_{n,k}^{(\widehat{\textbf{I}}_k)}$, we have
-$$\P\left( T_{n,k}^{(\widehat{\textbf{I}}_k)}(\id)> \widehat{b}_{n,k}^{(\widehat{\textbf{I}}_k)} \Big|\forall m < k, \, \exists \textbf{C} \supset \widehat{\textbf{I}}_m  : T_{n,m}^{(\textbf{C})}(\id) \le \widehat{b}_{n,m}^{(\textbf{C})}\right) = f^+\left(\frac{k}{K}\right)-f^+\left(\frac{k-1}{K}\right) $$
+$$\P_\sigma\left( T_{n,k}^{(\widehat{\textbf{I}}_k^+)}(\id)> \widehat{b}_{n,k}^{(\widehat{\textbf{I}}_k^+)} \Big|\forall m < k, \, \exists \textbf{C} \supset \widehat{\textbf{I}}_m  : T_{n,m}^{(\textbf{C}^+)}(\id) \le \widehat{b}_{n,m}^{(\textbf{C}^+)}\right) = f^+\left(\frac{k}{K}\right)-f^+\left(\frac{k-1}{K}\right) $$
 and similarly to interim 1, we have 
-$$T_{n,k}^{(\textbf{C})}(\id)> \widehat{b}_{n,k}^{(\textbf{C})}\, \Leftrightarrow \,
- T_{n,k}^{(\widehat{\textbf{I}}_k)}(\id) > \widehat{b}_{n,k}^{(\widehat{\textbf{I}}_k)} $$
+$$T_{n,k}^{(\textbf{C}^+)}(\id)> \widehat{b}_{n,k}^{(\textbf{C}^+)}\, \Leftrightarrow \,
+ T_{n,k}^{(\widehat{\textbf{I}}_k^+)}(\id) > \widehat{b}_{n,k}^{(\widehat{\textbf{I}}_k^+)}.$$
+Then,
  \begin{multline*}
 \P\left(\text{reject }H_{\widehat{j}} \text{ at interim k} \Big| \text{did not reject }H_{\widehat{j}} \text{ before interim k}\right)\\
-= \P\left( \exists \textbf{C} \supset \widehat{\textbf{I}}_k :\quad  T_{n,k}^{(\textbf{C})}(\id)> \widehat{b}_{n,k}^{(\textbf{C})} \Big|  \forall m < k, \, \exists \textbf{C} \supset \widehat{\textbf{I}}_m  : T_{n,m}^{(\textbf{C})}(\id) \le \widehat{b}_{n,m}^{(\textbf{C})}\right)\\
-= \P\left(T_{n,k}^{(\widehat{\textbf{I}}_k)}(\id) > \widehat{b}_{n,k}^{(\widehat{\textbf{I}}_k)}\Big|  \forall m < k, \, \exists \textbf{C} \supset \widehat{\textbf{I}}_m  : T_{n,m}^{(\textbf{C})}(\id) \le \widehat{b}_{n,m}^{(\textbf{C})} \right)
+= \P_\sigma\left( \exists \textbf{C} \supset \widehat{\textbf{I}}_k :\quad  T_{n,k}^{(\textbf{C})}(\id)> \widehat{b}_{n,k}^{(\textbf{C})} \Big|  \forall m < k, \, \exists \textbf{C} \supset \widehat{\textbf{I}}_m  : T_{n,m}^{(\textbf{C})}(\id) \le \widehat{b}_{n,m}^{(\textbf{C})}\right)\\
+= \P_\sigma\left(T_{n,k}^{(\widehat{\textbf{I}}_k)}(\id) > \widehat{b}_{n,k}^{(\widehat{\textbf{I}}_k)}\Big|  \forall m < k, \, \exists \textbf{C} \supset \widehat{\textbf{I}}_m  : T_{n,m}^{(\textbf{C})}(\id) \le \widehat{b}_{n,m}^{(\textbf{C})} \right)
  = f^+\left(\frac{k}{K}\right)-f^+\left(\frac{k-1}{K}\right)
 \end{multline*}
-which together with Equation~\eqref{eq:interim1_multi} and \eqref{eq:multi1} gives strong FWE control.
+which together with Equation~\eqref{eq:interim1_multi} and \eqref{eq:multi1} gives,
+$$\P_\sigma(\text{E is true})\le \alpha.$$
+Then, take the expectation with respect to the data this time, 
+$$\E\left[\P_\sigma(\text{E is true})\right] = \mathrm{FWE}(\alpha) \le \alpha. $$
 \end{proof}
 
 \subsection{Effect of early accept}
@@ -277,44 +281,55 @@ $$\mathrm{POW}(\beta) \ge \mathrm{POW}(0) - \beta $$
 \end{Theorem}
 The proof of this theorem is an adaptation of the proof of Theorem~\ref{th:multi_FWE}.
 \begin{proof}
-Let $\textbf{I}\subset\{1,\dots,J\}$ be the indices of the set of true hypotheses and suppose that  $\textbf{I}\neq\{1,\dots,J\}$ so that at least one hypothesis is False. Then, let $\widehat{j}$ be the (random) first accepted hypothesis not in $\textbf{I}$.
-\begin{equation}\label{eq:multi2}
-\mathrm{POW}(\beta) = \P\left( \text{accept }H_{\widehat{j}}  \right)= \sum_{k=1}^K \P\left(\text{accept }H_{\widehat{j}} \text{ at interim k} \Big| \text{did not accept }H_{\widehat{j}} \text{ before interim k} \right) 
-\end{equation}
+Let $\textbf{I}\subset\{1,\dots,J\}$ be the indices of the set of true hypotheses and suppose that  $\textbf{I}\neq\{1,\dots,J\}$ so that at least one hypothesis is False. Let E be the following event
+$$\mathrm{E}= \{ \exists j \in \textbf{I}^c: \quad H_j \text{ is accepted}\}.$$
+If E is true, let $\widehat{j}$ be the (random) index of the first hypothesis which is rejected.
+We have 
 
+\begin{multline}\label{eq:multi2}
+\P_\sigma\left( \text{E is true}  \right)= \sum_{k=1}^K \P_\sigma\left(\text{accept }H_{\widehat{j}} \text{ at interim k} \Big| \text{did not accept }H_{\widehat{j}} \text{ before interim k} \right)\\
+ + \P_\sigma\left(\text{did not reject }H_{\widehat{j}} \text{ at any interim}\Big| \text{did not accept }H_{\widehat{j}} \text{ before interim K or at interim K} \right)
+\end{multline}
 
 \paragraph{First interim:}
 
-At the first interim, we look at the probability that at least one true hypothesis is rejected. Let $\widehat{\textbf{I}}_1 \subset \textbf{I}$ be the random set of true hypotheses not accepted in first interim, we have $\widehat{j}\in \widehat{\textbf{I}}_1$ (if $\widehat{\textbf{I}}_1$ is empty almost surely, then the error is $0$, we suppose $\widehat{\textbf{I}}_1$ non empty) and
-$$\P\left(\text{reject }H_{\widehat{j}} \text{ at interim 1}\right)= \P\left( \exists \textbf{C}\supset \widehat{\textbf{I}}_1: \, T_{n,1}^{\widehat{j}}(\id) = T_{n,1}^{(\textbf{C}^+)}(\id) > \widehat{b}_{n,1}^{(\textbf{C}^+)}(1-\alpha) \right) $$
-Then, because $\widehat{j}$ is the first hypothesis of $\textbf{I}$ rejected, we have $\widehat{\textbf{I}}_1 \subset \textbf{C}$, hence for any $\sigma \in S_n$, $ T_{n,1}^{(\textbf{C}^+)}(\sigma)\ge T_{n,1}^{(\widehat{\textbf{I}}_1^+)}(\sigma)$ and the quantiles verify $ \widehat{b}_{n,1}^{(\textbf{C}^+)}(1-\alpha) \ge \widehat{b}_{n,1}^{(\widehat{\textbf{I}}_1^+)}(1-\alpha)$,
- and moreover because $\widehat{j} \in \widehat{\textbf{I}}_1$ we have
-$$T_{n,1}^{\widehat{j}}(\id)=\max(T_{n,1}^{j}(\id), j \in  \textbf{C}) = \max(T_{n,1}^{j}(\id), j \in  \widehat{\textbf{I}}_1) = T_{n,1}^{(\widehat{\textbf{I}}_1^+)}(\id).$$
+At the first interim, we look at the probability that at least one false hypothesis is accepted. Let $\widehat{\textbf{I}^c}_1 \subset \textbf{I}^c$ be the random set of false hypotheses not rejected in first interim, we have $\widehat{j}\in \widehat{\textbf{I}^c}_1 $ (if $\widehat{\textbf{I}^c}_1 $ is empty almost surely, then the error is $0$, we suppose $\widehat{\textbf{I}^c}_1 $ non empty) and
+$$\P_\sigma\left(\text{accept }H_{\widehat{j}} \text{ at interim 1}\right)= \P_\sigma\left( \exists \textbf{C}\supset \widehat{\textbf{I}^c}_1 : \, T_{n,1}^{\widehat{j}}(\id) = T_{n,1}^{(\textbf{C}^-)}(\id) < \widehat{b}_{n,1}^{(\textbf{C}^-)} \right) $$
+Then, because $\widehat{j}$ is the first hypothesis of $\textbf{I}^c$ accepted, we have $\widehat{\textbf{I}^c}_1 \subset \textbf{C}$, hence for any $\sigma \in S_n$, $ T_{n,1}^{(\textbf{C}^-)}(\sigma)\le  T_{n,1}^{(\widehat{\textbf{I}^c}_1^-)}(\sigma)$ and the quantiles verify $ \widehat{b}_{n,1}^{(\textbf{C}^-)} \le  \widehat{b}_{n,1}^{(\widehat{\textbf{I}^c}_1^-)}$,
+ and moreover because $\widehat{j} \in \widehat{\textbf{I}^c}_1$ we have
+$$T_{n,1}^{\widehat{j}}(\id)=\min(T_{n,1}^{j}(\id), j \in  \textbf{C}) = \min(T_{n,1}^{j}(\id), j \in  \widehat{\textbf{I}^c}_1) = T_{n,1}^{(\widehat{\textbf{I}^c}_1^-)}(\id).$$
 Hence,
 \begin{equation}\label{eq:interim1_multi}
-\P\left(\text{reject }H_{\widehat{j}} \text{ at interim 1}\right)\le \P\left( T_{n,1}^{(\widehat{\textbf{I}}_1^+)}(\id) > \widehat{b}_{n,1}^{(\widehat{\textbf{I}}_1^+)}(1-\alpha) \right) \le  \alpha(1/K) 
+\P_\sigma\left(\text{accept }H_{\widehat{j}} \text{ at interim 1}\right)\le \P_\sigma\left( T_{n,1}^{(\widehat{\textbf{I}^c}_1^-)}(\id) < \widehat{b}_{n,1}^{(\widehat{\textbf{I}^c}_1^-)} \right) \le  f^-(1/K) 
 \end{equation}
-the last inequality is by definition of $\widehat{b}_{n,1}^{(\widehat{\textbf{I}}_1^+)}(1-\alpha)$
+the last inequality is by definition of $\widehat{b}_{n,1}^{(\widehat{\textbf{I}}_1^-)}$
 
 \paragraph{Interim $1<k\le  K$:}
 
-At interim $k$, suppose that we do not have any true hypothesis rejected and if there are still true hypotheses not accepted yet.
+At interim $k$, suppose that we do not have any false hypothesis accepted and if there are still false hypotheses not rejected yet.
 
-Let $\widehat{\textbf{I}}_k$ be the set of true hypotheses not accepted yet, then all the probabilities computed in the algorithm are conditioned on not having rejected any true hypotheses and not having accepted all true hypotheses (otherwise the error is $0$ and the result is true):
-$$\forall m < k, \, \exists \textbf{C} \supset \widehat{\textbf{I}}_m  : T_{n,m}^{(\textbf{C})}(\id) \le \widehat{b}_{n,m}^{(\textbf{C})}(1-\alpha).$$
-and by definition of $\widehat{b}_{n,k}^{(\widehat{\textbf{I}}_k)}(1-\alpha)$, we have
-$$\P\left( T_{n,k}^{(\widehat{\textbf{I}}_k)}(\id)> \widehat{b}_{n,k}^{(\widehat{\textbf{I}}_k)}(1-\alpha)  \Big|\forall m < k, \, \exists \textbf{C} \supset \widehat{\textbf{I}}_m  : T_{n,m}^{(\textbf{C})}(\id) \le \widehat{b}_{n,m}^{(\textbf{C})}(1-\alpha)\right) = \alpha\left(\frac{k}{K}\right)-\alpha\left(\frac{k-1}{K}\right) $$
+Let $\widehat{\textbf{I}^c}_k$ be the set of false hypotheses not rejected yet, then all the probabilities computed in the algorithm are conditioned on not having accepted any false hypotheses and not having rejected all false hypotheses (otherwise the error is $0$ and the result is true):
+$$\forall m < k, \, \exists \textbf{C} \supset \widehat{\textbf{I}^c}_m  : T_{n,m}^{(\textbf{C}^-)}(\id) > \widehat{b}_{n,m}^{(\textbf{C}^-)}.$$
+and by definition of $\widehat{b}_{n,k}^{(\widehat{\textbf{I}}_k^-)}$, we have
+$$\P\left( T_{n,k}^{(\widehat{\textbf{I}}_k^-)}(\id)< \widehat{b}_{n,k}^{(\widehat{\textbf{I}^c}_k^-)} \Big|\forall m < k, \, \exists \textbf{C} \supset \widehat{\textbf{I}^c}_m  : T_{n,m}^{(\textbf{C}^-)}(\id) > \widehat{b}_{n,m}^{(\textbf{C}^-)}\right) = f^-\left(\frac{k}{K}\right)-f^-\left(\frac{k-1}{K}\right) $$
 and similarly to interim 1, we have 
-$$T_{n,k}^{(\textbf{C})}(\id)> \widehat{b}_{n,k}^{(\textbf{C})}(1-\alpha)\, \Leftrightarrow \,
- T_{n,k}^{(\widehat{\textbf{I}}_k)}(\id) > \widehat{b}_{n,k}^{(\widehat{\textbf{I}}_k)}(1-\alpha)  $$
+$$T_{n,k}^{(\textbf{C}^-)}(\id)< \widehat{b}_{n,k}^{(\textbf{C}^-)}\, \Leftrightarrow \,
+ T_{n,k}^{(\widehat{\textbf{I}^c}_k^-)}(\id) \ge \widehat{b}_{n,k}^{(\widehat{\textbf{I}^c}_k^-)}  $$
  \begin{multline*}
-\P\left(\text{reject }H_{\widehat{j}} \text{ at interim k} \Big| \text{did not reject }H_{\widehat{j}} \text{ before interim k}\right)\\
-= \P\left( \exists \textbf{C} \supset \widehat{\textbf{I}}_k :\quad  T_{n,k}^{(\textbf{C})}(\id)> \widehat{b}_{n,k}^{(\textbf{C})}(1-\alpha)  \Big|  \forall m < k, \, \exists \textbf{C} \supset \widehat{\textbf{I}}_m  : T_{n,m}^{(\textbf{C})}(\id) \le \widehat{b}_{n,m}^{(\textbf{C})}(1-\alpha)\right)\\
-= \P\left(T_{n,k}^{(\widehat{\textbf{I}}_k)}(\id) > \widehat{b}_{n,k}^{(\widehat{\textbf{I}}_k)}(1-\alpha)  \Big|  \forall m < k, \, \exists \textbf{C} \supset \widehat{\textbf{I}}_m  : T_{n,m}^{(\textbf{C})}(\id) \le \widehat{b}_{n,m}^{(\textbf{C})}(1-\alpha) \right)
- = \alpha\left(\frac{k}{K}\right)-\alpha\left(\frac{k-1}{K}\right)
+\P\left(\text{accept }H_{\widehat{j}} \text{ at interim k} \Big| \text{did not accept }H_{\widehat{j}} \text{ before interim k}\right)\\
+= \P\left( \exists \textbf{C} \supset \widehat{\textbf{I}^c}_k :\quad  T_{n,k}^{(\textbf{C}^-)}(\id)< \widehat{b}_{n,k}^{(\textbf{C}^-)}  \Big|  \forall m < k, \, \exists \textbf{C} \supset \widehat{\textbf{I}^c}_m  : T_{n,m}^{(\textbf{C}^-)}(\id) \ge \widehat{b}_{n,m}^{(\textbf{C}^-)}\right)\\
+= \P\left(T_{n,k}^{(\widehat{\textbf{I}^c}_k^-)}(\id) > \widehat{b}_{n,k}^{(\widehat{\textbf{I}^c}_k^-)} \Big|  \forall m < k, \, \exists \textbf{C} \supset \widehat{\textbf{I}^c}_m  : T_{n,m}^{(\textbf{C}^-)}(\id) \ge \widehat{b}_{n,m}^{(\textbf{C}^-)} \right)\\
+ = f^-\left(\frac{k}{K}\right)-f^-\left(\frac{k-1}{K}\right)
 \end{multline*}
-which together with Equation~\eqref{eq:interim1_multi} and \eqref{eq:multi1} gives strong FWE control.
 
+\paragraph{Additional error at interim K:}
+Finally, we control
+$$\P_\sigma\left(\text{did not reject }H_{\widehat{j}} \text{ at any interim}\Big| \text{did not accept }H_{\widehat{j}} \text{ before interim K or at interim K} \right)$$
+\todoT{Control this if possible ?}
+% which together with Equation~\eqref{eq:interim1_multi} and \eqref{eq:multi1}, we have
+% $$\P_\sigma(\text{E is true})\le \beta.$$
+% Then, take the expectation with respect to the data this time, 
+% $$\E\left[\P_\sigma(\text{E is true})\right] =  \le \alpha. $$
 \end{proof}
 
 
