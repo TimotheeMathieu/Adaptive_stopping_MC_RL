@@ -189,7 +189,7 @@ Collect evaluations $e_{kn}(A_i),\dots,e_{(k+1)n}(A_i)$.\\
 Set $\lambda^+ = f^+ \left(\frac{k}{K}\right)- f^+ \left( \frac{k-1}{K}\right)$ and $\lambda^- = f^- \left(\frac{k}{K}\right)- f^- \left( \frac{k-1}{K}\right)$.\\
 \While{}{
 Compute the boundary $\widehat{b}_{n,k}^{(\textbf{C}^+)}$ and $\widehat{b}_{n,k}^{(\textbf{C}^-)}$ such that
-$$\frac{1}{((2n)!)^k}\sum_{\sigma \in S_k} \1\{T_{n,k}^{(\textbf{C}^+)}(\sigma) \ge  \widehat{b}_{n,k}^{(\textbf{C}^+)}\} \le  \lambda^+ \quad \text{and}\quad \frac{1}{((2n)!)^k}\sum_{\sigma \in S_k} \1\{T_{n,k}^{(\textbf{C}^-)}(\sigma) \leq   \widehat{b}_{n,k}^{(\textbf{C}^-)}\} \le  \lambda^-  .$$
+$$\frac{1}{|S_k|}\sum_{\sigma \in S_k} \1\{T_{n,k}^{(\textbf{C}^+)}(\sigma) \ge  \widehat{b}_{n,k}^{(\textbf{C}^+)}\} \le  \lambda^+ \quad \text{and}\quad \frac{1}{|S_k|}\sum_{\sigma \in S_k} \1\{T_{n,k}^{(\textbf{C}^-)}(\sigma) \leq   \widehat{b}_{n,k}^{(\textbf{C}^-)}\} \le  \lambda^-  .$$
 where $S_k$ is the set of permutations $\sigma\in(S_{2n})^k$  such that $\sigma_1,\dots,\sigma_{k-1}$ did not correspond to permutation which would have accepted or rejected before interim $k$.
 
 \If{$T_{n,k}^{(\textbf{C}^+)}(\mathrm{id}) > \widehat{b}_{n,k}^{(\textbf{C}^+)}$}{
@@ -256,7 +256,7 @@ More generally, Lemma~\ref{lem:quantile_permu_2} is true even for more general p
 % In Theorem~\ref{th:uniform_permu}, one must be careful that in general the event $\{Z \in G^z}\}$ can have probability $0$ for any value of $z$ (in particular this is true if $Z$ has a continuous distribution), hence we have to construct the $\sigma$-field $\mathcal{G}$ to state our theorem properly. A consequence of this theorem is that
 
 \begin{Lemma}
-for any $j \in \textbf{I}^+$, the exchangeability hypothesis is true and $(T_n^{(j)}(\id))_{j \in\textbf{I}^+} =^d (T_n^{(j)}(\sigma))_{\textbf{I}^+}$ for any $\sigma \in S_{2n}$.
+for any $j \in \textbf{I}$, the exchangeability hypothesis is true and we have the following joint equality in distribution $(T_n^{(j)}(\id))_{j \in\textbf{I}} =^d (T_n^{(j)}(\sigma))_{j \in \textbf{I}}$ for any $\sigma \in S_{2n}$.
 
 \end{Lemma}
 \begin{proof}
@@ -272,7 +272,7 @@ Then, in each connected cluster of indices in $\textbf{I}$, the samples are i.i.
 Let $(X_{i,j})_{i\le n, j\le J}$ be i.i.d from a distribution $P_1,\dots,P_J$. Let $\textbf{I}$ be a set of comparisons $(i,j)$ for which we have $P_i=P_j$ is true. Let $\alpha \in (0,1)$ and define $\widehat{b}_{n}^{(\textbf{I}^+)}$ such that 
 $$ \frac{1}{(2n)!}\sum_{\sigma \in S_{2n}} \1\{T_{n,k}^{(\textbf{I}^+)}(\sigma) \ge  \widehat{b}_{n,k}^{(\textbf{I}^+)}\} \le  f^{+}\left(\frac{k}{K}\right)- f^{+}\left(\frac{k-1}{K}\right).$$
 Then, 
-$$\P\left(T_{n,k}^{(\textbf{I}^+)}(\id) > \widehat{b}_{n,k}^{(\textbf{I}^+)} |  \text{ did not reject before interim}\right)\le f^{+}\left(\frac{k}{K}\right)- f^{+}\left(\frac{k-1}{K}\right) $$ 
+$$\P\left(T_{n,k}^{(\textbf{I}^+)}(\id) > \widehat{b}_{n,k}^{(\textbf{I}^+)} |  \text{ did not reject before interim k}\right)\le f^{+}\left(\frac{k}{K}\right)- f^{+}\left(\frac{k-1}{K}\right) $$ 
 \end{Lemma}
 \begin{proof}
 We have
@@ -280,10 +280,13 @@ We have
 \P&\left(T_{n,k}^{(\textbf{I}^+)}(\id) > \widehat{b}_{n,k}^{(\textbf{I}^+)} ,  \text{ did not reject any $T_{n,j}(\id)$ before interim k} \right)\\
 &= \P\left(\max\{T_{n}^{(j)}(\id), j \in \textbf{I}^+\} > \widehat{b}_{n}^{(\textbf{I}^+)},  \text{ did not reject any $T_{n,j}(\id)$ before interim k} \right)
 \end{align*}
-Then, having that for any $j \in \textbf{I}^+$, the exchangeability hypothesis is true and we have the joint equality in distribution $(T_n^{(j)}(\id))_{j \in\textbf{I}^+} =^d (T_n^{(j)}(\sigma))_{\textbf{I}^+}$ for any $\sigma \in S_{2n}$. 
+Then, having that for any $j \in \textbf{I}^+$, the exchangeability hypothesis is true and we have the joint equality in distribution $(T_n^{(j)}(\id))_{j \in\textbf{I}^+} =^d (T_n^{(j)}(\sigma))_{\textbf{I}^+}$ for any $\sigma \in S_{2n}$. Denote $E_k(\sigma)$ the event  ``did not reject any $T_{n,j}(\sigma)$ before interim k''
 \begin{align*}
-\P&\left(T_{n,k}^{(\textbf{I}^+)}(\id) > \widehat{b}_{n,k}^{(\textbf{I}^+)} ,  \text{ did not reject any $T_{n,j}(\id)$ before interim k} \right)\\
-&= \frac{1}{((2n)!)^k}\sum_{\sigma_1,\dots,\sigma_k \in S_{2n}}\P\left(\max\{T_{n}^{(j)}(\sigma), j \in \textbf{I}^+\} > \widehat{b}_{n}^{(\textbf{I}^+)},  \text{ did not reject any $T_{n,j}(\sigma)$ before interim k} \right)\\
+\P\left(T_{n,k}^{(\textbf{I}^+)}(\id) > \widehat{b}_{n,k}^{(\textbf{I}^+)} |  E_k(\id) \right)&= \frac{1}{\P(E_k(\id))}\P\left(T_{n,k}^{(\textbf{I}^+)}(\id) > \widehat{b}_{n,k}^{(\textbf{I}^+)} ,  E_k(\id) \right)\\
+&= \frac{1}{((2n)!)^k}\sum_{\sigma_1,\dots,\sigma_k \in S_{2n}} \frac{1}{\P(E_k(\sigma))}\P\left(\max\{T_{n}^{(j)}(\sigma), j \in \textbf{I}^+\} > \widehat{b}_{n}^{(\textbf{I}^+)},  E_k(\sigma) \right)\\
+&= \frac{1}{\P(E_k(\id))}\E\left[\frac{1}{((2n)!)^k}\sum_{\sigma_1,\dots,\sigma_k \in S_{2n}} \1\{\max\{T_{n}^{(j)}(\sigma), j \in \textbf{I}^+\} > \widehat{b}_{n}^{(\textbf{I}^+)},  E_k(\sigma)\} \right]\\
+&= \frac{1}{\P(E_k(\id))}\E\left[\frac{1}{((2n)!)^k}\sum_{\sigma \in S_k} \1\{\max\{T_{n}^{(j)}(\sigma), j \in \textbf{I}^+\} > \widehat{b}_{n}^{(\textbf{I}^+)}\} \right]\\
+&\le  \frac{1}{\P(E_k(\id))}\E\left[\frac{|S_k|}{((2n)!)^k} \right]\left(f^{+}\left(\frac{k}{K}\right)- f^{+}\left(\frac{k-1}{K}\right)\right)\\
 &\le f^{+}\left(\frac{k}{K}\right)- f^{+}\left(\frac{k-1}{K}\right)
 \end{align*}
 \end{proof}
