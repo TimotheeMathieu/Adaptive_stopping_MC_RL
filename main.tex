@@ -34,6 +34,7 @@
 \newcommand{\E}{\mathbb{E}}
 \newcommand{\R}{\mathbb{R}}
 \newcommand{\N}{\mathbb{N}}
+\renewcommand{\S}{\mathfrak{S}}
 
 \newcommand{\sign}{\text{sign}}
 \newcommand{\1}{\mathbbm{1}}
@@ -112,14 +113,14 @@ In the case where only two agents are compared, we use the following algorithm (
 \SetAlgoLined
 \SetKwInput{KwParameter}{Parameters}
 \KwParameter{Agents $A_1,A_2$, environment $\mathcal{E}$, number of blocks $K \in \N^*$, size of a block $N$, level of the test $\alpha\in (0,1)$.}
-Define $2NK$ different seeds $s_{1,1},\dots,s_{1,n},s_{2,1},\dots,s_{2,n}$.\\
+Define $2NK$ different seeds $s_{1,1},\dots,s_{1,N},s_{2,1},\dots,s_{2,N}$.\\
 \For{$k=1,\dots,K$}{
 \For{$i=1,2$}{
-Train agent $A_i$ on environment $\mathcal{E}$ with the seeds $s_{i,kn},\dots,s_{i,(k+1)n}$.\\
-Collect evaluations $e_{kn}(A_i),\dots,e_{(k+1)n}(A_i)$ using this trained agent.\\
+Train agent $A_i$ on environment $\mathcal{E}$ with the seeds $s_{i,kN},\dots,s_{i,(k+1)N}$.\\
+Collect evaluations $e_{1,k}(A_i),\dots,e_{N,k}(A_i)$ using this trained agent.\\
 }
 Compute the boundary $B_k$ using all current and previous data.\\
-\If{$|\frac{1}{nk}\sum_{j=1}^{nk}e_{j}(A_1)-\frac{1}{nk}\sum_{j=1}^{nk}e_{j}(A_2)| \ge B_k$}{
+\If{$|\frac{1}{Nk}\sum_{i=1}^k\left(\sum_{j=1}^{N}e_{j,k}(A_1)-\sum_{j=1}^{N}e_{j,k}(A_2)\right)| \ge B_k$}{
 Reject the equality of the agents' evaluation, break the loop.
 }
 \Else{
@@ -146,32 +147,26 @@ An illustration of the group sequential test is given in figure~\ref{fig:gst}. T
 We use Monte-Carlo approximation, using random permutation instead of enumerating all the permutations.
 
 \item[Multiple testing]
-When dealing with multiple testing, particular care must be taken so as not to decrease the error of the test. Suppose that we want to test $H_j$ versus $H_j'$ for $1\le j\le J$ using a test statistic $T_{n}^{(j)}$. Instead of the type I error considered in two-sample testing, we consider the family-wise error rate (FWE) which is defined as the probability of making at least one type I error: let $\textbf{I}\subset \{1,\dots,J\}$ be the set of the true hypotheses, then 
+When dealing with multiple testing, particular care must be taken so as not to decrease the error of the test. Suppose that we want to test $H_j$ versus $H_j'$ for $1\le j\le J$ using a test statistic $T_{N}^{(j)}$. Instead of the type I error considered in two-sample testing, we consider the family-wise error rate (FWE) which is defined as the probability of making at least one type I error: let $\textbf{I}\subset \{1,\dots,J\}$ be the set of the true hypotheses, then 
 $$\mathrm{FWE} = \P_{H_j, j \in \textbf{I}}\left(\exists j \in \textbf{I}:\quad  \text{reject }H_j \right).$$
 Usually, we say that an algorithm has a weak FWE control if the FWE is smaller than $\alpha$ when $\textbf{I}=\{1,\dots,J\}$ and we say that the algorithm has strong FWE control if FWE is smaller than $\alpha$ for any $\textbf{I}\neq \emptyset$· 
 \end{description}
 
 \subsection{Notations}
-We consider $L\ge 2$ agents $A_1,\dots,A_L$. The $k^{th}$ step of the algorithm is called the $k^{th}$ interim for some $k \in \{1,\dots,K\}$. Let $c_1,\dots,c_J$ be the comparisons we want to make. For any $i$, $c_i$ is a couple of agent's indices: $c_i=(c_{i,1},c_{i,2}) \in \{1,\dots,L\}^2$. We denote $e_{k,n}(A_i)$ the $n^{th}$ evaluation of agent $A_i$ during interim $k$.
+We denote by $\S_{2N}$ the set of permutations of $\{1,\dots,2N\}$ and for $\sigma_1,\sigma_2,\dots,\sigma_k \in \S_{2N}^2$, we denote $\sigma_1 \cdot \sigma_2 \cdot \ldots \cdot \sigma_k$ the concatenation of the permutation $\sigma_1$ done in interim $1$ and $\sigma_2$ done on interim $2$,\dots, $\sigma_k$ on interim $k$. We consider $L\ge 2$ agents $A_1,\dots,A_L$. The $k^{th}$ step of the algorithm is called the $k^{th}$ interim for some $k \in \{1,\dots,K\}$. Let $c_1,\dots,c_J$ be the comparisons we want to make. For any $i$, $c_i$ is a couple of agent's indices: $c_i=(c_{i,1},c_{i,2}) \in \{1,\dots,L\}^2$. We denote $e_{1,k}(j), \dots, e_{2N, k}(j)$ the concatenation of the $2N$ evaluations obtained from the two agents compared for comparison $j$ at at interim $k$.
 
 For some $\textbf{C} \subset \{1,\dots,J\}$, denote
-$$T_{n,k}^{(\textbf{C}^+)}(\sigma)= \max\left(\sum_{i=1}^kT_{n,i}^{(j)}(\sigma_i),\quad j \in \textbf{C}\right) \quad \text{and}\quad T_{n,k}^{(\textbf{C}^-)}(\sigma)= \min\left(\sum_{i=1}^kT_{n,i}^{(j)}(\sigma_i),\quad j \in \textbf{C}\right)$$
-
-where $T_{n,i}^{(j)}(\sigma_i)= |D_{n,i}^{(j)}(\sigma_i)|$ with
-$$D_{n,i}^{(j)}(\sigma_i)= D_{n,i-1}^{(j)}(\sigma_{i-1})+\sum_{l=1}^{n} e_{\sigma_i(l)+2ni}(A_{1,j})-\sum_{l=n+1}^{2n} e_{\sigma_i(l)+2ni} $$
-and 
-$$D_{n,1}^{(j)}(\sigma_1)=\sum_{l=1}^{n} e_{\sigma_i(l)}(A_{1,j})-\sum_{l=n+1}^{2n} e_{\sigma_i(l)}(A_{2,j}).$$
-$D_{n,i}$ is the sum of differences of all the blocks until block $i$ after permutation by $\sigma_1,\dots,\sigma_i\in S_{2n}$.
+$$T_{N,k}^{(\textbf{C}^+)}(\sigma)= \max\left(\sum_{i=1}^kT_{N,i}^{(j)}(\sigma_i),\quad j \in \textbf{C}\right) \quad \text{and}\quad T_{N,k}^{(\textbf{C}^-)}(\sigma)= \min\left(\sum_{i=1}^kT_{N,i}^{(j)}(\sigma_i),\quad j \in \textbf{C}\right)$$
+where 
+$$T_{N,i}^{(j)}(\sigma)= \left|\sum_{i=1}^k\left(\sum_{n=1}^{N} e_{\sigma_i(n),i}(j)-\sum_{n=N+1}^{2N} e_{\sigma_i(n),i}(j)\right)\right|$$ 
+$T_{N,i}^{(j)}$ is the absolute value of the sum of differences of all the blocks until block $i$ after permutation of the concatenation of the two agents's evaluations. by $\sigma_1,\dots,\sigma_i\in \S_{2N}$.
  
 $\textbf{I}$ denotes the set of indices of the true hypotheses among $\{1,\dots,J\}$. Let $\alpha, \beta \in [0,1]$, the algorithm depends on a level spending function $f^+:[0,1]\to[0,\alpha]$ and a power spending function $f^-:[0,1]\to [0,\beta]$, both non-decreasing functions verifying $f^+(0)=f^-(0)=0$, $f^+(1)=\alpha$, $f^-(1)=\beta$. We define the boundaries of the algorithm by 
 $$\frac{1}{n!}\sum_{\sigma \in S_n} \1\{T_{n,k}^{(\textbf{C}^+)}(\sigma) \ge  \widehat{b}_{n,k}^{(\textbf{C}^+)}\} \le  \lambda^+ \quad \text{and}\quad \frac{1}{n!}\sum_{\sigma \in S_n} \1\{T_{n,k}^{(\textbf{C}^-)}(\sigma) \leq   \widehat{b}_{n,k}^{(\textbf{C}^-)}\} \le  \lambda^- .$$
 where $\lambda^+ = f^+ \left(\frac{k}{K}\right)- f^+ \left( \frac{k-1}{K}\right)$ and $\lambda^- = f^- \left(\frac{k}{K}\right)- f^- \left( \frac{k-1}{K}\right)$.
 
 If $\textbf{I} \neq \emptyset$, we denote 
-$$\mathrm{FWE}(\alpha) = \P\left(\exists j \in \textbf{I}:\quad  \text{reject }H_j \right),$$
-and if $\textbf{I}^c \neq \emptyset$, we denote 
-$$\mathrm{POW}(\beta) =  1-\P_\sigma\left(\exists j \notin \textbf{I}:\quad  \text{accept }H_j \right)= \P_\sigma\left(\forall j \notin \textbf{I}, \quad \text{reject }H_j\right) $$
-where both these probabilities are taken with respect to the random permutation, conditioned on the data.
+$$\mathrm{FWE}(\alpha) = \P\left(\exists j \in \textbf{I}:\quad  \text{reject }H_j \right).$$
 \subsection{AdaStop: adaptive stopping algorithm using step-down method and group sequential permutation tests}
 
 The algorithm is given in Algorithm~\ref{algo:main}
@@ -179,25 +174,25 @@ The algorithm is given in Algorithm~\ref{algo:main}
 \SetAlgoLined
 \SetKwInput{KwParameter}{Parameters}
 \KwParameter{Agents $A_1,A_2,\dots, A_L$, environment $\mathcal{E}$, comparison pairs $(c_i)_{i \le L}$ where $c_i$ is a couple of two agents that we want to compare. Integers $K,N \in \N^*$, test parameters $\alpha,\beta$.}
-Define $mnK$ different seeds $(s_{i,j})_{i\le L,j\le N}$.\\
+Define $LNK$ different seeds $(s_{l,n,k})_{l\le L,n\le N, k\le K}$.\\
 Set $\textbf{C}=\{1, \dots,L\}$ the set of indices for the comparisons we want to do.\\
 \For{$k=1,\dots,K$}{
-\For{$i=1...m$}{
-Train agent $A_i$ on environment $\mathcal{E}$ with the seeds $s_{i,kn},\dots,s_{i,(k+1)n}$.\\
-Collect evaluations $e_{kn}(A_i),\dots,e_{(k+1)n}(A_i)$.\\
+\For{$l=1...L$}{
+Train agent $A_l$ on environment $\mathcal{E}$ with the seeds $s_{l,1,k},\dots,s_{l,N,k}$.\\
+Collect the $N$  evaluations of agent $A_l$.\\
 }
 Set $\lambda^+ = f^+ \left(\frac{k}{K}\right)- f^+ \left( \frac{k-1}{K}\right)$ and $\lambda^- = f^- \left(\frac{k}{K}\right)- f^- \left( \frac{k-1}{K}\right)$.\\
 \While{}{
-Compute the boundary $\widehat{b}_{n,k}^{(\textbf{C}^+)}$ and $\widehat{b}_{n,k}^{(\textbf{C}^-)}$ such that
-$$\frac{1}{|S_k|}\sum_{\sigma \in S_k} \1\{T_{n,k}^{(\textbf{C}^+)}(\sigma) \ge  \widehat{b}_{n,k}^{(\textbf{C}^+)}\} \le  \lambda^+ \quad \text{and}\quad \frac{1}{|S_k|}\sum_{\sigma \in S_k} \1\{T_{n,k}^{(\textbf{C}^-)}(\sigma) \leq   \widehat{b}_{n,k}^{(\textbf{C}^-)}\} \le  \lambda^-  .$$
-where $S_k$ is the set of permutations $\sigma\in(S_{2n})^k$  such that $\sigma_1,\dots,\sigma_{k-1}$ did not correspond to permutation which would have accepted or rejected before interim $k$.
+Compute the boundary $\widehat{b}_{N,k}^{(\textbf{C}^+)}$ and $\widehat{b}_{N,k}^{(\textbf{C}^-)}$ such that
+$$\frac{1}{|S_k|}\sum_{\sigma \in S_k} \1\{T_{N,k}^{(\textbf{C}^+)}(\sigma) \ge  \widehat{b}_{N,k}^{(\textbf{C}^+)}\} \le  \lambda^+ \quad \text{and}\quad \frac{1}{|S_k|}\sum_{\sigma \in S_k} \1\{T_{N,k}^{(\textbf{C}^-)}(\sigma) \leq   \widehat{b}_{N,k}^{(\textbf{C}^-)}\} \le  \lambda^-  .$$
+where $S_k$ is the set of permutations $\sigma\in(\S_{2N})^k$  such that $\sigma_1,\dots,\sigma_{k-1}$ did not correspond to permutation which would have accepted or rejected before interim $k$.
 
-\If{$T_{n,k}^{(\textbf{C}^+)}(\mathrm{id}) > \widehat{b}_{n,k}^{(\textbf{C}^+)}$}{
-Reject $H_{j_{\max}}$ where $j_{\max} =  \arg\max\left(T_{n,k}^{(j)}(\id),\quad j \in \textbf{C}\right)$.\\
+\If{$T_{N,k}^{(\textbf{C}^+)}(\mathrm{id}) > \widehat{b}_{N,k}^{(\textbf{C}^+)}$}{
+Reject $H_{j_{\max}}$ where $j_{\max} =  \arg\max\left(T_{N,k}^{(j)}(\id),\quad j \in \textbf{C}\right)$.\\
 Update $\textbf{C}=\textbf{C} \setminus \{j_{\max }\}$
 }
-\If{$T_{n,k}^{(\textbf{C}^-)}(\mathrm{id}) < \widehat{b}_{n,k}^{(\textbf{C}^-)}$}{
-Accept $H_{j_{\min}}$ where $j_{\min} =  \arg\min\left(T_{n,k}^{(j)}(\id ),\quad j \in \textbf{C}\right)$.\\
+\If{$T_{n,k}^{(\textbf{C}^-)}(\mathrm{id}) < \widehat{b}_{N,k}^{(\textbf{C}^-)}$}{
+Accept $H_{j_{\min}}$ where $j_{\min} =  \arg\min\left(T_{N,k}^{(j)}(\id ),\quad j \in \textbf{C}\right)$.\\
 Update $\textbf{C}=\textbf{C} \setminus \{j_{\min }\}$
 }
 }
@@ -216,86 +211,86 @@ Break the loop and returns the answers
 \newpage
 
 \section{Theoretical guarentees}
-\todoT{For now: asymptotic is not with early accept and not multiple.}
-\todoT{
-TODO:\\
-- Prove that early accept does not decrease the power too much\\
-- Do the asymptotic for early accept and multiple testing (this would also allow estimate of power)
-} 
-\subsection{Basic results on non-sequential permutation tests}
+% \todoT{For now: asymptotic is not with early accept and not multiple.}
+% \todoT{
+% TODO:\\
+% - Prove that early accept does not decrease the power too much\\
+% - Do the asymptotic for early accept and multiple testing (this would also allow estimate of power)
+% } 
+\subsection{Basic results following from the use of permutation tests}
 One of the basic property of two-sample permutation tests is that when the null hypothesis is true, then all the permutation are as likely to give a certain value and hence the law given the data is the uniform distributions on all the permutations. The precise theorem for this result is a bit technical due to the fact that the probability for the data to have any given value is $0$ and we must be a bit careful with the formulation (see \cite[Theorem 17.2.2]{lehmann2005testing} for a precise formulation). 
 
 In what follows we show results with the same flavour but adapted to our multi-testing and sequential testing problem to fit exactly our setting.
 \begin{Lemma}\label{lem:quantile_permu_2}
-Let $X_1,\dots,X_n$ be i.i.d from a distribution $P$ and $Y_1,\dots,Y_n$ be i.i.d. from a distribution $Q$. Denote $Z_1^{2n}=X_1,\dots,X_n,Y_1,\dots,Y_n$ be the concatenation of $X_1^n$ and $Y_1^n$. Let $\alpha \in (0,1)$ and define $\widehat{b}$ such that 
-$$ \frac{1}{(2n)!}\sum_{\sigma\in S_{2n}} \1\left\{ \frac{1}{n}\sum_{i=1}^n (Z_{\sigma(i)}-Z_{\sigma(n+i)}) > \widehat{b}\right\}\le \alpha.$$
+Let $X_1,\dots,X_N$ be i.i.d from a distribution $P$ and $Y_1,\dots,Y_N$ be i.i.d. from a distribution $Q$. Denote $Z_1^{2N}=X_1,\dots,X_N,Y_1,\dots,Y_N$ be the concatenation of $X_1^N$ and $Y_1^N$. Let $\alpha \in (0,1)$ and define $\widehat{b}$ such that 
+$$ \frac{1}{(2N)!}\sum_{\sigma\in \S_{2N}} \1\left\{ \frac{1}{N}\sum_{i=1}^n (Z_{\sigma(i)}-Z_{\sigma(N+i)}) > \widehat{b}\right\}\le \alpha.$$
 Then, if $P=Q$, we have 
-$$\P\left(\frac{1}{n}\sum_{i=1}^n (X_i-Y_i) >\widehat{b} \right)\le \alpha $$ 
+$$\P\left(\frac{1}{N}\sum_{i=1}^n (X_i-Y_i) >\widehat{b} \right)\le \alpha $$ 
 \end{Lemma}
 \begin{proof}
-Denote $T(\sigma)= \frac{1}{n}\sum_{i=1}^n (Z_{\sigma(i)}-Z_{\sigma(n+i)})$ and $\P$ be the probability with respect to the laws of $X_1^n$ and $Y_1^n$. Since $P=Q$, for any $\sigma,\sigma' \in S_n$ we have $T(\sigma)=^d T(\sigma')$. Then, because $\widehat{b}$ does not depend on the permutation $\sigma$ (but it depends on the values of $Z_1^{2n}$, we have for any $\sigma \in S_n$
+Denote $T(\sigma)= \frac{1}{N}\sum_{i=1}^n (Z_{\sigma(i)}-Z_{\sigma(n+i)})$ and $\P$ be the probability with respect to the laws of $X_1^N$ and $Y_1^N$. Since $P=Q$, for any $\sigma,\sigma' \in \S_{2N}$ we have $T(\sigma)=^d T(\sigma')$. Then, because $\widehat{b}$ does not depend on the permutation $\sigma$ (but it depends on the values of $Z_1^{2N}$, we have for any $\sigma \in \S_{2N}$
 \begin{align*}
 \P\left(T(\id)> \widehat{b}\right)&=\P\left(T(\sigma)> \widehat{b}\right)
 \end{align*} 
 Now, take the sum on all the permutations, 
 \begin{align*}
-\P\left(T(\id)> \widehat{b}\right)&=\frac{1}{(2n)!}\sum_{\sigma\in S_n} \E\left[\1\{T(\sigma)> \widehat{b}\}\right]\\
-&=  \E\left[\frac{1}{(2n)!}\sum_{\sigma\in S_n}\1\{T(\sigma)> \widehat{b}\}\right]\le \alpha
+\P\left(T(\id)> \widehat{b}\right)&=\frac{1}{(2N)!}\sum_{\sigma\in \S_{2N}} \E\left[\1\{T(\sigma)> \widehat{b}\}\right]\\
+&=  \E\left[\frac{1}{(2N)!}\sum_{\sigma\in \S_{2N}}\1\{T(\sigma)> \widehat{b}\}\right]\le \alpha
 \end{align*}
 which proves the result.
 \end{proof}
 
 
 More generally, Lemma~\ref{lem:quantile_permu_2} is true even for more general permutation tests. In particular, in our case we have
-% one of the basic property of permutation tests is that when the null hypothesis is true, then all the permutation are as likely to give a certain value and hence the law given the data is the uniform distributions on all the permutations. The precise theorem for this result is a bit technical due to the difficulty that in a lot of cases, the probability for the data to have any given value is $0$ and we must be a bit careful with the formulation. More precisely, we have this theorem (from \cite[Theorem 17.2.2]{lehmann2005testing})
-% \begin{Theorem}\label{th:uniform_permu}
-% Let $Z_1^m$ have distribution $P$, and the problem is to test $P \in \mathcal{P}_0$. Suppose that the randomization hypothesis holds that $Z =^d \sigma Z$ for any permutation $\sigma \in S_m$ whenever $P \in \mathcal{P}_0$. Denote $G^z=\{\sigma z, \sigma \in S_m\} $, the orbit of $z \in \R^m$, and let $\mathcal{G}$ be the $\sigma$-field generated by the partition of the sample space described by $G^z$ as $z$ varies. Then for any test statistic $T = T(Z)$, any $P \in \mathcal{P}_0$ and any Borel subset $B\subset \R$, 
-% $$\P\left(T(Z)\in B | Z \in \mathcal{G} \right)= \frac{1}{m!}\sum_{\sigma \in S_m} \1\{T(\sigma Z) \in B \} $$ 
-% with probability $1$ under $P$.
-% \end{Theorem}
-% In Theorem~\ref{th:uniform_permu}, one must be careful that in general the event $\{Z \in G^z}\}$ can have probability $0$ for any value of $z$ (in particular this is true if $Z$ has a continuous distribution), hence we have to construct the $\sigma$-field $\mathcal{G}$ to state our theorem properly. A consequence of this theorem is that
 
 \begin{Lemma}
-for any $j \in \textbf{I}$, the exchangeability hypothesis is true and we have the following joint equality in distribution $(T_n^{(j)}(\id))_{j \in\textbf{I}} =^d (T_n^{(j)}(\sigma))_{j \in \textbf{I}}$ for any $\sigma \in S_{2n}$.
-
+for any $j \in \textbf{I}$, then we have the following joint equality in distribution :
+$$\forall \sigma \in (\S_{2N})^k, \quad (T_N^{(j)}(\id))_{j \in\textbf{I}} =^d (T_N^{(j)}(\sigma))_{j \in \textbf{I}}.$$
+where $\textbf{I}$ is a subset of $\{1,\dots,J\}$ of true hypotheses.
 \end{Lemma}
 \begin{proof}
 We have
-$$T_{n,k}^{(j)}(\sigma)=|D_{n,k}^{(j)}(\sigma_{k})|= \left|D_{n,k-1}^{(j)}(\sigma_{k-1})+\sum_{l=1}^{n} e_{\sigma_k(l)+2nk}(A_{1,j})-\sum_{l=n+1}^{2n} e_{\sigma_k(l)+2nk}(A_{2,j}) \right| $$
-Remark that $T_{n,k}^{(j)}(\sigma) = T_{n,k}^{(j)}(\sigma^{-1})$ because it corresponds to changing the sign $-1$
- to $+1$ and vice-versa in all the sums defining $D_{n,k}^{(j)}(\sigma_{k})$, the factor -1 is then cancelled because we take the absolute value in $T_{n,k}$. Hence, we can consider that in two different couples $(i,j)$ and $(j,k)$, the plus/minus signs for $Z_j$ are the same in the two couples. As a consequence transformation by $\sigma$ can be seen as a global transformation of the concatenation of all the points $(e_{\sigma_i(l)+2ni}(A_{2,j}), e_{\sigma_i(l)+2ni}(A_{2,j}))_{i\le k,j\in \textbf{I}}$. 
+\begin{align*}
+T_{N,k}^{(j)}(\sigma_1 \cdot  \sigma_2 \cdot  \ldots  \cdot  \sigma_k)&=  \left|\sum_{i=1}^k\left(\sum_{n=1}^{N} e_{\sigma_i(n),i}(j)-\sum_{n=N+1}^{2N} e_{\sigma_i(n),i}(j)\right)\right|
+\end{align*}
+Hence, $T_{n,k}^{(j)}(\sigma) = T_{n,k}^{(j)}(\sigma')$ where $\sigma'_i(n)=\sigma_i(n+N)$ if $n \le N$ and $\sigma_i(n) = \sigma_i(n-N)$ otherwise. This corresponds to changing the sign $-1$ to $+1$ inside the absolute value. Now, let us consider two different comparisons $j=(i_1,i_2)$ and $j'=(i_2,i_3)$, i.e. the two couples share one agent. We can consider that in both $T_{N,k}^{(j)}(\sigma)$ and $T_{N,k}^{(j')}(\sigma)$ the permutation acts in the same way on agent $i_2$.
 
-Then, in each connected cluster of indices in $\textbf{I}$, the samples are i.i.d and they are permuted by a permutation that is constructed using $\sigma$, this is a permutation in the cluster hence the result follows from the usual permuted exchangeability in each cluster and the fact that the clusters are independent.
+As a consequence transformation by $\sigma$ can be seen as a global transformation of the concatenation of all the points (with repetition removed) $(e_{n,i}(j), e_{n,i}(j))_{n\le N, i\le k,j\in \textbf{I}}$. 
+
+Now, we define the connected clusters of indices in $\textbf{I}$. We denote $\mathcal{C}(i)$ the connected cluster of agent $i \in \{1,\dots,L\}$ which consists in all the agents that are compared to it in $\textbf{I}$: $\mathcal{C}(i)=\{l \in  \{1,\dots,L\}:\quad  (l,i)\in \textbf{I}\}$ where $(l,i)$ is taken without order. Because the agents's evaluations are independent from one-another, the cluster of indices are also independent and we can consider them separately. 
+
+In each cluster, as said previously, we can consider that the data are transform by a global permutation on the indices, and the permutation must be of the form of a concatenation of permutations on interims as defined previously. Then, because the samples are i.i.d because we consider only true hypotheses, using the usual permuted exchangeability argument  we get that for all $i$, $(T_N^{(j)}(\id))_{j \in\textbf{C(i)}} =^d (T_N^{(j)}(\sigma))_{j \in \textbf{C(i)}}$, then we get the result because the clusters are independent.
 \end{proof}
 
+By convention, let $f^+\left(\frac{-1}{K}\right)=0$. We have,
 \begin{Lemma}
 Let $(X_{i,j})_{i\le n, j\le J}$ be i.i.d from a distribution $P_1,\dots,P_J$. Let $\textbf{I}$ be a set of comparisons $(i,j)$ for which we have $P_i=P_j$ is true. Let $\alpha \in (0,1)$ and define $\widehat{b}_{n}^{(\textbf{I}^+)}$ such that 
-$$ \frac{1}{(2n)!}\sum_{\sigma \in S_{2n}} \1\{T_{n,k}^{(\textbf{I}^+)}(\sigma) \ge  \widehat{b}_{n,k}^{(\textbf{I}^+)}\} \le  f^{+}\left(\frac{k}{K}\right)- f^{+}\left(\frac{k-1}{K}\right).$$
-Then, 
-$$\P\left(T_{n,k}^{(\textbf{I}^+)}(\id) > \widehat{b}_{n,k}^{(\textbf{I}^+)} |  \text{ did not reject before interim k}\right)\le f^{+}\left(\frac{k}{K}\right)- f^{+}\left(\frac{k-1}{K}\right) $$ 
+$$ \frac{1}{(2n)!}\sum_{\sigma \in \S_{2n}} \1\{T_{n,k}^{(\textbf{I}^+)}(\sigma) \ge  \widehat{b}_{n,k}^{(\textbf{I}^+)}\} \le  f^{+}\left(\frac{k}{K}\right)- f^{+}\left(\frac{k-1}{K}\right).$$
+Then, denote $E_k(\sigma,\textbf{I})$ the event  ``did not reject nor accept any $T_{n,j}(\sigma)$ for $j \in I$ before interim k'', we have
+$$\P\left(T_{n,k}^{(\textbf{I}^+)}(\id) > \widehat{b}_{n,k}^{(\textbf{I}^+)} | E_k(\id, \textbf{I})\right)\le f^{+}\left(\frac{k}{K}\right)- f^{+}\left(\frac{k-1}{K}\right).$$
 \end{Lemma}
 \begin{proof}
 We have
 \begin{align*}
-\P&\left(T_{n,k}^{(\textbf{I}^+)}(\id) > \widehat{b}_{n,k}^{(\textbf{I}^+)} ,  \text{ did not reject any $T_{n,j}(\id)$ before interim k} \right)\\
-&= \P\left(\max\{T_{n}^{(j)}(\id), j \in \textbf{I}^+\} > \widehat{b}_{n}^{(\textbf{I}^+)},  \text{ did not reject any $T_{n,j}(\id)$ before interim k} \right)
+\P&\left(T_{n,k}^{(\textbf{I}^+)}(\id) > \widehat{b}_{n,k}^{(\textbf{I}^+)} ,  E_k(\id,\textbf{I}) \right)\\
+&= \P\left(\max\{T_{n}^{(j)}(\id), j \in \textbf{I}^+\} > \widehat{b}_{n}^{(\textbf{I}^+)},  E_k(\id,\textbf{I})\right)
 \end{align*}
-Then, having that for any $j \in \textbf{I}^+$, the exchangeability hypothesis is true and we have the joint equality in distribution $(T_n^{(j)}(\id))_{j \in\textbf{I}^+} =^d (T_n^{(j)}(\sigma))_{\textbf{I}^+}$ for any $\sigma \in S_{2n}$. Denote $E_k(\sigma)$ the event  ``did not reject any $T_{n,j}(\sigma)$ before interim k''
+Then, having that for any $j \in \textbf{I}^+$, then we have the joint equality in distribution $(T_n^{(j)}(\id))_{j \in\textbf{I}^+} =^d (T_n^{(j)}(\sigma))_{\textbf{I}^+}$ for any $\sigma \in S_{2n}$. 
 \begin{align*}
-\P\left(T_{n,k}^{(\textbf{I}^+)}(\id) > \widehat{b}_{n,k}^{(\textbf{I}^+)} |  E_k(\id) \right)&= \frac{1}{\P(E_k(\id))}\P\left(T_{n,k}^{(\textbf{I}^+)}(\id) > \widehat{b}_{n,k}^{(\textbf{I}^+)} ,  E_k(\id) \right)\\
-&= \frac{1}{((2n)!)^k}\sum_{\sigma_1,\dots,\sigma_k \in S_{2n}} \frac{1}{\P(E_k(\sigma))}\P\left(\max\{T_{n}^{(j)}(\sigma), j \in \textbf{I}^+\} > \widehat{b}_{n}^{(\textbf{I}^+)},  E_k(\sigma) \right)\\
-&= \frac{1}{\P(E_k(\id))}\E\left[\frac{1}{((2n)!)^k}\sum_{\sigma_1,\dots,\sigma_k \in S_{2n}} \1\{\max\{T_{n}^{(j)}(\sigma), j \in \textbf{I}^+\} > \widehat{b}_{n}^{(\textbf{I}^+)},  E_k(\sigma)\} \right]\\
-&= \frac{1}{\P(E_k(\id))}\E\left[\frac{1}{((2n)!)^k}\sum_{\sigma \in S_k} \1\{\max\{T_{n}^{(j)}(\sigma), j \in \textbf{I}^+\} > \widehat{b}_{n}^{(\textbf{I}^+)}\} \right]\\
-&\le  \frac{1}{\P(E_k(\id))}\E\left[\frac{|S_k|}{((2n)!)^k} \right]\left(f^{+}\left(\frac{k}{K}\right)- f^{+}\left(\frac{k-1}{K}\right)\right)\\
+\P\left(T_{n,k}^{(\textbf{I}^+)}(\id) > \widehat{b}_{n,k}^{(\textbf{I}^+)} |  E_k(\id,\textbf{I}) \right)&= \frac{1}{\P(E_k(\id,\textbf{I}))}\P\left(T_{n,k}^{(\textbf{I}^+)}(\id) > \widehat{b}_{n,k}^{(\textbf{I}^+)} ,  E_k(\id,\textbf{I}) \right)\\
+&= \frac{1}{((2n)!)^k}\sum_{\sigma_1,\dots,\sigma_k \in \S_{2n}} \frac{1}{\P(E_k(\sigma,\textbf{I}),\textbf{I})}\P\left(\max\{T_{n}^{(j)}(\sigma), j \in \textbf{I}^+\} > \widehat{b}_{n}^{(\textbf{I}^+)},  E_k(\sigma,\textbf{I}) \right)\\
+&= \frac{1}{\P(E_k(\id,  \textbf{I}))}\E\left[\frac{1}{((2n)!)^k}\sum_{\sigma_1,\dots,\sigma_k \in \S_{2n}} \1\{\max\{T_{n}^{(j)}(\sigma), j \in \textbf{I}^+\} > \widehat{b}_{n}^{(\textbf{I}^+)},  E_k(\sigma,\textbf{I})\} \right]\\
+&= \frac{1}{\P(E_k(\id,\textbf{I}))}\E\left[\frac{1}{((2n)!)^k}\sum_{\sigma \in S_k} \1\{\max\{T_{n}^{(j)}(\sigma), j \in \textbf{I}^+\} > \widehat{b}_{n}^{(\textbf{I}^+)}\} \right]\\
+&\le  \frac{1}{\P(E_k(\id,\textbf{I}))}\E\left[\frac{|S_k|}{((2n)!)^k} \right]\left(f^{+}\left(\frac{k}{K}\right)- f^{+}\left(\frac{k-1}{K}\right)\right)\\
 &\le f^{+}\left(\frac{k}{K}\right)- f^{+}\left(\frac{k-1}{K}\right)
 \end{align*}
+where the last line follows from the definition of $S_k$.
 \end{proof}
 \subsection{Multiple group sequential testing}
 First we prove that the multiple testing scheme is correct for testing $ P_j = P_k$ against $ P_j \neq P_k$ for all the couples $j \neq k$. 
 
+\todoT{For now this proof is wrong because of early accept: I don't have exchangeability when the set of true undecided hypotheses is shrinking randomly.}
 
-
-\todoT{Maybe prove that asymptotically, the multiple test is ok for stronger hypotheses.}
 \begin{Theorem}\label{th:multi_FWE}
 For any $\alpha \in (0,1)$ and any non-decreasing level spending function $f^+$, the test resulting from Algorithm~\ref{algo:main} has a strong control on the FWE: we have $\mathrm{FWE}(\alpha)\le\alpha$.
 \end{Theorem}
@@ -305,15 +300,16 @@ $$\mathrm{E}= \{ \exists j \in \textbf{I}: \quad H_j \text{ is rejected}\}.$$
 If E is true, let $\widehat{j}$ be the (random) index of the first hypothesis which is rejected.
 We have 
 \begin{equation}\label{eq:multi1}
-\P_\sigma\left(\text{E is true} \right)= \sum_{k=1}^K \P_\sigma\left(\text{reject }H_{\widehat{j}} \text{ at interim k} \Big| \text{did not reject }H_{\widehat{j}} \text{ before interim k} \right) 
+\P_\sigma\left(\text{E is true} \right)= \sum_{k=1}^K \P_\sigma\left(\text{reject }H_{\widehat{j}} \text{ at interim k} \Big|  E_k(\id,\widehat{\textbf{I}}_k) \right) 
 \end{equation}
+where $\widehat{\textbf{I}}_k$ is the set of undecided true hypotheses, meaning that this is the subset of $\textbf{I}$ the set of true hypotheses composed of hypotheses that have not been accepted yet until interim $k$.
 
 
 \paragraph{First interim:}
 
 At the first interim, we look at the probability that at least one true hypothesis is rejected. Let $\widehat{\textbf{I}}_1 \subset \textbf{I}$ be the random set of true hypotheses not accepted in first interim, we have $\widehat{j}\in \widehat{\textbf{I}}_1$ (if $\widehat{\textbf{I}}_1$ is empty almost surely, then the error is $0$, we suppose $\widehat{\textbf{I}}_1$ non empty) and
 $$\P_\sigma\left(\text{reject }H_{\widehat{j}} \text{ at interim 1}\right)= \P_\sigma\left( \exists \textbf{C}\supset \widehat{\textbf{I}}_1: \, T_{n,1}^{\widehat{j}}(\id) = T_{n,1}^{(\textbf{C}^+)}(\id) > \widehat{b}_{n,1}^{(\textbf{C}^+)} \right) $$
-Then, because $\widehat{j}$ is the first hypothesis of $\textbf{I}$ rejected, we have $\widehat{\textbf{I}}_1 \subset \textbf{C}$, hence for any $\sigma \in S_n$, $ T_{n,1}^{(\textbf{C}^+)}(\sigma)\ge T_{n,1}^{(\widehat{\textbf{I}}_1^+)}(\sigma)$ and the quantiles verify $ \widehat{b}_{n,1}^{(\textbf{C}^+)} \ge \widehat{b}_{n,1}^{(\widehat{\textbf{I}}_1^+)}$,
+Then, because $\widehat{j}$ is the first hypothesis of $\textbf{I}$ rejected, we have $\widehat{\textbf{I}}_1 \subset \textbf{C}$, hence for any $\sigma \in \S_{2n}$, $ T_{n,1}^{(\textbf{C}^+)}(\sigma)\ge T_{n,1}^{(\widehat{\textbf{I}}_1^+)}(\sigma)$ and the quantiles verify $ \widehat{b}_{n,1}^{(\textbf{C}^+)} \ge \widehat{b}_{n,1}^{(\widehat{\textbf{I}}_1^+)}$,
  and moreover because $\widehat{j} \in \widehat{\textbf{I}}_1$ we have
 $$T_{n,1}^{\widehat{j}}(\id)=\max(T_{n,1}^{j}(\id), j \in  \textbf{C}) = \max(T_{n,1}^{j}(\id), j \in  \widehat{\textbf{I}}_1) = T_{n,1}^{(\widehat{\textbf{I}}_1^+)}(\id).$$
 Hence,
@@ -326,7 +322,7 @@ the last inequality is by definition of $\widehat{b}_{n,1}^{(\widehat{\textbf{I}
 
 At interim $k$, suppose that we do not have any true hypothesis rejected and if there are still true hypotheses not accepted yet.
 
-Let $\widehat{\textbf{I}}_k$ be the set of true hypotheses not accepted yet, then all the probabilities computed in the algorithm are conditioned on not having rejected any true hypotheses and not having accepted all true hypotheses (otherwise the error is $0$ and the result is true):
+Let $\widehat{\textbf{I}}_k\subset \widehat{\textbf{I}}_{k-1}$ be the set of true hypotheses not accepted yet, then all the probabilities computed in the algorithm are conditioned on not having rejected any true hypotheses and not having accepted all true hypotheses (otherwise the error is $0$ and the result is true):
 $$\forall m < k, \, \exists \textbf{C} \supset \widehat{\textbf{I}}_m  : T_{n,m}^{(\textbf{C}^+)}(\id) \le \widehat{b}_{n,m}^{(\textbf{C}^+)}.$$
 and by definition of $\widehat{b}_{n,k}^{(\widehat{\textbf{I}}_k)}$, we have
 $$\P_\sigma\left( T_{n,k}^{(\widehat{\textbf{I}}_k^+)}(\id)> \widehat{b}_{n,k}^{(\widehat{\textbf{I}}_k^+)} \Big|\forall m < k, \, \exists \textbf{C} \supset \widehat{\textbf{I}}_m  : T_{n,m}^{(\textbf{C}^+)}(\id) \le \widehat{b}_{n,m}^{(\textbf{C}^+)}\right) = f^+\left(\frac{k}{K}\right)-f^+\left(\frac{k-1}{K}\right) $$
@@ -346,8 +342,8 @@ Then, take the expectation with respect to the data this time,
 $$\E\left[\P_\sigma(\text{E is true})\right] = \mathrm{FWE}(\alpha) \le \alpha. $$
 \end{proof}
 
-\subsection{Effect of early accept}
-\todoT{Having no information on the distribution, I am not sure how to control this.}
+% \subsection{Effect of early accept}
+% \todoT{Having no information on the distribution, I am not sure how to control this.}
 % \begin{Theorem}
 % Let $\mathrm{POW}(\beta)$ be some power function, for a given parameter $\beta$. We have
 % $$\mathrm{POW}(\beta) \ge \mathrm{POW}(0) - \beta $$
@@ -420,66 +416,63 @@ $$\E\left[\P_\sigma(\text{E is true})\right] = \mathrm{FWE}(\alpha) \le \alpha. 
 % \end{align*}
 % Hence, reasoning by induction, we have from Proposition~\ref{prop:asym_perm_test}
 % $$\sup_{t}\left|\prod_{k=1}^K \widehat{R}_{n,k}(t_k) - \prod_{k=1}^{K}\Phi\left( \frac{t_k}{\tau(P,Q)}\right) \right|\xrightarrow[n \to \infty]{P} 0$$
-\subsection{Convergence of the boundary and test of equality of means}
-\todoT{Expand the proof to multiple and early stopping and adapt notations.}
-Denote $S_{i}^{i+j}=(S_i, S_{i+1},\dots, S_{i+j})$ and let $T_n(S_1^n)=T(S_1,\dots,S_{2n})=\frac{1}{\sqrt{n}}\sum_{i=1}^n S_i -\frac{1}{n}\sum_{i=n+1}^{2n} S_i$. Denote by
-$$\widehat{R}_{n,k}(t)=\frac{1}{n!}\sum_{\sigma \in S_{2n}} \1\{\sqrt{n}T_n(\sigma S_{2nk}^{2n(k+1)}) \le t\} $$
-the randomization distribution of $T_n$ where for any permutation $\sigma \in S_n$,
-$$\sigma S_{2nk}^{2n(k+1)}=(S_{\sigma(2nk)},S_{\sigma(2nk+1)},\dots,S_{\sigma(2n(k+1))})$$
-is the sample permuted using $ \sigma$.
+% \subsection{Convergence of the boundary and test of equality of means}
+% \todoT{Expand the proof to multiple and early stopping and adapt notations.}
+% Denote $S_{i}^{i+j}=(S_i, S_{i+1},\dots, S_{i+j})$ and let $T_n(S_1^n)=T(S_1,\dots,S_{2n})=\frac{1}{\sqrt{n}}\sum_{i=1}^n S_i -\frac{1}{n}\sum_{i=n+1}^{2n} S_i$. Denote by
+% $$\widehat{R}_{n,k}(t)=\frac{1}{n!}\sum_{\sigma \in S_{2n}} \1\{\sqrt{n}T_n(\sigma S_{2nk}^{2n(k+1)}) \le t\} $$
+% the randomization distribution of $T_n$ where for any permutation $\sigma \in \S_{2n}$,
+% $$\sigma S_{2nk}^{2n(k+1)}=(S_{\sigma(2nk)},S_{\sigma(2nk+1)},\dots,S_{\sigma(2n(k+1))})$$
+% is the sample permuted using $ \sigma$.
 
-Notation:
-$$T_{n,k}(\sigma)=T_n\left(\sigma S_{2nk+1}^{2n(k+1)}\right) $$
-is the difference of the means on the $k^{th}$ bloc when the block have been permuted using $\sigma$.
+% Notation:
+% $$T_{n,k}(\sigma)=T_n\left(\sigma S_{2nk+1}^{2n(k+1)}\right) $$
+% is the difference of the means on the $k^{th}$ bloc when the block have been permuted using $\sigma$.
 
-Remark that on the first step, because the conditional distribution of $T_n(\sigma S_1^{2n})$ knowing $S_1^{2n}$ is symmetric, there is no need to compute the lower boundary and the decision can be made solely by testing $|T_n(S_1^{2n})|\ge B_1$ for some $B_1$. The same reasoning can be used for the remaining steps.
+% Remark that on the first step, because the conditional distribution of $T_n(\sigma S_1^{2n})$ knowing $S_1^{2n}$ is symmetric, there is no need to compute the lower boundary and the decision can be made solely by testing $|T_n(S_1^{2n})|\ge B_1$ for some $B_1$. The same reasoning can be used for the remaining steps.
 
-The boundaries are the minimal values of $B_1,\dots, B_K$ such that
+% The boundaries are the minimal values of $B_1,\dots, B_K$ such that
 
-$$\P_{\sigma_1}(|T_{n,1}(\sigma_1)|\ge B_1) = q_1 \le \alpha\left(\frac{1}{K}\right) $$
+% $$\P_{\sigma_1}(|T_{n,1}(\sigma_1)|\ge B_1) = q_1 \le \alpha\left(\frac{1}{K}\right) $$
 
-$$\P_{\sigma_1^2}\left( \frac{1}{2}|T_{n,2}(\sigma_2)+T_{n,1}(\sigma_1)|\ge  B_2\sqrt{n},\quad  |T_{n,1}(\sigma_1)|\le  B_1\sqrt{n}  \right)+q_1 = q_2 \le\alpha\left(\frac{2}{K}\right) $$
-More generally, for any $2\le k\le K$,
-\begin{equation}\label{eq:def_Bk}
-\P_{\sigma_1^k}\left(\left|\frac{1}{k}\sum_{j=0}^k T_{n,j}(\sigma_j)\right|\ge B_{k}, \quad \forall i < k,\,  n\left|\frac{1}{i}\sum_{j=0}^i T_{n,j}\left(\sigma_j\right)\right|\le  B_i\right)+\sum_{j=1}^{k-1}q_j  = q_k \le\alpha\left(\frac{k}{K}\right).
-\end{equation}
-Remark that $B_k$ is deterministic conditionally on the values of $S_1,\dots,S_{2nk}$. Hence it is deterministic with respect to the random permutation $\sigma$, but it still depends on $n$ and the values of $S_i$.
+% $$\P_{\sigma_1^2}\left( \frac{1}{2}|T_{n,2}(\sigma_2)+T_{n,1}(\sigma_1)|\ge  B_2\sqrt{n},\quad  |T_{n,1}(\sigma_1)|\le  B_1\sqrt{n}  \right)+q_1 = q_2 \le\alpha\left(\frac{2}{K}\right) $$
+% More generally, for any $2\le k\le K$,
+% \begin{equation}\label{eq:def_Bk}
+% \P_{\sigma_1^k}\left(\left|\frac{1}{k}\sum_{j=0}^k T_{n,j}(\sigma_j)\right|\ge B_{k}, \quad \forall i < k,\,  n\left|\frac{1}{i}\sum_{j=0}^i T_{n,j}\left(\sigma_j\right)\right|\le  B_i\right)+\sum_{j=1}^{k-1}q_j  = q_k \le\alpha\left(\frac{k}{K}\right).
+% \end{equation}
+% Remark that $B_k$ is deterministic conditionally on the values of $S_1,\dots,S_{2nk}$. Hence it is deterministic with respect to the random permutation $\sigma$, but it still depends on $n$ and the values of $S_i$.
 
-\begin{Theorem}\label{th:conv_boundary}
-We have that for any $1\le k\le K$, $B_k\xrightarrow[n \to \infty]{}b_k$ where the real numbers $b_k$ are defined as follows. Let $W_1,\dots, W_K$ be i.i.d random variable with law $\mathcal{N}(0,1)$, then $b_1$ is the solution of the following equation:
-$$ \P\left(\left|W_1 \right|\ge \frac{b_1}{\tau(P,Q)}  \right)=\alpha\left( \frac{1}{K} \right),$$
-and for any $1<k\le K$, $b_k$ is solution of
-\begin{equation*}
-\P\left( \left|\frac{1}{k}\sum_{j=1}^k W_j\right| > \frac{b_l}{\tau(P,Q)}, \quad \forall j<k,\, \left|\frac{1}{j}\sum_{i=1}^j W_i\right| \le \frac{b_j}{\tau(P,Q)} \right)=\alpha\left(\frac{k}{K} \right) - \alpha\left( \frac{k-1}{K}\right).
-\end{equation*}
+% \begin{Theorem}\label{th:conv_boundary}
+% We have that for any $1\le k\le K$, $B_k\xrightarrow[n \to \infty]{}b_k$ where the real numbers $b_k$ are defined as follows. Let $W_1,\dots, W_K$ be i.i.d random variable with law $\mathcal{N}(0,1)$, then $b_1$ is the solution of the following equation:
+% $$ \P\left(\left|W_1 \right|\ge \frac{b_1}{\tau(P,Q)}  \right)=\alpha\left( \frac{1}{K} \right),$$
+% and for any $1<k\le K$, $b_k$ is solution of
+% \begin{equation*}
+% \P\left( \left|\frac{1}{k}\sum_{j=1}^k W_j\right| > \frac{b_l}{\tau(P,Q)}, \quad \forall j<k,\, \left|\frac{1}{j}\sum_{i=1}^j W_i\right| \le \frac{b_j}{\tau(P,Q)} \right)=\alpha\left(\frac{k}{K} \right) - \alpha\left( \frac{k-1}{K}\right).
+% \end{equation*}
 
-\end{Theorem}
-In short, Theorem~\ref{th:conv_boundary} tells us that asymptotically, the group sequential test behaves like a sequential test on Gaussians in which the boundary is set to spend the level $\alpha$ exactly as predicted by the level-spending function. There are several consequences of this theorem.
-\todoT{Show this properly with lemmas and proving everything}
-\begin{itemize}
- \item Asymptotically, the test $H_0:\mu_X = \mu_Y$ vs $H_1:\mu_X \neq \mu_Y$ has level $\alpha$ because under $H_0$, $\tau(P,Q)^2=\sigma_P^2+\sigma_Q^2$ and $T_n(\mathrm{id} S_1^{2n})=\frac{1}{\sqrt{n}}\left(\sum_{i=1}^n S_i - \sum_{i=n+1}^{2n} S_i\right)$ converges to $\mathcal{N}(0,\sigma_X^2+\sigma_Y^2)$. Hence the boundary correspond to the appropriate law.
- \item Under $H_1:\mu_P \neq \mu_Q$, we have an expression of the asymptotic boundary. On the other hand, we also have that
-$$T_n(\mathrm{id}S_1^{2n}) =\frac{1}{\sqrt{n}}\left(\sum_{i=1}^n S_i - \sum_{i=n+1}^{2n} S_i\right) = \frac{1}{\sqrt{n}}\left(\sum_{i=1}^n (S_i-\mu_X) - \sum_{i=n+1}^{2n} (S_i-\mu_Y)   + n (\mu_X-\mu_Y)\right)$$
-Hence, because the convergence in the CLT is uniform, we have
-$$\P\left( T_n(\mathrm{id}S_1^{2n}) \le B_1\right) = \Phi\left(\frac{B_1-\sqrt{n}(\mu_X-\mu_Y)}{\sqrt{\sigma_X^2+\sigma_Y^2}}\right) + o_P(1).$$
-Then, by Theorem~\ref{th:conv_boundary},
-$$\P\left( T_n(\mathrm{id}S_1^{2n}) \le B_1\right) = \Phi\left(\frac{b_1+o_P(1)-\sqrt{n}(\mu_X-\mu_Y)}{\sqrt{\sigma_X^2+\sigma_Y^2}}\right) + o_P(1) =\Phi\left(\frac{b_1-\sqrt{n}(\mu_X-\mu_Y)}{\sqrt{\sigma_X^2+\sigma_Y^2}}\right) + o_P(1)$$
-Then, repeating the same reasoning on $\P\left( T_n(\mathrm{id}S_1^{2n}) \ge - B_1\right)$, we obtain, the probability to reject at the first interim given by
-$$\P\left( |T_n(\mathrm{id}S_1^{2n})| > B_1\right) = \P\left( \left|W_1\sqrt{\sigma_X^2+\sigma_Y^2}-\sqrt{n}(\mu_X-\mu_Y)\right|\ge b_1\right) + o_P(1).$$
-Proceeding similarly, we have that there exists $W_1,\dots,W_K$ i.i.d. $\mathcal{N}(0,1)$ random variables such that
-$$\P\left( \exists k \le K:\, \left|\frac{1}{k}\sum_{j=1}^k T_{n,j}(\mathrm{id})\right| > B_k\right) =\P\left( \exists k \le K:\, \left|\frac{\sqrt{\sigma_X^2+\sigma_Y^2}}{k}\sum_{j=1}^kW_j + \sqrt{n}(\mu_X-\mu_Y)\right| > b_k\right) + o_P(1).$$
-This approximation of the power can be computed approximately using Monte-Carlo methods, using gaussian concentration inequality to know how many Monte-Carlo iteration are necessary to approximate the power.
+% \end{Theorem}
+% In short, Theorem~\ref{th:conv_boundary} tells us that asymptotically, the group sequential test behaves like a sequential test on Gaussians in which the boundary is set to spend the level $\alpha$ exactly as predicted by the level-spending function. There are several consequences of this theorem.
+% \todoT{Show this properly with lemmas and proving everything}
+% \begin{itemize}
+%  \item Asymptotically, the test $H_0:\mu_X = \mu_Y$ vs $H_1:\mu_X \neq \mu_Y$ has level $\alpha$ because under $H_0$, $\tau(P,Q)^2=\sigma_P^2+\sigma_Q^2$ and $T_n(\mathrm{id} S_1^{2n})=\frac{1}{\sqrt{n}}\left(\sum_{i=1}^n S_i - \sum_{i=n+1}^{2n} S_i\right)$ converges to $\mathcal{N}(0,\sigma_X^2+\sigma_Y^2)$. Hence the boundary correspond to the appropriate law.
+%  \item Under $H_1:\mu_P \neq \mu_Q$, we have an expression of the asymptotic boundary. On the other hand, we also have that
+% $$T_n(\mathrm{id}S_1^{2n}) =\frac{1}{\sqrt{n}}\left(\sum_{i=1}^n S_i - \sum_{i=n+1}^{2n} S_i\right) = \frac{1}{\sqrt{n}}\left(\sum_{i=1}^n (S_i-\mu_X) - \sum_{i=n+1}^{2n} (S_i-\mu_Y)   + n (\mu_X-\mu_Y)\right)$$
+% Hence, because the convergence in the CLT is uniform, we have
+% $$\P\left( T_n(\mathrm{id}S_1^{2n}) \le B_1\right) = \Phi\left(\frac{B_1-\sqrt{n}(\mu_X-\mu_Y)}{\sqrt{\sigma_X^2+\sigma_Y^2}}\right) + o_P(1).$$
+% Then, by Theorem~\ref{th:conv_boundary},
+% $$\P\left( T_n(\mathrm{id}S_1^{2n}) \le B_1\right) = \Phi\left(\frac{b_1+o_P(1)-\sqrt{n}(\mu_X-\mu_Y)}{\sqrt{\sigma_X^2+\sigma_Y^2}}\right) + o_P(1) =\Phi\left(\frac{b_1-\sqrt{n}(\mu_X-\mu_Y)}{\sqrt{\sigma_X^2+\sigma_Y^2}}\right) + o_P(1)$$
+% Then, repeating the same reasoning on $\P\left( T_n(\mathrm{id}S_1^{2n}) \ge - B_1\right)$, we obtain, the probability to reject at the first interim given by
+% $$\P\left( |T_n(\mathrm{id}S_1^{2n})| > B_1\right) = \P\left( \left|W_1\sqrt{\sigma_X^2+\sigma_Y^2}-\sqrt{n}(\mu_X-\mu_Y)\right|\ge b_1\right) + o_P(1).$$
+% Proceeding similarly, we have that there exists $W_1,\dots,W_K$ i.i.d. $\mathcal{N}(0,1)$ random variables such that
+% $$\P\left( \exists k \le K:\, \left|\frac{1}{k}\sum_{j=1}^k T_{n,j}(\mathrm{id})\right| > B_k\right) =\P\left( \exists k \le K:\, \left|\frac{\sqrt{\sigma_X^2+\sigma_Y^2}}{k}\sum_{j=1}^kW_j + \sqrt{n}(\mu_X-\mu_Y)\right| > b_k\right) + o_P(1).$$
+% This approximation of the power can be computed approximately using Monte-Carlo methods, using gaussian concentration inequality to know how many Monte-Carlo iteration are necessary to approximate the power.
 
-\end{itemize}
+% \end{itemize}
 
-\newpage
-\section{Simulation study}
-\todoT{Misspecification study of Gaussian GST on uniform and maybe on multi-modal distributions}
-\todoT{Comparison of GST algorithms on gaussian Data.}
-\section{Experimental results}
-\todoT{Apply to some classical algorithms on classical environments. Maybe also try to
-replicate adaptively the results of the NIPS article : do we also stop around 20 iterations when comparing two agents on an Atari environment?}
-\todoT{Compare with article https://arxiv.org/pdf/1806.08295.pdf on environments that are simpler than Atari. Maybe show that depending on the environment the number of seeds needed can vary a lot.}
+% \newpage
+\section{Offline experimental comparison with the litterature}
+\todoT{Comparison with edge of statistical precipice and Flower's team article}
+\section{Online experimental results}
+\todoT{Test to compare PPO and other}
 \appendix
 
 \section{Non-sequential permutation test}
@@ -491,7 +484,7 @@ For $T_n$ the difference of empirical mean, we have the following property.
 Let $T_n(Z_1,\dots,Z_{2n})=\frac{1}{\sqrt{n}}\sum_{i=1}^n Z_i -\frac{1}{n}\sum_{i=n+1}^{2n} Z_i$.
 
 Suppose $X_1,\dots,X_n$ are i.i.d from $P$ and $Y_1,\dots,Y_n$ are i.i.d from $Q$ and both $P$ and $Q$ has finite variance. Denote $Z_1,\dots,Z_{2n}=X_1,\dots,X_n, Y_1,\dots,Y_n$ the concatenation of the two samples. Then, we have
-$$\sup_{t}\left|\frac{1}{n!}\sum_{\sigma \in S_n} \1\{T_n(\sigma Z_{1}^{2n}) \le t\}- \Phi\left(t/\tau(P,Q) \right)\right|\xrightarrow[n \to \infty]{P} 0$$
+$$\sup_{t}\left|\frac{1}{n!}\sum_{\sigma \in \S_{2n}} \1\{T_n(\sigma Z_{1}^{2n}) \le t\}- \Phi\left(t/\tau(P,Q) \right)\right|\xrightarrow[n \to \infty]{P} 0$$
 where $\tau(P,Q)^2=\sigma_P^2+\sigma_Q^2+\frac{(\mu_P- \mu_Q)^2}{2} $.
 \end{Proposition}
 Remark: this proposition can be extended to other $T_n$ statistics using Theorem 2.1 in \cite{Chung_2013} or Theorem 15.2.5 of \cite{lehmann2005testing}.
@@ -499,7 +492,7 @@ Remark: this proposition can be extended to other $T_n$ statistics using Theorem
 %\todoT{Another possible interesting result would be to show how many random permutations we need to estimate the true permutation distribution. Concentration inequalities could be used here.}
 
 Using Proposition~\ref{prop:asym_perm_test}, we have that the empirical quantile defined by
-$$Q_{1-\alpha}(T_n) = \inf\left\{t \in \R:\quad \frac{1}{n!}\sum_{\sigma \in S_n} \1\{T_n(\sigma Z_{1}^{2n}) \le t\} \ge 1-\alpha\right\} $$
+$$Q_{1-\alpha}(T_n) = \inf\left\{t \in \R:\quad \frac{1}{n!}\sum_{\sigma \in \S_{2n}} \1\{T_n(\sigma Z_{1}^{2n}) \le t\} \ge 1-\alpha\right\} $$
 converges to the quantiles of a Gaussian with variance $\tau^2$
 $$Q_{1-\alpha}(T_n)\xrightarrow[n \to \infty]{P} \tau(P,Q)\Phi^{-1}(1-\alpha) $$
 
@@ -528,7 +521,7 @@ $$T_{n}^{(\textbf{C})}(\sigma)= \max\left(T_n^{(j)}(\sigma),\quad j \in \textbf{
 Initialize $\textbf{C}=\{1,\dots,J\}$\\
 \While{$\textbf{C} \neq \emptyset$}{
 Compute $\widehat{b}_{n}^{(\textbf{C})}(1-\alpha)$ the quantile of order $1-\alpha$ of the permutation law of $T_{n}^{(\textbf{C})}(\sigma)$:
-$$\sum_{\sigma \in S_n} \1\{T_{n}^{(\textbf{C})}(\sigma) \ge  \widehat{b}_{n}^{(\textbf{C})}(1-\alpha)\} = \lfloor \alpha n! \rfloor .$$
+$$\sum_{\sigma \in \S_{2n}} \1\{T_{n}^{(\textbf{C})}(\sigma) \ge  \widehat{b}_{n}^{(\textbf{C})}(1-\alpha)\} = \lfloor \alpha n! \rfloor .$$
 \If{$T_{n}^{(\textbf{C})}(\mathrm{id}) \le \widehat{b}_{n}^{(\textbf{C})}(1-\alpha)$}{
 Accept all the hypotheses $H_j, j\in \textbf{C}$ and break the loop.}
 \Else{
