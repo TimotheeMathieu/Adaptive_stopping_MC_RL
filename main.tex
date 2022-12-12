@@ -161,9 +161,7 @@ where
 $$T_{N,i}^{(j)}(\sigma)= \left|\sum_{i=1}^k\left(\sum_{n=1}^{N} e_{\sigma_i(n),i}(j)-\sum_{n=N+1}^{2N} e_{\sigma_i(n),i}(j)\right)\right|$$ 
 $T_{N,i}^{(j)}$ is the absolute value of the sum of differences of all the blocks until block $i$ after permutation of the concatenation of the two agents's evaluations. by $\sigma_1,\dots,\sigma_i\in \S_{2N}$.
  
-$\textbf{I}$ denotes the set of indices of the true hypotheses among $\{1,\dots,J\}$. Let $\alpha, \beta \in [0,1]$, the algorithm depends on a level spending function $f^+:[0,1]\to[0,\alpha]$ and a power spending function $f^-:[0,1]\to [0,\beta]$, both non-decreasing functions verifying $f^+(0)=f^-(0)=0$, $f^+(1)=\alpha$, $f^-(1)=\beta$. We define the boundaries of the algorithm by 
-$$\frac{1}{n!}\sum_{\sigma \in S_n} \1\{T_{n,k}^{(\textbf{C}^+)}(\sigma) \ge  \widehat{b}_{n,k}^{(\textbf{C}^+)}\} \le  \lambda^+ \quad \text{and}\quad \frac{1}{n!}\sum_{\sigma \in S_n} \1\{T_{n,k}^{(\textbf{C}^-)}(\sigma) \leq   \widehat{b}_{n,k}^{(\textbf{C}^-)}\} \le  \lambda^- .$$
-where $\lambda^+ = f^+ \left(\frac{k}{K}\right)- f^+ \left( \frac{k-1}{K}\right)$ and $\lambda^- = f^- \left(\frac{k}{K}\right)- f^- \left( \frac{k-1}{K}\right)$.
+$\textbf{I}$ denotes the set of indices of the true hypotheses among $\{1,\dots,J\}$. Let $\alpha, \beta \in [0,1]$, the algorithm depends on a level spending function $f^+:[0,1]\to[0,\alpha]$ and a power spending function $f^-:[0,1]\to [0,\beta]$, both non-decreasing functions verifying $f^+(0)=f^-(0)=0$, $f^+(1)=\alpha$, $f^-(1)=\beta$. 
 
 If $\textbf{I} \neq \emptyset$, we denote 
 $$\mathrm{FWE}(\alpha) = \P\left(\exists j \in \textbf{I}:\quad  \text{reject }H_j \right).$$
@@ -253,7 +251,7 @@ We have
 \begin{align*}
 T_{N,k}^{(j)}(\sigma_1 \cdot  \sigma_2 \cdot  \ldots  \cdot  \sigma_k)&=  \left|\sum_{i=1}^k\left(\sum_{n=1}^{N} e_{\sigma_i(n),i}(j)-\sum_{n=N+1}^{2N} e_{\sigma_i(n),i}(j)\right)\right|
 \end{align*}
-Hence, $T_{n,k}^{(j)}(\sigma) = T_{n,k}^{(j)}(\sigma')$ where $\sigma'_i(n)=\sigma_i(n+N)$ if $n \le N$ and $\sigma_i(n) = \sigma_i(n-N)$ otherwise. This corresponds to changing the sign $-1$ to $+1$ inside the absolute value. Now, let us consider two different comparisons $j=(i_1,i_2)$ and $j'=(i_2,i_3)$, i.e. the two couples share one agent. We can consider that in both $T_{N,k}^{(j)}(\sigma)$ and $T_{N,k}^{(j')}(\sigma)$ the permutation acts in the same way on agent $i_2$.
+Hence, $T_{N,k}^{(j)}(\sigma) = T_{N,k}^{(j)}(\sigma')$ where $\sigma'_i(n)=\sigma_i(n+N)$ if $n \le N$ and $\sigma_i(n) = \sigma_i(n-N)$ otherwise. This corresponds to changing the sign $-1$ to $+1$ inside the absolute value. Now, let us consider two different comparisons $j=(i_1,i_2)$ and $j'=(i_2,i_3)$, i.e. the two couples share one agent. We can consider that in both $T_{N,k}^{(j)}(\sigma)$ and $T_{N,k}^{(j')}(\sigma)$ the permutation acts in the same way on agent $i_2$.
 
 As a consequence transformation by $\sigma$ can be seen as a global transformation of the concatenation of all the points (with repetition removed) $(e_{n,i}(j), e_{n,i}(j))_{n\le N, i\le k,j\in \textbf{I}}$. 
 
@@ -264,27 +262,39 @@ In each cluster, as said previously, we can consider that the data are transform
 
 By convention, let $f^+\left(\frac{-1}{K}\right)=0$. We have,
 \begin{Lemma}
-Let $(X_{i,j})_{i\le n, j\le J}$ be i.i.d from a distribution $P_1,\dots,P_J$. Let $\textbf{I}$ be a set of comparisons $(i,j)$ for which we have $P_i=P_j$ is true. Let $\alpha \in (0,1)$ and define $\widehat{b}_{n}^{(\textbf{I}^+)}$ such that 
-$$ \frac{1}{(2n)!}\sum_{\sigma \in \S_{2n}} \1\{T_{n,k}^{(\textbf{I}^+)}(\sigma) \ge  \widehat{b}_{n,k}^{(\textbf{I}^+)}\} \le  f^{+}\left(\frac{k}{K}\right)- f^{+}\left(\frac{k-1}{K}\right).$$
-Then, denote $E_k(\sigma,\textbf{I})$ the event  ``did not reject nor accept any $T_{n,j}(\sigma)$ for $j \in I$ before interim k'', we have
-$$\P\left(T_{n,k}^{(\textbf{I}^+)}(\id) > \widehat{b}_{n,k}^{(\textbf{I}^+)} | E_k(\id, \textbf{I})\right)\le f^{+}\left(\frac{k}{K}\right)- f^{+}\left(\frac{k-1}{K}\right).$$
+Let $(X_{i,j})_{i\le n, j\le J}$ be i.i.d from a distribution $P_1,\dots,P_J$. Let $\textbf{I}$ be a set of comparisons $(i,j)$ for which we have $P_i=P_j$ is true. Let $\alpha \in (0,1)$ and define $\widehat{b}_{n}^{(\textbf{I}^+)}$ as in Algorithm~\ref{algo:main}. Let $\widehat{\textbf{I}}_k$ the (random) set of true hypotheses not yet accepted or rejected at interim $k$, we have
+$$\P\left(T_{N,k}^{(\widehat{\textbf{I}}_k^+)}(\id) > \widehat{b}_{N,k}^{(\widehat{\textbf{I}}_k^+)} \right)\le f^{+}\left(\frac{k}{K}\right)- f^{+}\left(\frac{k-1}{K}\right).$$
 \end{Lemma}
 \begin{proof}
+For  $\textbf{J}\subset \textbf{I}$,  denote 
+$$E_k(\sigma,\textbf{J}) = \left\{\forall m < k, T_{N,m}^{(\textbf{J}^+)}(\sigma) \le   \widehat{b}_{N,m}^{(\textbf{J}^+)} \text{ and }T_{N,m}^{(\textbf{J}^-)}(\sigma) \ge   \widehat{b}_{N,m}^{(\textbf{J}^-)}\right\}$$
+which correspond to the event  ``did not reject nor accept any $H_j$ for $j  \in \textbf{J}$ before interim k''. Remark that 
+$$\widehat{\textbf{I}}_k = \arg\max_{\textbf{J}\subset \textbf{I}} \{|J|:\quad E_k(\id ,\textbf{J}) \text{ is true}\}.$$
 We have
 \begin{align*}
-\P&\left(T_{n,k}^{(\textbf{I}^+)}(\id) > \widehat{b}_{n,k}^{(\textbf{I}^+)} ,  E_k(\id,\textbf{I}) \right)\\
-&= \P\left(\max\{T_{n}^{(j)}(\id), j \in \textbf{I}^+\} > \widehat{b}_{n}^{(\textbf{I}^+)},  E_k(\id,\textbf{I})\right)
+\P\left(T_{N,k}^{(\widehat{\textbf{I}}_k^+)}(\id) > \widehat{b}_{N,k}^{(\widehat{\textbf{I}}_k^+)} \right)&= \sum_{ \textbf{J}\subset \textbf{I} }\P\left(T_{N,k}^{(\textbf{J}^+)}(\id) > \widehat{b}_{N,k}^{(\textbf{J}^+)} , \textbf{J} = \widehat{\textbf{I}}_k\right) \\
+&= \sum_{ \textbf{J}\subset \textbf{I} }\P\left(\max\{ T_{N,k}^{(j)}(\id), j \in \textbf{J}\} > \widehat{b}_{N,k}^{(\textbf{J}^+)} , \textbf{J} = \widehat{\textbf{I}}_k, E_k(\id,\textbf{J})\right)
 \end{align*}
-Then, having that for any $j \in \textbf{I}^+$, then we have the joint equality in distribution $(T_n^{(j)}(\id))_{j \in\textbf{I}^+} =^d (T_n^{(j)}(\sigma))_{\textbf{I}^+}$ for any $\sigma \in S_{2n}$. 
+Then, having that for any $j \in \textbf{J}^+$, then we have the joint equality in distribution $(T_N^{(j)}(\id))_{j \in\textbf{J}^+} =^d (T_N^{(j)}(\sigma))_{\textbf{J}^+}$ for any $\sigma \in (\S_{2N})^k$. 
 \begin{align*}
-\P\left(T_{n,k}^{(\textbf{I}^+)}(\id) > \widehat{b}_{n,k}^{(\textbf{I}^+)} |  E_k(\id,\textbf{I}) \right)&= \frac{1}{\P(E_k(\id,\textbf{I}))}\P\left(T_{n,k}^{(\textbf{I}^+)}(\id) > \widehat{b}_{n,k}^{(\textbf{I}^+)} ,  E_k(\id,\textbf{I}) \right)\\
-&= \frac{1}{((2n)!)^k}\sum_{\sigma_1,\dots,\sigma_k \in \S_{2n}} \frac{1}{\P(E_k(\sigma,\textbf{I}),\textbf{I})}\P\left(\max\{T_{n}^{(j)}(\sigma), j \in \textbf{I}^+\} > \widehat{b}_{n}^{(\textbf{I}^+)},  E_k(\sigma,\textbf{I}) \right)\\
-&= \frac{1}{\P(E_k(\id,  \textbf{I}))}\E\left[\frac{1}{((2n)!)^k}\sum_{\sigma_1,\dots,\sigma_k \in \S_{2n}} \1\{\max\{T_{n}^{(j)}(\sigma), j \in \textbf{I}^+\} > \widehat{b}_{n}^{(\textbf{I}^+)},  E_k(\sigma,\textbf{I})\} \right]\\
-&= \frac{1}{\P(E_k(\id,\textbf{I}))}\E\left[\frac{1}{((2n)!)^k}\sum_{\sigma \in S_k} \1\{\max\{T_{n}^{(j)}(\sigma), j \in \textbf{I}^+\} > \widehat{b}_{n}^{(\textbf{I}^+)}\} \right]\\
-&\le  \frac{1}{\P(E_k(\id,\textbf{I}))}\E\left[\frac{|S_k|}{((2n)!)^k} \right]\left(f^{+}\left(\frac{k}{K}\right)- f^{+}\left(\frac{k-1}{K}\right)\right)\\
-&\le f^{+}\left(\frac{k}{K}\right)- f^{+}\left(\frac{k-1}{K}\right)
+\P&\left(\max\{ T_{N,k}^{(j)}(\id), j \in \textbf{J}\} > \widehat{b}_{N,k}^{(\textbf{J}^+)} ,\textbf{J} = \widehat{\textbf{I}}_k, E_k(\id,\textbf{J})\right)\\
+&= \frac{1}{((2N)!)^k}\sum_{\sigma_1,\dots,\sigma_k \in \S_{2N}} \P\left(\max\{ T_{N,k}^{(j)}(\sigma), j \in \textbf{J}\} > \widehat{b}_{N,k}^{(\textbf{J}^+)} ,  \textbf{J} = \widehat{\textbf{I}}_k,E_k(\sigma,\textbf{J})\right)\\
+&= \frac{1}{((2N)!)^k} \E\left[\sum_{\sigma_1,\dots,\sigma_k \in \S_{2N}}\1\left\{\max\{ T_{N,k}^{(j)}(\sigma), j \in \textbf{J}\} > \widehat{b}_{N,k}^{(\textbf{J}^+)} , \textbf{J} = \widehat{\textbf{I}}_k,E_k(\sigma,\textbf{J})\right\}\right]\\
+&\le \frac{1}{((2N)!)^k} \E\left[ \1\{\textbf{J} = \widehat{\textbf{I}}_k\}\sum_{\sigma \in S_k}\1\left\{\max\{ T_{N,k}^{(j)}(\sigma), j \in \widehat{\textbf{I}}_k\} > \widehat{b}_{N,k}^{(\widehat{\textbf{I}}_k^+)}\right\}\right]\\
+&\le  \left(f^{+}\left(\frac{k}{K}\right)- f^{+}\left(\frac{k-1}{K}\right)\right)\E\left[\frac{1}{((2N)!)^k} |S_k|\1\{\textbf{J} = \widehat{\textbf{I}}_k\}\right]\\
+&=  \left(f^{+}\left(\frac{k}{K}\right)- f^{+}\left(\frac{k-1}{K}\right)\right)\E\left[\frac{1}{((2N)!)^k} \sum_{ \sigma_1,\dots,\sigma_k \in \S_{2N}}\1\{E_k(\sigma, \textbf{J}), \textbf{J} = \widehat{\textbf{I}}_k\}\right]\\
+&= \left(f^{+}\left(\frac{k}{K}\right)- f^{+}\left(\frac{k-1}{K}\right)\right)\frac{1}{((2N)!)^k} \sum_{ \sigma_1,\dots,\sigma_k \in \S_{2N}} \P(E_k(\sigma, \textbf{J}), \textbf{J} = \widehat{\textbf{I}}_k )\\
+&= \left(f^{+}\left(\frac{k}{K}\right)- f^{+}\left(\frac{k-1}{K}\right)\right)
+ \P(E_k(\id, \textbf{J}), \textbf{J} = \widehat{\textbf{I}}_k )\\
+&\le \left(f^{+}\left(\frac{k}{K}\right)- f^{+}\left(\frac{k-1}{K}\right)\right)
+ \P( \textbf{J} = \widehat{\textbf{I}}_k )
 \end{align*}
-where the last line follows from the definition of $S_k$.
+Hence,
+\begin{align*}
+\P\left(T_{N,k}^{(\widehat{\textbf{I}}_k^+)}(\id) > \widehat{b}_{N,k}^{(\widehat{\textbf{I}}_k^+)} \right)&= \sum_{ \textbf{J}\subset \textbf{I} }\P\left(\max\{ T_{N,k}^{(j)}(\id), j \in \textbf{J}\} > \widehat{b}_{N,k}^{(\textbf{J}^+)} ,  E_k(\id,\textbf{J}), \textbf{J} = \widehat{\textbf{I}}_k\right)\\
+&\le \sum_{ \textbf{J}\subset \textbf{I} }\left(f^{+}\left(\frac{k}{K}\right)- f^{+}\left(\frac{k-1}{K}\right)\right)\P( \textbf{J} = \widehat{\textbf{I}}_k ) \\
+&= f^{+}\left(\frac{k}{K}\right)- f^{+}\left(\frac{k-1}{K}\right).
+\end{align*}
 \end{proof}
 \subsection{Multiple group sequential testing}
 First we prove that the multiple testing scheme is correct for testing $ P_j = P_k$ against $ P_j \neq P_k$ for all the couples $j \neq k$. 
@@ -296,50 +306,51 @@ For any $\alpha \in (0,1)$ and any non-decreasing level spending function $f^+$,
 \end{Theorem}
 \begin{proof}
 Let $\textbf{I}$ be the set of true hypotheses. Let E be the following event
-$$\mathrm{E}= \{ \exists j \in \textbf{I}: \quad H_j \text{ is rejected}\}.$$
-If E is true, let $\widehat{j}$ be the (random) index of the first hypothesis which is rejected.
+$$\mathrm{A}= \{ \exists j \in \textbf{I}: \quad H_j \text{ is rejected}\}.$$
 We have 
-\begin{equation}\label{eq:multi1}
-\P_\sigma\left(\text{E is true} \right)= \sum_{k=1}^K \P_\sigma\left(\text{reject }H_{\widehat{j}} \text{ at interim k} \Big|  E_k(\id,\widehat{\textbf{I}}_k) \right) 
-\end{equation}
-where $\widehat{\textbf{I}}_k$ is the set of undecided true hypotheses, meaning that this is the subset of $\textbf{I}$ the set of true hypotheses composed of hypotheses that have not been accepted yet until interim $k$.
+\begin{align*}\label{eq:multi1}
+\P_\sigma\left(\text{A is true} \right)&= \sum_{k=1}^K \P\left( \exists j \in \textbf{I}: \quad H_j\text{ is rejected at interim $k$ and it is not accepted nor rejected before interim $k$}\right)\\
+&=  \sum_{k=1}^K \P\left( \exists j \in\textbf{I}: \quad j \in \widehat{\textbf{I}}_k, \text{ and }\, H_j\text{ is rejected at interim }k \right)\\
+&=  \sum_{k=1}^K \P\left( T_{N,k}^{(\widehat{\textbf{I}}_k^+)}(\id) > \widehat{b}_{N,k}^{(\widehat{\textbf{I}}_k^+)} \right)\\
+&\le \sum_{k=1}^K\left(f^{+}\left(\frac{k}{K}\right)- f^{+}\left(\frac{k-1}{K}\right)\right)\\
+&= \alpha
+\end{align*}
 
+% \paragraph{First interim:}
 
-\paragraph{First interim:}
+% At the first interim, we look at the probability that at least one true hypothesis is rejected. Let $\widehat{\textbf{I}}_1 \subset \textbf{I}$ be the random set of true hypotheses not accepted in first interim, we have $\widehat{j}\in \widehat{\textbf{I}}_1$ (if $\widehat{\textbf{I}}_1$ is empty almost surely, then the error is $0$, we suppose $\widehat{\textbf{I}}_1$ non empty) and
+% $$\P_\sigma\left(\text{reject }H_{\widehat{j}} \text{ at interim 1}\right)= \P_\sigma\left( \exists \textbf{C}\supset \widehat{\textbf{I}}_1: \, T_{n,1}^{\widehat{j}}(\id) = T_{n,1}^{(\textbf{C}^+)}(\id) > \widehat{b}_{n,1}^{(\textbf{C}^+)} \right) $$
+% Then, because $\widehat{j}$ is the first hypothesis of $\textbf{I}$ rejected, we have $\widehat{\textbf{I}}_1 \subset \textbf{C}$, hence for any $\sigma \in \S_{2n}$, $ T_{n,1}^{(\textbf{C}^+)}(\sigma)\ge T_{n,1}^{(\widehat{\textbf{I}}_1^+)}(\sigma)$ and the quantiles verify $ \widehat{b}_{n,1}^{(\textbf{C}^+)} \ge \widehat{b}_{n,1}^{(\widehat{\textbf{I}}_1^+)}$,
+%  and moreover because $\widehat{j} \in \widehat{\textbf{I}}_1$ we have
+% $$T_{n,1}^{\widehat{j}}(\id)=\max(T_{n,1}^{j}(\id), j \in  \textbf{C}) = \max(T_{n,1}^{j}(\id), j \in  \widehat{\textbf{I}}_1) = T_{n,1}^{(\widehat{\textbf{I}}_1^+)}(\id).$$
+% Hence,
+% \begin{equation}\label{eq:interim1_multi}
+% \P_\sigma\left(\text{reject }H_{\widehat{j}} \text{ at interim 1}\right)\le \P_\sigma\left( T_{n,1}^{(\widehat{\textbf{I}}_1^+)}(\id) > \widehat{b}_{n,1}^{(\widehat{\textbf{I}}_1^+)} \right) \le  f^+(1/K) 
+% \end{equation}
+% the last inequality is by definition of $\widehat{b}_{n,1}^{(\widehat{\textbf{I}}_1^+)}$ because $\widehat{\textbf{I}}_1^+$ is  a set of true hypotheses and by Lemma~\ref{lem:perm}
 
-At the first interim, we look at the probability that at least one true hypothesis is rejected. Let $\widehat{\textbf{I}}_1 \subset \textbf{I}$ be the random set of true hypotheses not accepted in first interim, we have $\widehat{j}\in \widehat{\textbf{I}}_1$ (if $\widehat{\textbf{I}}_1$ is empty almost surely, then the error is $0$, we suppose $\widehat{\textbf{I}}_1$ non empty) and
-$$\P_\sigma\left(\text{reject }H_{\widehat{j}} \text{ at interim 1}\right)= \P_\sigma\left( \exists \textbf{C}\supset \widehat{\textbf{I}}_1: \, T_{n,1}^{\widehat{j}}(\id) = T_{n,1}^{(\textbf{C}^+)}(\id) > \widehat{b}_{n,1}^{(\textbf{C}^+)} \right) $$
-Then, because $\widehat{j}$ is the first hypothesis of $\textbf{I}$ rejected, we have $\widehat{\textbf{I}}_1 \subset \textbf{C}$, hence for any $\sigma \in \S_{2n}$, $ T_{n,1}^{(\textbf{C}^+)}(\sigma)\ge T_{n,1}^{(\widehat{\textbf{I}}_1^+)}(\sigma)$ and the quantiles verify $ \widehat{b}_{n,1}^{(\textbf{C}^+)} \ge \widehat{b}_{n,1}^{(\widehat{\textbf{I}}_1^+)}$,
- and moreover because $\widehat{j} \in \widehat{\textbf{I}}_1$ we have
-$$T_{n,1}^{\widehat{j}}(\id)=\max(T_{n,1}^{j}(\id), j \in  \textbf{C}) = \max(T_{n,1}^{j}(\id), j \in  \widehat{\textbf{I}}_1) = T_{n,1}^{(\widehat{\textbf{I}}_1^+)}(\id).$$
-Hence,
-\begin{equation}\label{eq:interim1_multi}
-\P_\sigma\left(\text{reject }H_{\widehat{j}} \text{ at interim 1}\right)\le \P_\sigma\left( T_{n,1}^{(\widehat{\textbf{I}}_1^+)}(\id) > \widehat{b}_{n,1}^{(\widehat{\textbf{I}}_1^+)} \right) \le  f^+(1/K) 
-\end{equation}
-the last inequality is by definition of $\widehat{b}_{n,1}^{(\widehat{\textbf{I}}_1^+)}$ because $\widehat{\textbf{I}}_1^+$ is  a set of true hypotheses and by Lemma~\ref{lem:perm}
+% \paragraph{Interim $1<k\le  K$:}
 
-\paragraph{Interim $1<k\le  K$:}
+% At interim $k$, suppose that we do not have any true hypothesis rejected and if there are still true hypotheses not accepted yet.
 
-At interim $k$, suppose that we do not have any true hypothesis rejected and if there are still true hypotheses not accepted yet.
-
-Let $\widehat{\textbf{I}}_k\subset \widehat{\textbf{I}}_{k-1}$ be the set of true hypotheses not accepted yet, then all the probabilities computed in the algorithm are conditioned on not having rejected any true hypotheses and not having accepted all true hypotheses (otherwise the error is $0$ and the result is true):
-$$\forall m < k, \, \exists \textbf{C} \supset \widehat{\textbf{I}}_m  : T_{n,m}^{(\textbf{C}^+)}(\id) \le \widehat{b}_{n,m}^{(\textbf{C}^+)}.$$
-and by definition of $\widehat{b}_{n,k}^{(\widehat{\textbf{I}}_k)}$, we have
-$$\P_\sigma\left( T_{n,k}^{(\widehat{\textbf{I}}_k^+)}(\id)> \widehat{b}_{n,k}^{(\widehat{\textbf{I}}_k^+)} \Big|\forall m < k, \, \exists \textbf{C} \supset \widehat{\textbf{I}}_m  : T_{n,m}^{(\textbf{C}^+)}(\id) \le \widehat{b}_{n,m}^{(\textbf{C}^+)}\right) = f^+\left(\frac{k}{K}\right)-f^+\left(\frac{k-1}{K}\right) $$
-and similarly to interim 1, we have 
-$$T_{n,k}^{(\textbf{C}^+)}(\id)> \widehat{b}_{n,k}^{(\textbf{C}^+)}\, \Leftrightarrow \,
- T_{n,k}^{(\widehat{\textbf{I}}_k^+)}(\id) > \widehat{b}_{n,k}^{(\widehat{\textbf{I}}_k^+)}.$$
-Then,
- \begin{multline*}
-\P\left(\text{reject }H_{\widehat{j}} \text{ at interim k} \Big| \text{did not reject }H_{\widehat{j}} \text{ before interim k}\right)\\
-= \P_\sigma\left( \exists \textbf{C} \supset \widehat{\textbf{I}}_k :\quad  T_{n,k}^{(\textbf{C})}(\id)> \widehat{b}_{n,k}^{(\textbf{C})} \Big|  \forall m < k, \, \exists \textbf{C} \supset \widehat{\textbf{I}}_m  : T_{n,m}^{(\textbf{C})}(\id) \le \widehat{b}_{n,m}^{(\textbf{C})}\right)\\
-= \P_\sigma\left(T_{n,k}^{(\widehat{\textbf{I}}_k)}(\id) > \widehat{b}_{n,k}^{(\widehat{\textbf{I}}_k)}\Big|  \forall m < k, \, \exists \textbf{C} \supset \widehat{\textbf{I}}_m  : T_{n,m}^{(\textbf{C})}(\id) \le \widehat{b}_{n,m}^{(\textbf{C})} \right)
- = f^+\left(\frac{k}{K}\right)-f^+\left(\frac{k-1}{K}\right)
-\end{multline*}
-which together with Equation~\eqref{eq:interim1_multi} and \eqref{eq:multi1} gives,
-$$\P_\sigma(\text{E is true})\le \alpha.$$
-Then, take the expectation with respect to the data this time, 
-$$\E\left[\P_\sigma(\text{E is true})\right] = \mathrm{FWE}(\alpha) \le \alpha. $$
+% Let $\widehat{\textbf{I}}_k\subset \widehat{\textbf{I}}_{k-1}$ be the set of true hypotheses not accepted yet, then all the probabilities computed in the algorithm are conditioned on not having rejected any true hypotheses and not having accepted all true hypotheses (otherwise the error is $0$ and the result is true):
+% $$\forall m < k, \, \exists \textbf{C} \supset \widehat{\textbf{I}}_m  : T_{n,m}^{(\textbf{C}^+)}(\id) \le \widehat{b}_{n,m}^{(\textbf{C}^+)}.$$
+% and by definition of $\widehat{b}_{n,k}^{(\widehat{\textbf{I}}_k)}$, we have
+% $$\P_\sigma\left( T_{n,k}^{(\widehat{\textbf{I}}_k^+)}(\id)> \widehat{b}_{n,k}^{(\widehat{\textbf{I}}_k^+)} \Big|\forall m < k, \, \exists \textbf{C} \supset \widehat{\textbf{I}}_m  : T_{n,m}^{(\textbf{C}^+)}(\id) \le \widehat{b}_{n,m}^{(\textbf{C}^+)}\right) = f^+\left(\frac{k}{K}\right)-f^+\left(\frac{k-1}{K}\right) $$
+% and similarly to interim 1, we have 
+% $$T_{n,k}^{(\textbf{C}^+)}(\id)> \widehat{b}_{n,k}^{(\textbf{C}^+)}\, \Leftrightarrow \,
+%  T_{n,k}^{(\widehat{\textbf{I}}_k^+)}(\id) > \widehat{b}_{n,k}^{(\widehat{\textbf{I}}_k^+)}.$$
+% Then,
+%  \begin{multline*}
+% \P\left(\text{reject }H_{\widehat{j}} \text{ at interim k} \Big| \text{did not reject }H_{\widehat{j}} \text{ before interim k}\right)\\
+% = \P_\sigma\left( \exists \textbf{C} \supset \widehat{\textbf{I}}_k :\quad  T_{n,k}^{(\textbf{C})}(\id)> \widehat{b}_{n,k}^{(\textbf{C})} \Big|  \forall m < k, \, \exists \textbf{C} \supset \widehat{\textbf{I}}_m  : T_{n,m}^{(\textbf{C})}(\id) \le \widehat{b}_{n,m}^{(\textbf{C})}\right)\\
+% = \P_\sigma\left(T_{n,k}^{(\widehat{\textbf{I}}_k)}(\id) > \widehat{b}_{n,k}^{(\widehat{\textbf{I}}_k)}\Big|  \forall m < k, \, \exists \textbf{C} \supset \widehat{\textbf{I}}_m  : T_{n,m}^{(\textbf{C})}(\id) \le \widehat{b}_{n,m}^{(\textbf{C})} \right)
+%  = f^+\left(\frac{k}{K}\right)-f^+\left(\frac{k-1}{K}\right)
+% \end{multline*}
+% which together with Equation~\eqref{eq:interim1_multi} and \eqref{eq:multi1} gives,
+% $$\P_\sigma(\text{E is true})\le \alpha.$$
+% Then, take the expectation with respect to the data this time, 
+% $$\E\left[\P_\sigma(\text{E is true})\right] = \mathrm{FWE}(\alpha) \le \alpha. $$
 \end{proof}
 
 % \subsection{Effect of early accept}
