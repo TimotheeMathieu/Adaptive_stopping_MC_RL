@@ -183,7 +183,8 @@ Set $\lambda^+ = f^+ \left(\frac{k}{K}\right)- f^+ \left( \frac{k-1}{K}\right)$ 
 \While{}{
 Compute the boundary $\widehat{b}_{N,k}^{(\textbf{C}^+)}$ and $\widehat{b}_{N,k}^{(\textbf{C}^-)}$ such that
 $$\frac{1}{|S_k|}\sum_{\sigma \in S_k} \1\{T_{N,k}^{(\textbf{C}^+)}(\sigma) \ge  \widehat{b}_{N,k}^{(\textbf{C}^+)}\} \le  \lambda^+ \quad \text{and}\quad \frac{1}{|S_k|}\sum_{\sigma \in S_k} \1\{T_{N,k}^{(\textbf{C}^-)}(\sigma) \leq   \widehat{b}_{N,k}^{(\textbf{C}^-)}\} \le  \lambda^-  .$$
-where $S_k$ is the set of permutations $\sigma\in(\S_{2N})^k$  such that $\sigma_1,\dots,\sigma_{k-1}$ did not correspond to permutation which would have accepted or rejected before interim $k$.
+where $S_k$ is the set of permutations $\sigma\in(\S_{2N})^k$  such that it would not have accepted or rejected before
+$$\forall m < k,\quad  T_{N,m}^{(\textbf{C}^+)}(\sigma) \le   \widehat{b}_{N,m}^{(\textbf{C}^+)} \text{ and }T_{N,m}^{(\textbf{C}^-)}(\sigma) \ge   \widehat{b}_{N,m}^{(\textbf{C}^-)} $$
 
 \If{$T_{N,k}^{(\textbf{C}^+)}(\mathrm{id}) > \widehat{b}_{N,k}^{(\textbf{C}^+)}$}{
 Reject $H_{j_{\max}}$ where $j_{\max} =  \arg\max\left(T_{N,k}^{(j)}(\id),\quad j \in \textbf{C}\right)$.\\
@@ -262,25 +263,37 @@ In each cluster, as said previously, we can consider that the data are transform
 
 By convention, let $f^+\left(\frac{-1}{K}\right)=0$. We have,
 \begin{Lemma}
-Let $(X_{i,j})_{i\le n, j\le J}$ be i.i.d from a distribution $P_1,\dots,P_J$. Let $\textbf{I}$ be a set of comparisons $(i,j)$ for which we have $P_i=P_j$ is true. Let $\alpha \in (0,1)$ and define $\widehat{b}_{n}^{(\textbf{I}^+)}$ as in Algorithm~\ref{algo:main}. Let $\widehat{\textbf{I}}_k$ the (random) set of true hypotheses not yet accepted or rejected at interim $k$, we have
-$$\P\left(T_{N,k}^{(\widehat{\textbf{I}}_k^+)}(\id) > \widehat{b}_{N,k}^{(\widehat{\textbf{I}}_k^+)} \right)\le f^{+}\left(\frac{k}{K}\right)- f^{+}\left(\frac{k-1}{K}\right).$$
+Let $(X_{i,j})_{i\le n, j\le J}$ be i.i.d from a distribution $P_1,\dots,P_J$. Let $\textbf{I}$ be a set of comparisons $(i,j)$ for which we have $P_i=P_j$ is true. Let $\alpha \in (0,1)$ and define $\widehat{b}_{n}^{(\textbf{I}^+)}$ as in Algorithm~\ref{algo:main}, we have
+$$\P\left(T_{N,k}^{(\widehat{\textbf{I}}_k^+)}(\id) > \widehat{b}_{N,k}^{(\widehat{\textbf{I}}_k^+)}\Big| \forall m < k  \quad T_{N,m}^{(\textbf{I}^+)}(\sigma) \le   \widehat{b}_{N,m}^{(\textbf{I}^+)}\right)\le f^{+}\left(\frac{k}{K}\right)- f^{+}\left(\frac{k-1}{K}\right).$$
 \end{Lemma}
 \begin{proof}
 For  $\textbf{J}\subset \textbf{I}$,  denote 
-$$E_k(\sigma,\textbf{J}) = \left\{\forall m < k, T_{N,m}^{(\textbf{J}^+)}(\sigma) \le   \widehat{b}_{N,m}^{(\textbf{J}^+)} \text{ and }T_{N,m}^{(\textbf{J}^-)}(\sigma) \ge   \widehat{b}_{N,m}^{(\textbf{J}^-)}\right\}$$
-which correspond to the event  ``did not reject nor accept any $H_j$ for $j  \in \textbf{J}$ before interim k''. Remark that 
-$$\widehat{\textbf{I}}_k = \arg\max_{\textbf{J}\subset \textbf{I}} \{|J|:\quad E_k(\id ,\textbf{J}) \text{ is true}\}.$$
+$$E_k(\sigma,\textbf{J}) = \left\{\forall m < k, T_{N,m}^{(\textbf{I}^+)}(\sigma) \le   \widehat{b}_{N,m}^{(\textbf{I}^+)} \text{ and }T_{N,m}^{(\textbf{J}^-)}(\sigma) \ge   \widehat{b}_{N,m}^{(\textbf{J}^-)}\right\}$$
+which correspond to the event  ``did not reject any true hypotheses and did nor accept any $H_j$ for $j  \in \textbf{J}$ before interim k after permutation by $\sigma$''.  Denote by $\textbf{C}_k$ the (random) value of $\textbf{C}$ at the beginning of interim $k$. 
 We have
 \begin{align*}
-\P\left(T_{N,k}^{(\widehat{\textbf{I}}_k^+)}(\id) > \widehat{b}_{N,k}^{(\widehat{\textbf{I}}_k^+)} \right)&= \sum_{ \textbf{J}\subset \textbf{I} }\P\left(T_{N,k}^{(\textbf{J}^+)}(\id) > \widehat{b}_{N,k}^{(\textbf{J}^+)} , \textbf{J} = \widehat{\textbf{I}}_k\right) \\
-&= \sum_{ \textbf{J}\subset \textbf{I} }\P\left(\max\{ T_{N,k}^{(j)}(\id), j \in \textbf{J}\} > \widehat{b}_{N,k}^{(\textbf{J}^+)} , \textbf{J} = \widehat{\textbf{I}}_k, E_k(\id,\textbf{J})\right)
+\P&\left(T_{N,k}^{(\textbf{C}_k^+)}(\id) > \widehat{b}_{N,k}^{(\textbf{C}_k^+)}, \forall m < k  \quad T_{N,m}^{(\textbf{I}^+)}(\id) \le   \widehat{b}_{N,m}^{(\textbf{I}^+)} \right)\\
+&= \sum_{ \textbf{J}\subset \textbf{I} }\P\left(T_{N,k}^{(\textbf{J}^+)}(\id) > \widehat{b}_{N,k}^{(\textbf{J}^+)} , \textbf{J} = \textbf{C}_k, \forall m < k  \quad T_{N,m}^{(\textbf{I}^+)}(\id) \le   \widehat{b}_{N,m}^{(\textbf{I}^+)}\right) \\
+&= \sum_{ \textbf{J}\subset \textbf{I} }\P\left(\max\{ T_{N,k}^{(j)}(\id), j \in \textbf{J}\} > \widehat{b}_{N,k}^{(\textbf{J}^+)} , \textbf{J} = \textbf{C}_k, E_k(\id,\textbf{J})\right)
 \end{align*}
-Then, having that for any $j \in \textbf{J}^+$, then we have the joint equality in distribution $(T_N^{(j)}(\id))_{j \in\textbf{J}^+} =^d (T_N^{(j)}(\sigma))_{\textbf{J}^+}$ for any $\sigma \in (\S_{2N})^k$. 
+
+Let $\widehat{\textbf{I}}_k$ the (random) set of true hypotheses not yet accepted or rejected at interim $k$. Remark that having that on the event $E_k(\sigma,J)$, we never rejected any hypothesis from $\textbf{I}$ before interim $k$, and interim $k$ correspond to a reject of an hypothesis from $\textbf{I}_k$: there exists $ \widehat{j} \in \textbf{I}_k$ such that $\max\{ T_{N,k}^{(j)}(\id), j \in\textbf{C}_k\} = T_{N,k}^{(\widehat{j})}(\id)$. Hence, we have
+$$\max\{ T_{N,k}^{(j)}(\id), j \in\textbf{C}_k\} =\max\{ T_{N,k}^{(j)}(\id ), j \in \widehat{\textbf{I}}_k\}. $$
+
+And moreover, we also have that at interim $k$, $\textbf{C}_k \supset \widehat{\textbf{I}}_k$ because initially $\textbf{I} \subset \textbf{C}_1$ and any accepted hypotheses were removed from both $\textbf{C}_1$ and from $\textbf{I}$ to give $\textbf{C}_k$ and  $\widehat{\textbf{I}}_k$ respectively. Hence
+$\widehat{b}_{N,k}^{(\textbf{C}_k^+)} \ge \widehat{b}_{N,k}^{(\widehat{\textbf{I}}_k^+)} $, and we have 
+
+\begin{align*}
+\1\left\{\max\{ T_{N,k}^{(j)}(\id), j \in \textbf{J}\} > \widehat{b}_{N,k}^{(\textbf{C}_k^+)},\textbf{J} = \textbf{C}_k,  E_k(\id, \textbf{J})\right\}  &\le \1\left\{\max\{ T_{N,k}^{(j)}(\id), j \in \widehat{\textbf{I}}_k\} > \widehat{b}_{N,k}^{(\widehat{\textbf{I}}_k^+)}\right\}
+\end{align*}
+Then, then we have the joint equality in distribution $(T_N^{(j)}(\id))_{j \in\textbf{I}} =^d (T_N^{(j)}(\sigma))_{\textbf{I}}$ for any $\sigma \in (\S_{2N})^k$. 
+\begin{align*}
+\P&\left(\max\{ T_{N,k}^{(j)}(\id), j \in \textbf{J}\} > \widehat{b}_{N,k}^{(\textbf{J}^+)} ,\textbf{J} = \textbf{C}_k, E_k(\id,\textbf{J})\right)\\
+&= \frac{1}{((2N)!)^k}\sum_{\sigma_1,\dots,\sigma_k \in \S_{2N}} \P\left(\max\{ T_{N,k}^{(j)}(\sigma), j \in \textbf{J}\} > \widehat{b}_{N,k}^{(\textbf{J}^+)} ,  \textbf{J} = \textbf{C}_k,E_k(\sigma,\textbf{J})\right)\\
+&= \frac{1}{((2N)!)^k} \E\left[\sum_{\sigma_1,\dots,\sigma_k \in \S_{2N}}\1\left\{\max\{ T_{N,k}^{(j)}(\sigma), j \in \textbf{J}\} > \widehat{b}_{N,k}^{(\textbf{J}^+)} , \textbf{J} = \textbf{C}_k,E_k(\sigma,\textbf{J})\right\}\right]\\
+\end{align*}
 \begin{align*}
 \P&\left(\max\{ T_{N,k}^{(j)}(\id), j \in \textbf{J}\} > \widehat{b}_{N,k}^{(\textbf{J}^+)} ,\textbf{J} = \widehat{\textbf{I}}_k, E_k(\id,\textbf{J})\right)\\
-&= \frac{1}{((2N)!)^k}\sum_{\sigma_1,\dots,\sigma_k \in \S_{2N}} \P\left(\max\{ T_{N,k}^{(j)}(\sigma), j \in \textbf{J}\} > \widehat{b}_{N,k}^{(\textbf{J}^+)} ,  \textbf{J} = \widehat{\textbf{I}}_k,E_k(\sigma,\textbf{J})\right)\\
-&= \frac{1}{((2N)!)^k} \E\left[\sum_{\sigma_1,\dots,\sigma_k \in \S_{2N}}\1\left\{\max\{ T_{N,k}^{(j)}(\sigma), j \in \textbf{J}\} > \widehat{b}_{N,k}^{(\textbf{J}^+)} , \textbf{J} = \widehat{\textbf{I}}_k,E_k(\sigma,\textbf{J})\right\}\right]\\
-&\le \frac{1}{((2N)!)^k} \E\left[ \1\{\textbf{J} = \widehat{\textbf{I}}_k\}\sum_{\sigma \in S_k}\1\left\{\max\{ T_{N,k}^{(j)}(\sigma), j \in \widehat{\textbf{I}}_k\} > \widehat{b}_{N,k}^{(\widehat{\textbf{I}}_k^+)}\right\}\right]\\
 &\le  \left(f^{+}\left(\frac{k}{K}\right)- f^{+}\left(\frac{k-1}{K}\right)\right)\E\left[\frac{1}{((2N)!)^k} |S_k|\1\{\textbf{J} = \widehat{\textbf{I}}_k\}\right]\\
 &=  \left(f^{+}\left(\frac{k}{K}\right)- f^{+}\left(\frac{k-1}{K}\right)\right)\E\left[\frac{1}{((2N)!)^k} \sum_{ \sigma_1,\dots,\sigma_k \in \S_{2N}}\1\{E_k(\sigma, \textbf{J}), \textbf{J} = \widehat{\textbf{I}}_k\}\right]\\
 &= \left(f^{+}\left(\frac{k}{K}\right)- f^{+}\left(\frac{k-1}{K}\right)\right)\frac{1}{((2N)!)^k} \sum_{ \sigma_1,\dots,\sigma_k \in \S_{2N}} \P(E_k(\sigma, \textbf{J}), \textbf{J} = \widehat{\textbf{I}}_k )\\
