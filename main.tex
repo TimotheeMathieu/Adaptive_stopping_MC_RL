@@ -183,7 +183,7 @@ Set $\lambda^+ = f^+ \left(\frac{k}{K}\right)- f^+ \left( \frac{k-1}{K}\right)$ 
 
 \While{True}{
 Compute the boundary $\widehat{b}_{N,k}^{(\textbf{C}^+)}$ and $\widehat{b}_{N,k}^{(\textbf{C}^-)}$ such that
-$$\frac{1}{|S_k|}\sum_{\sigma \in S_k} \1\{T_{N,k}^{(\textbf{C}^+)}(\sigma) \ge  \widehat{b}_{N,k}^{(\textbf{C}^+)}\} \le  \lambda^+ \quad \text{and}\quad \frac{1}{|S_k|}\sum_{\sigma \in S_k} \1\{T_{N,k}^{(\textbf{C}^-)}(\sigma) \leq   \widehat{b}_{N,k}^{(\textbf{C}^-)}\} \le  \lambda^-  .$$
+$$\frac{1}{((2N)!)^k}\sum_{\sigma \in S_k} \1\{T_{N,k}^{(\textbf{C}^+)}(\sigma) \ge  \widehat{b}_{N,k}^{(\textbf{C}^+)}\} \le  \lambda^+ \quad \text{and}\quad \frac{1}{((2N)!)^k}\sum_{\sigma \in S_k} \1\{T_{N,k}^{(\textbf{C}^-)}(\sigma) \leq   \widehat{b}_{N,k}^{(\textbf{C}^-)}\} \le  \lambda^-  .$$
 where $S_k$ is the set of permutations $\sigma\in(\S_{2N})^k$  such that it would not have accepted or rejected before
 $$\forall m < k,\quad  T_{N,m}^{(\textbf{C}^+)}(\sigma) \le   \widehat{b}_{N,m}^{(\textbf{C}^+)} \text{ and }T_{N,m}^{(\textbf{C}^-)}(\sigma) \ge   \widehat{b}_{N,m}^{(\textbf{C}^-)} $$
 
@@ -387,8 +387,7 @@ now, because we are only dealing with true hypotheses, we can apply the invarian
 \mathrm{FWE}_k &\le \frac{1}{((2N)!)^k}\sum_{\sigma_1,\dots,\sigma_k \in \S_{2N}}\P\left( T_{N,k}^{(\textbf{I}^+)}(\sigma) > \widehat{b}_{N,k}^{(\textbf{I}^+)}, E_k(\sigma) \right)\\
 &= \E\left[\frac{1}{((2N)!)^k}\sum_{\sigma \in (\S_{2N})^k}\1\left\{ T_{N,k}^{(\textbf{I}^+)}(\sigma) > \widehat{b}_{N,k}^{(\textbf{I}^+)}, E_k(\sigma)\right\} \right]\\
 &\le \E\left[\frac{1}{((2N)!)^k}\sum_{\sigma \in (S_k)^k}\1\left\{ T_{N,k}^{(\textbf{I}^+)}(\sigma) > \widehat{b}_{N,k}^{(\textbf{I}^+)}\right\} \right]\\
-&\le \left(f^+\left(\frac{k}{K}\right)-f^+\left(\frac{k-1}{K}\right)\right)\E[|S_k|/((2N)!)^k]\\
-&\le f^+\left(\frac{k}{K}\right)-f^+\left(\frac{k-1}{K}\right)
+&\le f^+\left(\frac{k}{K}\right)-f^+\left(\frac{k-1}{K}\right)\\
 \end{align*}
 the last inequality follows by definition of $\widehat{b}_{N,k}^{(\textbf{I}^+)}$.
 \end{proof}
