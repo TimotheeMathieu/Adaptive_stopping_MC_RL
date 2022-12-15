@@ -90,7 +90,7 @@ A particular class of sequential test often used are the Sequential Probability 
 % \subsection{Notations}
 % We denote by $e(A)$ the evaluations of an algorithm $A$, $T$ is the test statistic constructed using 
 
-\section{Adaptive stopping using Group Sequential Testing}
+\section{Description of the methods used in the algorithm}
 \subsection{Group sequential testing}
 \todoT{Explain why must be careful when doing GST and that we can't just do several tests. Maybe also motivate using the confidence interval approach from NIPS article.}
 
@@ -103,10 +103,8 @@ GST often suppose strong models on the data, in particular it is often supposed 
 The presence of several modes in the distributions of the evaluations and the difficulty to make any distributional assumption justify a non-parametric approach of the problem, but to further justify this approach we did a study of the effect of model misspecification on simulated data when using Gaussian GST algorithm.
 
 
-For now, we suppose that $e(A)$ is a continuous random variable, in particular $\P(e_i(A)=e_j(A))=0$ for any $i \neq j$.
-
  
-\subsection{High level description of the algorithm}
+\subsection{High level description of the algorithm for two agents}
 In the case where only two agents are compared, we use the following algorithm (see Section~\ref{sec:multi} for the multi-agent and fully developped version of the algorithm).
 
 \begin{algorithm}[h]
@@ -140,17 +138,43 @@ An illustration of the group sequential test is given in figure~\ref{fig:gst}. T
 \end{center}
 \end{figure}
 
+\subsection{Permutation tests}
+Permutation tests are non-parametric tests that are ...
 
-\paragraph{Remarks:}
-\begin{description}
-\item[Speeding up permutation tests]
-We use Monte-Carlo approximation, using random permutation instead of enumerating all the permutations.
-
-\item[Multiple testing]
+\subsection{Multiple testing}
 When dealing with multiple testing, particular care must be taken so as not to decrease the error of the test. Suppose that we want to test $H_j$ versus $H_j'$ for $1\le j\le J$ using a test statistic $T_{N}^{(j)}$. Instead of the type I error considered in two-sample testing, we consider the family-wise error rate (FWE) which is defined as the probability of making at least one type I error: let $\textbf{I}\subset \{1,\dots,J\}$ be the set of the true hypotheses, then 
 $$\mathrm{FWE} = \P_{H_j, j \in \textbf{I}}\left(\exists j \in \textbf{I}:\quad  \text{reject }H_j \right).$$
-Usually, we say that an algorithm has a weak FWE control if the FWE is smaller than $\alpha$ when $\textbf{I}=\{1,\dots,J\}$ and we say that the algorithm has strong FWE control if FWE is smaller than $\alpha$ for any $\textbf{I}\neq \emptyset$· 
-\end{description}
+Usually, we say that an algorithm has a weak FWE control if the FWE is smaller than $\alpha$ when $\textbf{I}=\{1,\dots,J\}$ and we say that the algorithm has strong FWE control if FWE is smaller than $\alpha$ for any $\textbf{I}\neq \emptyset$.
+
+There are several procedures that can be used to have control on the FWE. The most famous one is Bonferroni procedure, it is a very simple procedure in which we take a threshold for $H_j$ vs $H_j'$ equal to a quantile of order $1-\alpha/J$ of the permutation distribution of $T_n^{(j)}$. It can be very conservative in general and we will prefer a step-down method that performs better in practice.
+
+\paragraph{Step-down procedure:} proposed by \cite{Romano_2003}, the step-down procedure is defined as follows: for some $\textbf{C} \subset \{1,\dots,J\}$, denote
+$$T_{n}^{(\textbf{C})}(\sigma)= \max\left(T_n^{(j)}(\sigma),\quad j \in \textbf{C}\right)$$
+\begin{algorithm}[h]
+\SetAlgoLined
+\SetKwInput{KwParameter}{Parameters}
+\KwParameter{$\alpha \in (0,1)$}
+Initialize $\textbf{C}=\{1,\dots,J\}$\\
+\While{$\textbf{C} \neq \emptyset$}{
+Compute $\widehat{b}_{n}^{(\textbf{C})}(1-\alpha)$ the quantile of order $1-\alpha$ of the permutation law of $T_{n}^{(\textbf{C})}(\sigma)$:
+$$\sum_{\sigma \in \S_{2n}} \1\{T_{n}^{(\textbf{C})}(\sigma) \ge  \widehat{b}_{n}^{(\textbf{C})}\} = \lfloor \alpha n! \rfloor .$$
+\uIf{$T_{n}^{(\textbf{C})}(\mathrm{id}) \le \widehat{b}_{n}^{(\textbf{C})}$}{
+Accept all the hypotheses $H_j, j\in \textbf{C}$ and break the loop.}
+\Else{
+Reject $H_{j_{\max}}$ where $j_{\max} =  \arg\max\left(T_n^{(j)}(\sigma),\quad j \in \textbf{C}\right)$.\\
+Define $\textbf{C}=\textbf{C} \setminus \{j_{max}\}$
+}
+}
+\caption{Multiple testing, non-sequential.}\label{alg:multiple_test_1}
+\end{algorithm}
+The Algorithm~\ref{alg:multiple_test_1} is consistent (i.e. $\mathrm{FWE}\le \alpha$) for the equality of distribution hypotheses. It uses the maximum of the statistics as a mean to test an intersection of hypotheses. This procedure is not specific to permutation tests and can be used for other tests provided some properties on the thresholds $\widehat{b}_{n}^{(\textbf{C})}$. 
+
+
+Remark that we could not use Benjamini-Hochberg procedure or similar procedures because the hypotheses are not independent. We adapt this procedure to the case of group sequential testing in Section~\ref{sec:main_algo}
+
+\subsection{Random permutation to speed up computation}
+We use Monte-Carlo approximation, using random permutation instead of enumerating all the permutations.
+\section{Main algorithm}\label{sec:main_algo}
 
 \subsection{Notations}
 We denote by $\S_{2N}$ the set of permutations of $\{1,\dots,2N\}$ and for $\sigma_1,\sigma_2,\dots,\sigma_k \in \S_{2N}^2$, we denote $\sigma_1 \cdot \sigma_2 \cdot \ldots \cdot \sigma_k$ the concatenation of the permutation $\sigma_1$ done in interim $1$ and $\sigma_2$ done on interim $2$,\dots, $\sigma_k$ on interim $k$. We consider $L\ge 2$ agents $A_1,\dots,A_L$. The $k^{th}$ step of the algorithm is called the $k^{th}$ interim for some $k \in \{1,\dots,K\}$. Let $c_1,\dots,c_J$ be the comparisons we want to make. For any $i$, $c_i$ is a couple of agent's indices: $c_i=(c_{i,1},c_{i,2}) \in \{1,\dots,L\}^2$. We denote $e_{1,k}(j), \dots, e_{2N, k}(j)$ the concatenation of the $2N$ evaluations obtained from the two agents compared for comparison $j$ at at interim $k$.
@@ -436,34 +460,6 @@ On the other hand, if $\mu_P > \mu_Q$, then $T_n \simeq \mathcal{N}(\sqrt{n}(\mu
 For a given drift $\mu_P-\mu_Q$, we can solve for $n$ to get a sample size required in order to converge to a given power.
 
 Example: suppose we want to detect a drift $\mu_P-\mu_Q=\sqrt{\sigma_P^2+\sigma_Q^2}$ in with probability $0.9$. Then we solve $1-\Phi\left(\Phi^{-1}(1-\alpha)\left(1+\frac{(\mu_P-\mu_Q)^2}{\sigma_P^2+\sigma_Q^2 }\right)-  \sqrt{n}\frac{\mu_P-\mu_Q}{\sqrt{\sigma_P^2+\sigma_Q^2}} \right) = 0.9$ and get that $n$ must be larger than $21$.
-\section{Non-sequential multiple tests}
-
-\paragraph{Bonferroni procedure:} a first approach is obtained by taking a threshold for $H_j$ vs $H_j'$ equal to a quantile of order $1-\alpha/J$ of the permutation distribution of $T_n^{(j)}$, this is the Bonferroni procedure and it can be very conservative.
-
-\paragraph{Step-down procedure:} another approach proposed by \cite{Romano_2003} is to consider a step-down procedure defined as follows: for some $\textbf{C} \subset \{1,\dots,J\}$, denote
-$$T_{n}^{(\textbf{C})}(\sigma)= \max\left(T_n^{(j)}(\sigma),\quad j \in \textbf{C}\right)$$
-\begin{algorithm}[h]
-\SetAlgoLined
-\SetKwInput{KwParameter}{Parameters}
-\KwParameter{$\alpha \in (0,1)$}
-Initialize $\textbf{C}=\{1,\dots,J\}$\\
-\While{$\textbf{C} \neq \emptyset$}{
-Compute $\widehat{b}_{n}^{(\textbf{C})}(1-\alpha)$ the quantile of order $1-\alpha$ of the permutation law of $T_{n}^{(\textbf{C})}(\sigma)$:
-$$\sum_{\sigma \in \S_{2n}} \1\{T_{n}^{(\textbf{C})}(\sigma) \ge  \widehat{b}_{n}^{(\textbf{C})}(1-\alpha)\} = \lfloor \alpha n! \rfloor .$$
-\If{$T_{n}^{(\textbf{C})}(\mathrm{id}) \le \widehat{b}_{n}^{(\textbf{C})}(1-\alpha)$}{
-Accept all the hypotheses $H_j, j\in \textbf{C}$ and break the loop.}
-\Else{
-Reject $H_{j_{\max}}$ where $j_{\max} =  \arg\max\left(T_n^{(j)}(\sigma),\quad j \in \textbf{C}\right)$.\\
-Define $\textbf{C}=\textbf{C} \setminus \{j_{max}\}$
-}
-}
-If the test was never rejected, return accept. Else return reject.
-\caption{Multiple testing, non-sequential.}\label{alg:multiple_test_1}
-\end{algorithm}
-The Algorithm~\ref{alg:multiple_test_1} is consistent (i.e. $\mathrm{FWE}\le \alpha$) for the equality of distribution hypotheses.
-
-
-Remark that we could not use Benjamini-Hochberg procedure or similar procedures because the hypotheses are not independent.
 \section{Proof of Theorem~\ref{th:conv_boundary}}
 \paragraph{Convergence of $B_1$}
 $$B_1 = \min \left\{ b>0 : \P_\sigma(|T_{n,1}(\sigma_1)|\ge b) \le \alpha\left(\frac{1}{K}\right)\right\} $$
