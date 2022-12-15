@@ -90,20 +90,24 @@ A particular class of sequential test often used are the Sequential Probability 
 % \subsection{Notations}
 % We denote by $e(A)$ the evaluations of an algorithm $A$, $T$ is the test statistic constructed using 
 
-\section{Description of the methods used in the algorithm}
+\section{Description of the different tools used in the algorithm}
 \subsection{Group sequential testing}
-\todoT{Explain why must be careful when doing GST and that we can't just do several tests. Maybe also motivate using the confidence interval approach from NIPS article.}
 
 To choose $N$ adaptively, we propose to use group sequential testing (GST). GST are used in particular in clinical trials in which case an early stopping is desirable when comparing two drugs. We choose to use GST in particular and not sequential testing because the data are often naturally grouped due to the parallelization of the computation.
 
 GST often suppose strong models on the data, in particular it is often supposed that the data are i.i.d. from a Gaussian distribution. This assumption is often not verified in the case of $e_i(A)$ being evaluations from a RL algorithm. In particular, the distribution of $e_i(A)$ often presents several modes and it can sometimes contain outliers.
 
-\todoT{Explain why several modes and give examples of distributions of DeepRL algos on classical environments. Ref https://arxiv.org/pdf/1806.08295.pdf on this also.}
-
 The presence of several modes in the distributions of the evaluations and the difficulty to make any distributional assumption justify a non-parametric approach of the problem, but to further justify this approach we did a study of the effect of model misspecification on simulated data when using Gaussian GST algorithm.
 
 
  
+
+\subsection{Permutation tests}
+Permutation tests are non-parametric tests that are exact for testing the equality in distribution. This means that the type I error of the test is controlled by $\alpha$ the parameter of the test.
+
+Let us recall the basic formulation of a two-sample permutation test. Let $X_1,\dots,X_N$ be i.i.d from a law $P$ and $Y_1,\dots,Y_N$ i.i.d from a law $Q$, we want to test $P=Q$ against $P \neq Q$. Let $Z_i = X_i$ if $i\le N$ and $Z_i = Y_i$ if $i>N$, $Z_1,\dots,Z_{2N}$ is the concatenation of $X_1^N$ and $Y_1^N$. Then, the test proceeds has follow: we reject $P=Q$ if $T(\id) = \left| \frac{1}{N}\sum_{i=1}^N(Z_i-Z_{N+i})\right|$ is larger than more that $95\%$ of the values $T(\sigma) =  \left| \frac{1}{N}\sum_{i=1}^N(Z_{\sigma(i)}-Z_{\sigma(N+i)})\right|$ when $\sigma$ enumerates all the possible permutations of $\{1,\dots,N\}$. The idea is that if $P$ is different from $Q$, then $T(\id)$ should be large and on the other hand if we shuffle the data having that there are data both from $P$ and from $Q$ in the first half and in the second half then the difference of mean $T(\sigma)$ will be closer to zero.
+
+
 \subsection{High level description of the algorithm for two agents}
 In the case where only two agents are compared, we use the following algorithm (see Section~\ref{sec:multi} for the multi-agent and fully developped version of the algorithm).
 
@@ -137,10 +141,6 @@ An illustration of the group sequential test is given in figure~\ref{fig:gst}. T
 \caption{Illustration of the boundary.\label{fig:gst}}
 \end{center}
 \end{figure}
-
-\subsection{Permutation tests}
-Permutation tests are non-parametric tests that are ...
-
 \subsection{Multiple testing}
 When dealing with multiple testing, particular care must be taken so as not to decrease the error of the test. Suppose that we want to test $H_j$ versus $H_j'$ for $1\le j\le J$ using a test statistic $T_{N}^{(j)}$. Instead of the type I error considered in two-sample testing, we consider the family-wise error rate (FWE) which is defined as the probability of making at least one type I error: let $\textbf{I}\subset \{1,\dots,J\}$ be the set of the true hypotheses, then 
 $$\mathrm{FWE} = \P_{H_j, j \in \textbf{I}}\left(\exists j \in \textbf{I}:\quad  \text{reject }H_j \right).$$
@@ -174,6 +174,7 @@ Remark that we could not use Benjamini-Hochberg procedure or similar procedures 
 
 \subsection{Random permutation to speed up computation}
 We use Monte-Carlo approximation, using random permutation instead of enumerating all the permutations.
+
 \section{Main algorithm}\label{sec:main_algo}
 
 \subsection{Notations}
