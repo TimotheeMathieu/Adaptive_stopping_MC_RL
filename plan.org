@@ -1,0 +1,23 @@
+* Introduction 
+** Problem description
+** Requirement of the algorithm ?
+** Shape of the regret's distribution in RL, with examples.
+** Alternative approaches (H2G2 and Edge of statistical)
+* The algorithm
+** Ingredients used in the algorithm
+*** Group sequential testing
+*** Permutation test
+*** Multiple testing
+** Alternative ingredients and why we did not use them (Bandits)
+** The main algorithm with comments
+** Theoretical guarentees, Type I error bound
+* Simulated experiments
+**  TODO Illustration that it works on simulated regret distributions (Alena and Ricc)
+*** Simulate some weird regret distribution and feed it to the algorithm to make 10000 replicate and be able to estimate type I error.
+*** Illustrate choice of $K$ and $N$ and $\beta$ 
+** One illustration of our own that illustrates something like that (Matheus)
+PPO VS SAC on Mujoco.
+** TODO Illustration with large number of agents (Alena and Ricc)
+* Comparison with alternative methods, using their data.
+** Comparison with "A Hitchhiker’s Guide to Statistical Comparisons of Reinforcement Learning Algorithms" (Hector)
+** Comparison with "Deep Reinforcement Learning at the Edge of the Statistical Precipice" (Hector)

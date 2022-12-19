@@ -107,6 +107,7 @@ Permutation tests are non-parametric tests that are exact for testing the equali
 
 Let us recall the basic formulation of a two-sample permutation test. Let $X_1,\dots,X_N$ be i.i.d from a law $P$ and $Y_1,\dots,Y_N$ i.i.d from a law $Q$, we want to test $P=Q$ against $P \neq Q$. Let $Z_i = X_i$ if $i\le N$ and $Z_i = Y_i$ if $i>N$, $Z_1,\dots,Z_{2N}$ is the concatenation of $X_1^N$ and $Y_1^N$. Then, the test proceeds has follow: we reject $P=Q$ if $T(\id) = \left| \frac{1}{N}\sum_{i=1}^N(Z_i-Z_{N+i})\right|$ is larger than more that $95\%$ of the values $T(\sigma) =  \left| \frac{1}{N}\sum_{i=1}^N(Z_{\sigma(i)}-Z_{\sigma(N+i)})\right|$ when $\sigma$ enumerates all the possible permutations of $\{1,\dots,N\}$. The idea is that if $P$ is different from $Q$, then $T(\id)$ should be large and on the other hand if we shuffle the data having that there are data both from $P$ and from $Q$ in the first half and in the second half then the difference of mean $T(\sigma)$ will be closer to zero.
 
+Remark that in the main algorithm, we use Monte-Carlo approximation in that we use random permutation instead of enumerating all the permutations to estimate the quantiles.
 
 \subsection{High level description of the algorithm for two agents}
 In the case where only two agents are compared, we use the following algorithm (see Section~\ref{sec:multi} for the multi-agent and fully developped version of the algorithm).
@@ -141,6 +142,9 @@ An illustration of the group sequential test is given in figure~\ref{fig:gst}. T
 \caption{Illustration of the boundary.\label{fig:gst}}
 \end{center}
 \end{figure}
+
+
+
 \subsection{Multiple testing}
 When dealing with multiple testing, particular care must be taken so as not to decrease the error of the test. Suppose that we want to test $H_j$ versus $H_j'$ for $1\le j\le J$ using a test statistic $T_{N}^{(j)}$. Instead of the type I error considered in two-sample testing, we consider the family-wise error rate (FWE) which is defined as the probability of making at least one type I error: let $\textbf{I}\subset \{1,\dots,J\}$ be the set of the true hypotheses, then 
 $$\mathrm{FWE} = \P_{H_j, j \in \textbf{I}}\left(\exists j \in \textbf{I}:\quad  \text{reject }H_j \right).$$
@@ -172,8 +176,6 @@ The Algorithm~\ref{alg:multiple_test_1} is consistent (i.e. $\mathrm{FWE}\le \al
 
 Remark that we could not use Benjamini-Hochberg procedure or similar procedures because the hypotheses are not independent. We adapt this procedure to the case of group sequential testing in Section~\ref{sec:main_algo}
 
-\subsection{Random permutation to speed up computation}
-We use Monte-Carlo approximation, using random permutation instead of enumerating all the permutations.
 
 \section{Main algorithm}\label{sec:main_algo}
 
@@ -276,17 +278,22 @@ $$\forall \sigma \in (\S_{2N})^k, \quad (T_N^{(j)}(\id))_{j \in\textbf{I}} =^d (
 where $\textbf{I}$ is a subset of $\{1,\dots,J\}$ of true hypotheses.
 \end{Lemma}
 \begin{proof}
-We have
+The comparisons $(c_i)_{i \in \textbf{I}}$ describe the graph with the nodes being the agents denoted $1,\dots,L$ and $(i,j)$ has an edge if $(i,j)\in(c_i)_{i \in \textbf{I}}$ is one of the comparisons that correspond to a true hypothesis. This graph is not necessarily connected, we denote $C(i)$ the connected component to which node $i$ (e.g. agent $i$) belongs, i.e. for any $i,j \in C(i)$ there exists a path going from $i$ to $j$. $C(i)$ can be equal to the singleton $\{i\}$ if all the comparisons with $i$ are in fact false hypotheses.
+
+Now, let us look at how a concatenation of permutations $\sigma_1\cdot\ldots\cdot\sigma_m$ for $m\le k$ acts on the evaluations $e_{n,i}(j)$ for $i \le m$, $1\le n\le 2N$ and $j \in \mathcal{C}(i)$. We have
 \begin{align*}
 T_{N,k}^{(j)}(\sigma_1 \cdot  \sigma_2 \cdot  \ldots  \cdot  \sigma_k)&=  \left|\sum_{i=1}^k\left(\sum_{n=1}^{N} e_{\sigma_i(n),i}(j)-\sum_{n=N+1}^{2N} e_{\sigma_i(n),i}(j)\right)\right|
 \end{align*}
+
 Hence, $T_{N,k}^{(j)}(\sigma) = T_{N,k}^{(j)}(\sigma')$ where $\sigma'_i(n)=\sigma_i(n+N)$ if $n \le N$ and $\sigma_i(n) = \sigma_i(n-N)$ otherwise. This corresponds to changing the sign $-1$ to $+1$ inside the absolute value. Now, let us consider two different comparisons $j=(i_1,i_2)$ and $j'=(i_2,i_3)$, i.e. the two couples share one agent. We can consider that in both $T_{N,k}^{(j)}(\sigma)$ and $T_{N,k}^{(j')}(\sigma)$ the permutation acts in the same way on agent $i_2$.
 
-As a consequence transformation by $\sigma$ can be seen as a global transformation of the concatenation of all the points (with repetition removed) $(e_{n,i}(j), e_{n,i}(j))_{n\le N, i\le k,j\in \textbf{I}}$. 
+As a consequence transformation by $\sigma$ can be seen as a global transformation of the concatenation of all the points (with repetition removed) $(e_{n,i}(j), e_{n,i}(j))_{n\le N, i\le k,j\in \textbf{I}}$. Moreover, we have that for any connected composant $\mathcal{C}$ in the graph, the random variables $(e_{n,i}(j), e_{n,i}(j))_{n\le N, i\le k,j\in \mathcal{C}}$ are i.i.d because all comparisons of $\mathcal{C}$ correspond true hypotheses $P_i = P_j$ and by transitivity of the equality, all the laws are equal in the whole connected component.
 
-Now, we define the connected clusters of indices in $\textbf{I}$. We denote $\mathcal{C}(i)$ the connected cluster of agent $i \in \{1,\dots,L\}$ which consists in all the agents that are compared to it in $\textbf{I}$: $\mathcal{C}(i)=\{l \in  \{1,\dots,L\}:\quad  (l,i)\in \textbf{I}\}$ where $(l,i)$ is taken without order. Because the agents's evaluations are independent from one-another, the cluster of indices are also independent and we can consider them separately. 
+Let $\mathcal{C}$ be one connected composant in the graph. Let us consider the function $\textbf{T}_k : \R^{N}\times\R^k\times\R^{\textbf{I}}\to \R^{Bk|\mathcal{C}|}$ defined by $$\textbf{T}_k\left((e_{n,i}(j))_{n\le N, i\le k,j\in \mathcal{C}}\right) =(T_{N,i}^{(j)}(\id))_{i\le k, j \in \mathcal{C}}$$
+$\textbf{T}_k$ is a function of the sample $(e_{n,i}(j))_{n\le N, i\le k,j\in \mathcal{C}}$ and this sample is independent and with the same law, hence the law of $(e_{n,i}(j))_{n\le N, i\le k,j\in \mathcal{C}}$ is invariant by permutation and this implies that for any $\sigma$, we have $\textbf{T}_k\left((e_{n,i}(j))_{n\le N, i\le k,j\in \mathcal{C}}\right) =^d \textbf{T}_k\left((e_{\sigma_i(n),i}(j))_{n\le N, i\le k,j\in \mathcal{C}}\right)$ which implies that $(T_{N,i}^{(j)}(\id))_{i\le k, j \in \mathcal{C}}=(T_{N,i}^{(j)}(\sigma))_{i\le k, j \in \mathcal{C}}$ for any $\sigma$ concatenation of $k$ permutations.
 
-In each cluster, as said previously, we can consider that the data are transform by a global permutation on the indices, and the permutation must be of the form of a concatenation of permutations on interims as defined previously. Then, because the samples are i.i.d because we consider only true hypotheses, using the usual permuted exchangeability argument  we get that for all $i$, $(T_N^{(j)}(\id))_{j \in\textbf{C(i)}} =^d (T_N^{(j)}(\sigma))_{j \in \textbf{C(i)}}$, then we get the result because the clusters are independent.
+Now, having that by construction the connected components are each independent of each other in the sense that the hypotheses corresponding to the nodes are independent of each other. Hence, having that $(T_{N,i}^{(j)}(\id))_{i\le k, j \in \mathcal{C}}=(T_{N,i}^{(j)}(\sigma))_{i\le k, j \in \mathcal{C}}$ for each connected component $\mathcal{C}$ implies that this is also true for the union of the connected component. Hence the result.
+
 \end{proof}
 
 % By convention, let $f^+\left(\frac{-1}{K}\right)=0$. We have,
