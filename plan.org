@@ -3,12 +3,12 @@
 ** Requirement of the algorithm ?
 ** Shape of the regret's distribution in RL, with examples.
 ** Alternative approaches (H2G2 and Edge of statistical)
+** Alternative ingredients for adaptivity and why we did not use them (Bandits)
 * The algorithm
 ** Ingredients used in the algorithm
 *** Group sequential testing
 *** Permutation test
 *** Multiple testing
-** Alternative ingredients and why we did not use them (Bandits)
 ** The main algorithm with comments
 ** Theoretical guarentees, Type I error bound
 * Simulated experiments
