@@ -59,7 +59,7 @@
 \date{}
 \begin{document}
 \maketitle
-\section{Description of the problem}
+\section{Introduction}
 In Reinforcement Learning, we often use Monte-Carlo methods to evaluate the performances of an algorithm. In particular, if we denote $e(A)$ some evaluation of algorithm $A$, the global score of an algorithm by
 $$S(A)=\frac{1}{N}\sum_{i=1}^N e_i(A) $$
 where $e_1(A), \dots,e_N(A)$ are the evaluation of the algorithm $A$ on $N$ different seeds (i.e. $e_1(A),\dots,e_N(A)$ are supposed i.i.d).
@@ -374,66 +374,49 @@ Suppose that $\beta = 0$, for any $\alpha \in (0,1)$ and any non-decreasing leve
 \end{Theorem}
 \begin{proof}
 Denote 
-$$E_k(\sigma) = \left\{\forall m < k,\quad  T_{N,m}^{(\textbf{I}^+)}(\sigma_1\cdot\ldots\cdot\sigma_m) \le   \widehat{b}_{N,m}^{(\textbf{I}^+)}\right\}$$
+$$\mathrm{NR}_k(\sigma) = \left\{\forall m < k,\quad  T_{N,m}^{(\textbf{I}^+)}(\sigma_1\cdot\ldots\cdot\sigma_m) \le   \widehat{b}_{N,m}^{(\textbf{I}^+)}\right\}$$
+and
+$$\mathrm{NA}_k(\sigma, \textbf{J}) = \left\{\forall m < k,\quad  T_{N,m}^{(\textbf{J}^-)}(\sigma_1\cdot\ldots\cdot\sigma_m) \ge   \widehat{b}_{N,m}^{(\textbf{J}^-)}\right\}$$
+$\mathrm{NR}_k(\sigma)$ is the event on which the statistics corresponding to true hypotheses, computed after permutation by $\sigma=\sigma_1\cdot \ldots \cdot \sigma_k$, are not rejected and $\mathrm{NA}_k(\sigma, \textbf{J})$ is the event on which none of the comparison from $\textbf{J}$ have been rejected after permutation by $\sigma$.
+
 Denote by $\textbf{C}_k$ the (random) value of $\textbf{C}$ at the beginning of interim $k$. 
 
 
-Let $\textbf{I}$ be the set of true hypotheses. Let A be the following event
-$$\mathrm{A}= \{ \exists j \in \textbf{I}: \quad H_j \text{ is rejected}\}.$$
+Let $\textbf{I}$ be the set of true hypotheses. Let E be the following event
+$$\mathrm{E}= \{ \exists j \in \textbf{I}: \quad H_j \text{ is rejected}\}.$$
 We have 
-\begin{align*}\label{eq:multi1}
-\P_\sigma\left(\text{A is true} \right)&= \sum_{k=1}^K \P\left( \exists j \in \textbf{I}: \quad H_j\text{ is rejected at interim $k$ }|\text{there were no rejection before interim $k$}\right)\\
-&\le   \sum_{k=1}^K  \P\left(\exists \textbf{J}:\quad  T_{N,k}^{(\textbf{J}^+)}(\id) > \widehat{b}_{N,k}^{(\textbf{J}^+)}, E_k(\id), \arg\max_{j \in \textbf{J}}T_{N,k}^{(j)}(\id) \in \textbf{I}, \forall \textbf{C}_k \supset \textbf{J}'\supsetneq\textbf{J} \quad  \arg\max_{j \in \textbf{J}'}T_{N,k}^{(j)}(\id) \notin \textbf{I} \right)
-\end{align*}
-$E_k(\id)$ means that we look at the first interim that rejects, $\arg\max_{j \in \textbf{J}}T_{N,k}^{(j)}(\id) \in \textbf{I}$ means that we reject a true hypothesis, and $\forall \textbf{C}_k \supset \textbf{J}'\supsetneq \textbf{J} \quad  \arg\max_{j \in \textbf{J}'}T_{N,k}^{(j)}(\id) \notin \textbf{I} $ means that $\textbf{J}$ corresponds to the set for the first rejection of a true hypothesis (there can be several rejection of false hypotheses before but not rejection of a true hypothesis). 
+\begin{multline*}\label{eq:multi1}
+\P_\sigma\left(\text{E is true} \right)= \sum_{k=1}^K \P\left( \exists j \in \textbf{I}: \quad H_j\text{ is rejected at interim $k$ }|\text{there were no rejection before interim $k$}\right)\\
+\le   \sum_{k=1}^K  \P\left(\exists \textbf{J}:\quad  T_{N,k}^{(\textbf{J}^+)}(\id) > \widehat{b}_{N,k}^{(\textbf{J}^+)}, \mathrm{NR}_k(\id), \mathrm{NA}_k(\id, \textbf{J}), \arg\max_{j \in \textbf{J}}T_{N,k}^{(j)}(\id) \in \textbf{I}, \forall \textbf{C}_k \supset \textbf{J}'\supsetneq\textbf{J} \quad  \arg\max_{j \in \textbf{J}'}T_{N,k}^{(j)}(\id) \notin \textbf{I} \right)
+\end{multline*}
+$\mathrm{NR}_k(\id)$ means that we look at the first interim that rejects, $\arg\max_{j \in \textbf{J}}T_{N,k}^{(j)}(\id) \in \textbf{I}$ means that we reject a true hypothesis, and $\forall \textbf{C}_k \supset \textbf{J}'\supsetneq \textbf{J} \quad  \arg\max_{j \in \textbf{J}'}T_{N,k}^{(j)}(\id) \notin \textbf{I} $ means that $\textbf{J}$ corresponds to the set for the first rejection of a true hypothesis (there can be several rejection of false hypotheses or acceptation of hypotheses before but not rejection of a true hypothesis). 
 We denote 
-$$\mathrm{FWE}_k =  \P\left(\exists \textbf{J}:\quad  T_{N,k}^{(\textbf{J}^+)}(\id) > \widehat{b}_{N,k}^{(\textbf{J}^+)}, E_k(\id), \arg\max_{j \in \textbf{J}}T_{N,k}^{(j)}(\id) \in \textbf{I}, \forall \textbf{C}_k \supset \textbf{J}'\supsetneq\textbf{J} \quad  \arg\max_{j \in \textbf{J}'}T_{N,k}^{(j)}(\id) \notin \textbf{I} \right),$$ 
+$$\mathrm{FWE}_k =  \P\left(\exists \textbf{J}:\quad  T_{N,k}^{(\textbf{J}^+)}(\id) > \widehat{b}_{N,k}^{(\textbf{J}^+)}, \mathrm{NR}_k(\id), \mathrm{NA}_k(\id, \textbf{J}), \arg\max_{j \in \textbf{J}}T_{N,k}^{(j)}(\id) \in \textbf{I}, \forall \textbf{C}_k \supset \textbf{J}'\supsetneq\textbf{J} \quad  \arg\max_{j \in \textbf{J}'}T_{N,k}^{(j)}(\id) \notin \textbf{I} \right),$$ 
 the error of interim $k$ and by convention we take $f^+(-1/K)=0$.
 
-%  \paragraph{First interim:}
-% the first interim is a non-sequential test, the result follows from (cite Exact and Approximate Stepdown Methods for Multiple Hypothesis Testing). We include here a proof with our notations for completness and as an introduction to the proof of the other interim.
-
-% After the first interim, $\textbf{C}_1 = \{1,\dots,J\}$ and $E_1(\id)$ is always true. We have in the case of type I error, 
-% \begin{align*}
-% \mathrm{FWE}_1 &= \P\left( T_{N,1}^{(\textbf{J}^+)}(\id) > \widehat{b}_{N,1}^{(\textbf{J}^+)}, E_1(\id), \arg\max_{j \in \textbf{J}}T_{N,1}^{(j)}(\id) \in \textbf{I}, \forall \textbf{C}_1 \supset \textbf{J}'\supsetneq \textbf{J} \quad  \arg\max_{j \in \textbf{J}'}T_{N,1}^{(j)}(\id) \notin \textbf{I} \right)\\
-% &=\P\left( T_{N,1}^{(\textbf{J}^+)}(\id) > \widehat{b}_{N,1}^{(\textbf{J}^+)},  \arg\max_{j \in \textbf{J}}T_{N,1}^{(j)}(\id) \in \textbf{I}, \forall  \textbf{J}'\supsetneq \textbf{J} \quad  \arg\max_{j \in \textbf{J}'}T_{N,1}^{(j)}(\id) \notin \textbf{I} \right)
-% \end{align*}
-% remark that because $\textbf{J}$ is the first rejection of a true hypothesis to occure, we have on the event 
-% $$\{ \arg\max_{j \in \textbf{J}}T_{N,1}^{(j)}(\id) \in \textbf{I}, \forall  \textbf{J}'\supsetneq \textbf{J} \quad  \arg\max_{j \in \textbf{J}'}T_{N,1}^{(j)}(\id) \notin \textbf{I}\} $$
-% that
-% $$T_{N,1}^{(\textbf{J}^+)}(\id)= \max\{T_{N,1}^{(j)}(\id), j \in \textbf{J}\} = \max\{T_{N,1}^{(j)}(\id), j \in \textbf{I}\} = T_{N,1}^{(\textbf{I}^+)}(\id)$$
-% Moreover, we $\textbf{J} \supset \textbf{I}$ because no true hypothesis have been rejected or accepted before, hence $\widehat{b}_{N,1}^{(\textbf{J}^+)} \ge \widehat{b}_{N,1}^{(\textbf{I}^+)}$. And finally, we have 
-% \begin{align*}
-% \mathrm{FWE}_1\le \P\left( T_{N,1}^{(\textbf{I}^+)}(\id) > \widehat{b}_{N,1}^{(\textbf{I}^+)} \right)
-% \end{align*}
-% now, because we are only dealing with true hypotheses, we can apply the invariance principle which assure the joint equality in distribution of $(T_{N,1}^{(j)}(\id))_{j \in \textbf{I}}$ and $( T_{N,1}^{(j)}(\sigma_1))_{j \in \textbf{I}}$ for any $\sigma_1 \in \S_{2N}$ to have
-% \begin{align*}
-% \mathrm{FWE}_1&\le \frac{1}{(2N)!}\sum_{\sigma_1 \in \S_{2N}}\P\left( T_{N,1}^{(\textbf{I}^+)}(\sigma_1) > \widehat{b}_{N,1}^{(\textbf{I}^+)} \right)\\
-% &= \E\left[\frac{1}{(2N)!}\sum_{\sigma_1 \in \S_{2N}}\1\left\{ T_{N,1}^{(\textbf{I}^+)}(\sigma_1) > \widehat{b}_{N,1}^{(\textbf{I}^+)}\right\} \right]\le f^+\left(\frac{1}{K}\right)
-% \end{align*}
-% the last inequality follows by definition of $\widehat{b}_{N,1}^{(\textbf{I}^+)}$.
-% \paragraph{Interim $1<k\le  K$:}
-
-Remark that on $$E_k(\id) \cap \{\arg\max_{j \in \textbf{J}}T_{N,k}^{(j)}(\id) \in \textbf{I}\}\cap\{ \forall \textbf{C}_k \supset \textbf{J}'\supsetneq\textbf{J} \quad  \arg\max_{j \in \textbf{J}'}T_{N,k}^{(j)}(\id) \notin \textbf{I}\}  $$
+Let $\textbf{J}\cap \textbf{I} = \textbf{I}_k$.
+Remark that on $$\mathrm{NR}_k(\id) \cap \{\arg\max_{j \in \textbf{J}}T_{N,k}^{(j)}(\id) \in \textbf{I}\}\cap\{ \forall \textbf{C}_k \supset \textbf{J}'\supsetneq\textbf{J} \quad  \arg\max_{j \in \textbf{J}'}T_{N,k}^{(j)}(\id) \notin \textbf{I}\}  $$
 $\textbf{J}$ corresponds to the first rejection to occur. Hence, having that the argmax is attaind in $\textbf{I}$,
-$$T_{N,k}^{(\textbf{J}^+)}(\id)= \max\{T_{N,k}^{(j)}(\id), j \in \textbf{J}\} = \max\{T_{N,1}^{(j)}(\id), j \in \textbf{I}\} = T_{N,k}^{(\textbf{I}^+)}(\id)$$
-Moreover, we $\textbf{J} \supset \textbf{I}$ because no true hypothesis have been rejected or accepted before, hence $\widehat{b}_{N,k}^{(\textbf{J}^+)} \ge \widehat{b}_{N,k}^{(\textbf{I}^+)}$. And finally, we have 
+$$T_{N,k}^{(\textbf{J}^+)}(\id)= \max\{T_{N,k}^{(j)}(\id), j \in \textbf{J}\} = \max\{T_{N,1}^{(j)}(\id), j \in \textbf{I}\cap \textbf{J}\} = T_{N,k}^{(\textbf{I}_k^+)}(\id)$$
+Moreover, having $\textbf{J} \supset \textbf{I}_k$, we have $\widehat{b}_{N,k}^{(\textbf{J}^+)} \ge \widehat{b}_{N,k}^{(\textbf{I}_k^+)}$. And finally, we have 
 \begin{align*}
-\mathrm{FWE}_k\le \P\left( T_{N,k}^{(\textbf{I}^+)}(\id) > \widehat{b}_{N,k}^{(\textbf{I}^+)}, E_k(\id) \right)
+\mathrm{FWE}_k\le \P\left(\exists \textbf{J} : \quad T_{N,k}^{(\textbf{I}_k^+)}(\id) > \widehat{b}_{N,k}^{(\textbf{I}_k^+)}, \mathrm{NR}_k(\id), \mathrm{NA}_k(\id, \mathrm{J}), \textbf{J}\cap \textbf{I} = \textbf{I}_k \right)
 \end{align*}
+Then, having that $\mathrm{NA}_k(\id, \mathrm{J}) \Rightarrow \mathrm{NA}_k(\id, \mathrm{I}_k)$, we have that 
+\begin{align*}
+\mathrm{FWE}_k\le \P\left(\exists \textbf{I}_k \subset \textbf{I} : \quad T_{N,k}^{(\textbf{I}_k^+)}(\id) > \widehat{b}_{N,k}^{(\textbf{I}_k^+)}, \mathrm{NR}_k(\id), \mathrm{NA}_k(\id, \mathrm{I}_k) \right)
+\end{align*}
+
 now, because we are only dealing with true hypotheses, we can apply the invariance principle from Lemma~\ref{lem:invariance} which assure the joint equality in distribution of $(T_{N,1}^{(j)}(\id))_{j \in \textbf{I}}$ and $( T_{N,1}^{(j)}(\sigma))_{j \in \textbf{I}}$ for any $\sigma \in (\S_{2N})^k$ to have
 \begin{align*}
-\mathrm{FWE}_k &\le \frac{1}{((2N)!)^k}\sum_{\sigma_1,\dots,\sigma_k \in \S_{2N}}\P\left( T_{N,k}^{(\textbf{I}^+)}(\sigma) > \widehat{b}_{N,k}^{(\textbf{I}^+)}, E_k(\sigma) \right)\\
+\mathrm{FWE}_k &\le \frac{1}{((2N)!)^k}\sum_{\sigma_1,\dots,\sigma_k \in \S_{2N}}\P\left(\exists \textbf{J}:\quad  T_{N,k}^{(\textbf{I}_k^+)}(\sigma) > \widehat{b}_{N,k}^{(\textbf{I}_k^+)}, \mathrm{NR}_k(\sigma),\mathrm{NA}_k(\sigma, \textbf{I}_k)) \right)\\
 &= \E\left[\frac{1}{((2N)!)^k}\sum_{\sigma \in (\S_{2N})^k}\1\left\{ T_{N,k}^{(\textbf{I}^+)}(\sigma) > \widehat{b}_{N,k}^{(\textbf{I}^+)}, E_k(\sigma)\right\} \right]\\
 &\le \E\left[\frac{1}{((2N)!)^k}\sum_{\sigma \in (S_k)^k}\1\left\{ T_{N,k}^{(\textbf{I}^+)}(\sigma) > \widehat{b}_{N,k}^{(\textbf{I}^+)}\right\} \right]\\
 &\le f^+\left(\frac{k}{K}\right)-f^+\left(\frac{k-1}{K}\right)\\
 \end{align*}
 the last inequality follows by definition of $\widehat{b}_{N,k}^{(\textbf{I}^+)}$.
 \end{proof}
-To control the FWE, we only care about true hypotheses $j \in \textbf{I}$. Let $\beta>0$ and consider a comparison $j \in \textbf{I}$ that have been stopped early. If it had not been stopped, it could have been wrongly rejected, increasing the error. Hence the type I error can only decrease when we accept early. The consequence of early accept is an increase in type II error.
-\begin{Lemma}
-The familywise-error rate is smaller when we use early-accept ($\beta>0$) than when we do not.
-\end{Lemma}
+
 
 % \newpage
 \section{Simulated experiments}
