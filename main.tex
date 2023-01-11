@@ -41,6 +41,7 @@
 \newcommand{\id}{\mathrm{id}}
 
 \newcommand{\argmin}{\arg\min}
+\newcommand{\dec}{\,{\buildrel d \over =}\,}
 
 \usepackage{color}
 \usepackage{array}
@@ -243,6 +244,8 @@ Break the loop and returns the answers
 }
 \caption{Main algorithm\label{algo:main}}
 \end{algorithm}
+\todoT{Remarks on the algorithm. In particular, there will not be conflict rejected that could have been accepted}.
+
 
 \newpage
 
@@ -264,7 +267,7 @@ Then, if $P=Q$, we have
 $$\P\left(\frac{1}{N}\sum_{i=1}^n (X_i-Y_i) >\widehat{b} \right)\le \alpha $$ 
 \end{Lemma}
 \begin{proof}
-Denote $T(\sigma)= \frac{1}{N}\sum_{i=1}^n (Z_{\sigma(i)}-Z_{\sigma(n+i)})$. Since $P=Q$, for any $\sigma,\sigma' \in \S_{2N}$ we have $T(\sigma)=^d T(\sigma')$. Then, because $\widehat{b}$ does not depend on the permutation $\sigma$ (but it depends on the values of $Z_1^{2N}$, we have for any $\sigma \in \S_{2N}$
+Denote $T(\sigma)= \frac{1}{N}\sum_{i=1}^n (Z_{\sigma(i)}-Z_{\sigma(n+i)})$. Since $P=Q$, for any $\sigma,\sigma' \in \S_{2N}$ we have $T(\sigma)\dec T(\sigma')$. Then, because $\widehat{b}$ does not depend on the permutation $\sigma$ (but it depends on the values of $Z_1^{2N}$, we have for any $\sigma \in \S_{2N}$
 \begin{align*}
 \P\left(T(\id)> \widehat{b}\right)&=\P\left(T(\sigma)> \widehat{b}\right)
 \end{align*} 
@@ -277,93 +280,64 @@ which proves the result.
 \end{proof}
 
 
-More generally, Lemma~\ref{lem:quantile_permu_2} is true even for more general permutation tests. In particular, in our case we have
+The goal is to prove an equivalent of Lemma~\ref{lem:quantile_permu_2} for the case of multiple group-sequential permutation tests.
 
-\begin{Lemma}
-for any $j \in \textbf{I}$, then we have the following joint equality in distribution :
-$$\forall \sigma \in (\S_{2N})^k, \quad (T_N^{(j)}(\id))_{j \in\textbf{I}} =^d (T_N^{(j)}(\sigma))_{j \in \textbf{I}}.$$
-where $\textbf{I}$ is a subset of $\{1,\dots,J\}$ of true hypotheses.
-\end{Lemma}
-\begin{proof}
-The comparisons $(c_i)_{i \in \textbf{I}}$ describe the graph with the nodes being the agents denoted $1,\dots,L$ and $(i,j)$ has an edge if $(i,j)\in(c_i)_{i \in \textbf{I}}$ is one of the comparisons that correspond to a true hypothesis. This graph is not necessarily connected, we denote $C(i)$ the connected component to which node $i$ (e.g. agent $i$) belongs, i.e. for any $i,j \in C(i)$ there exists a path going from $i$ to $j$. $C(i)$ can be equal to the singleton $\{i\}$ if all the comparisons with $i$ are in fact false hypotheses.
-
-Now, let us look at how a concatenation of permutations $\sigma_1\cdot\ldots\cdot\sigma_m$ for $m\le k$ acts on the evaluations $e_{n,i}(j)$ for $i \le m$, $1\le n\le 2N$ and $j \in \mathcal{C}(i)$. We have
-\begin{align*}
-T_{N,k}^{(j)}(\sigma_1 \cdot  \sigma_2 \cdot  \ldots  \cdot  \sigma_k)&=  \left|\sum_{i=1}^k\left(\sum_{n=1}^{N} e_{\sigma_i(n),i}(j)-\sum_{n=N+1}^{2N} e_{\sigma_i(n),i}(j)\right)\right|
-\end{align*}
-
-Hence, $T_{N,k}^{(j)}(\sigma) = T_{N,k}^{(j)}(\sigma')$ where $\sigma'_i(n)=\sigma_i(n+N)$ if $n \le N$ and $\sigma_i(n) = \sigma_i(n-N)$ otherwise. This corresponds to changing the sign $-1$ to $+1$ inside the absolute value. Now, let us consider two different comparisons $j=(i_1,i_2)$ and $j'=(i_2,i_3)$, i.e. the two couples share one agent. We can consider that in both $T_{N,k}^{(j)}(\sigma)$ and $T_{N,k}^{(j')}(\sigma)$ the permutation acts in the same way on agent $i_2$.
-
-As a consequence transformation by $\sigma$ can be seen as a global transformation of the concatenation of all the points (with repetition removed) $(e_{n,i}(j), e_{n,i}(j))_{n\le N, i\le k,j\in \textbf{I}}$. Moreover, we have that for any connected composant $\mathcal{C}$ in the graph, the random variables $(e_{n,i}(j), e_{n,i}(j))_{n\le N, i\le k,j\in \mathcal{C}}$ are i.i.d because all comparisons of $\mathcal{C}$ correspond true hypotheses $P_i = P_j$ and by transitivity of the equality, all the laws are equal in the whole connected component.
-
-Let $\mathcal{C}$ be one connected composant in the graph. Let us consider the function $\textbf{T}_k : \R^{N}\times\R^k\times\R^{\textbf{I}}\to \R^{Bk|\mathcal{C}|}$ defined by $$\textbf{T}_k\left((e_{n,i}(j))_{n\le N, i\le k,j\in \mathcal{C}}\right) =(T_{N,i}^{(j)}(\id))_{i\le k, j \in \mathcal{C}}$$
-$\textbf{T}_k$ is a function of the sample $(e_{n,i}(j))_{n\le N, i\le k,j\in \mathcal{C}}$ and this sample is independent and with the same law, hence the law of $(e_{n,i}(j))_{n\le N, i\le k,j\in \mathcal{C}}$ is invariant by permutation and this implies that for any $\sigma$, we have $\textbf{T}_k\left((e_{n,i}(j))_{n\le N, i\le k,j\in \mathcal{C}}\right) =^d \textbf{T}_k\left((e_{\sigma_i(n),i}(j))_{n\le N, i\le k,j\in \mathcal{C}}\right)$ which implies that $(T_{N,i}^{(j)}(\id))_{i\le k, j \in \mathcal{C}}=(T_{N,i}^{(j)}(\sigma))_{i\le k, j \in \mathcal{C}}$ for any $\sigma$ concatenation of $k$ permutations.
-
-Now, having that by construction the connected components are each independent of each other in the sense that the hypotheses corresponding to the nodes are independent of each other. Hence, having that $(T_{N,i}^{(j)}(\id))_{i\le k, j \in \mathcal{C}}=(T_{N,i}^{(j)}(\sigma))_{i\le k, j \in \mathcal{C}}$ for each connected component $\mathcal{C}$ implies that this is also true for the union of the connected component. Hence the result.
-
-\end{proof}
-
-% By convention, let $f^+\left(\frac{-1}{K}\right)=0$. We have,
-% \begin{Lemma}
-% Let $(X_{i,j})_{i\le n, j\le J}$ be i.i.d from a distribution $P_1,\dots,P_J$. Let $\textbf{I}$ be a set of comparisons $(i,j)$ for which we have $P_i=P_j$ is true. Let $\alpha \in (0,1)$ and define $\widehat{b}_{n}^{(\textbf{I}^+)}$ as in Algorithm~\ref{algo:main}, we have
-% $$\P\left(T_{N,k}^{(\widehat{\textbf{I}}_k^+)}(\id) > \widehat{b}_{N,k}^{(\widehat{\textbf{I}}_k^+)}\Big| \forall m < k  \quad T_{N,m}^{(\textbf{I}^+)}(\sigma) \le   \widehat{b}_{N,m}^{(\textbf{I}^+)}\right)\le f^{+}\left(\frac{k}{K}\right)- f^{+}\left(\frac{k-1}{K}\right).$$
+% \begin{Lemma}\label{lem:invariance} 
+% for any $j \in \textbf{I}$, then we have the following joint equality in distribution :
+% $$\forall \sigma \in (\S_{2N})^k, \quad (T_N^{(j)}(\id))_{j \in\textbf{I}} =^d (T_N^{(j)}(\sigma))_{j \in \textbf{I}}.$$
+% where $\textbf{I}$ is a subset of $\{1,\dots,J\}$ of true hypotheses.
 % \end{Lemma}
 % \begin{proof}
-% For  $\textbf{J}\subset \textbf{I}$,  denote 
-% $$E_k(\sigma,\textbf{J}) = \left\{\forall m < k, T_{N,m}^{(\textbf{I}^+)}(\sigma) \le   \widehat{b}_{N,m}^{(\textbf{I}^+)} \text{ and }T_{N,m}^{(\textbf{J}^-)}(\sigma) \ge   \widehat{b}_{N,m}^{(\textbf{J}^-)}\right\}$$
-% which correspond to the event  ``did not reject any true hypotheses and did nor accept any $H_j$ for $j  \in \textbf{J}$ before interim k after permutation by $\sigma$''.  Denote by $\textbf{C}_k$ the (random) value of $\textbf{C}$ at the beginning of interim $k$. 
-% We have
+% The comparisons $(c_i)_{i \in \textbf{I}}$ describe the graph with the nodes being the agents denoted $1,\dots,L$ and $(i,j)$ has an edge if $(i,j)\in(c_i)_{i \in \textbf{I}}$ is one of the comparisons that correspond to a true hypothesis. This graph is not necessarily connected, we denote $C(i)$ the connected component to which node $i$ (e.g. agent $i$) belongs, i.e. for any $i,j \in C(i)$ there exists a path going from $i$ to $j$. $C(i)$ can be equal to the singleton $\{i\}$ if all the comparisons with $i$ are in fact false hypotheses.
+
+% Now, let us look at how a concatenation of permutations $\sigma_1\cdot\ldots\cdot\sigma_m$ for $m\le k$ acts on the evaluations $e_{n,i}(j)$ for $i \le m$, $1\le n\le 2N$ and $j \in \mathcal{C}(i)$. We have
 % \begin{align*}
-% \P&\left(T_{N,k}^{(\textbf{C}_k^+)}(\id) > \widehat{b}_{N,k}^{(\textbf{C}_k^+)}, \forall m < k  \quad T_{N,m}^{(\textbf{I}^+)}(\id) \le   \widehat{b}_{N,m}^{(\textbf{I}^+)} \right)\\
-% &= \P\left(T_{N,k}^{(\textbf{C}_k^+)}(\id) > \widehat{b}_{N,k}^{(\textbf{C}_k^+)} , \forall m < k  \quad T_{N,m}^{(\textbf{I}^+)}(\id) \le   \widehat{b}_{N,m}^{(\textbf{I}^+)}\right) \\
-% &=\P\left(\max\{ T_{N,k}^{(j)}(\id), j \in \textbf{C}_k\} > \widehat{b}_{N,k}^{(\textbf{C}_k^+)} , E_k(\id,\textbf{C}_k)\right)
+% T_{N,k}^{(j)}(\sigma_1 \cdot  \sigma_2 \cdot  \ldots  \cdot  \sigma_k)&=  \left|\sum_{i=1}^k\left(\sum_{n=1}^{N} e_{\sigma_i(n),i}(j)-\sum_{n=N+1}^{2N} e_{\sigma_i(n),i}(j)\right)\right|
 % \end{align*}
 
-% Let $\widehat{\textbf{I}}_k$ the (random) set of true hypotheses not yet accepted or rejected at interim $k$. Remark that having that on the event $E_k(\sigma,J)$, we never rejected any hypothesis from $\textbf{I}$ before interim $k$, and interim $k$ correspond to a reject of an hypothesis from $\textbf{I}_k$: there exists $ \widehat{j} \in \textbf{I}_k$ such that $\max\{ T_{N,k}^{(j)}(\id), j \in\textbf{C}_k\} = T_{N,k}^{(\widehat{j})}(\id)$. Hence, we have
-% $$\max\{ T_{N,k}^{(j)}(\id), j \in\textbf{C}_k\} =\max\{ T_{N,k}^{(j)}(\id ), j \in \widehat{\textbf{I}}_k\}. $$
+% Hence, $T_{N,k}^{(j)}(\sigma) = T_{N,k}^{(j)}(\sigma')$ where $\sigma'_i(n)=\sigma_i(n+N)$ if $n \le N$ and $\sigma_i(n) = \sigma_i(n-N)$ otherwise. This corresponds to changing the sign $-1$ to $+1$ inside the absolute value. Now, let us consider two different comparisons $j=(i_1,i_2)$ and $j'=(i_2,i_3)$, i.e. the two couples share one agent. We can consider that in both $T_{N,k}^{(j)}(\sigma)$ and $T_{N,k}^{(j')}(\sigma)$ the permutation acts in the same way on agent $i_2$.
 
-% And moreover, we also have that at interim $k$, $\textbf{C}_k \supset \widehat{\textbf{I}}_k$ because initially $\textbf{I} \subset \textbf{C}_1$ and any accepted hypotheses were removed from both $\textbf{C}_1$ and from $\textbf{I}$ to give $\textbf{C}_k$ and  $\widehat{\textbf{I}}_k$ respectively. Hence
-% $\widehat{b}_{N,k}^{(\textbf{C}_k^+)} \ge \widehat{b}_{N,k}^{(\widehat{\textbf{I}}_k^+)} $, and we have 
+% As a consequence transformation by $\sigma$ can be seen as a global transformation of the concatenation of all the points (with repetition removed) $(e_{n,i}(j), e_{n,i}(j))_{n\le N, i\le k,j\in \textbf{I}}$. Moreover, we have that for any connected composant $\mathcal{C}$ in the graph, the random variables $(e_{n,i}(j), e_{n,i}(j))_{n\le N, i\le k,j\in \mathcal{C}}$ are i.i.d because all comparisons of $\mathcal{C}$ correspond true hypotheses $P_i = P_j$ and by transitivity of the equality, all the laws are equal in the whole connected component.
 
+% Let $\mathcal{C}$ be one connected composant in the graph. Let us consider the function $\textbf{T}_k : \R^{N}\times\R^k\times\R^{\textbf{I}}\to \R^{Bk|\mathcal{C}|}$ defined by $$\textbf{T}_k\left((e_{n,i}(j))_{n\le N, i\le k,j\in \mathcal{C}}\right) =(T_{N,i}^{(j)}(\id))_{i\le k, j \in \mathcal{C}}$$
+% $\textbf{T}_k$ is a function of the sample $(e_{n,i}(j))_{n\le N, i\le k,j\in \mathcal{C}}$ and this sample is independent and with the same law, hence the law of $(e_{n,i}(j))_{n\le N, i\le k,j\in \mathcal{C}}$ is invariant by permutation and this implies that for any $\sigma$, we have $\textbf{T}_k\left((e_{n,i}(j))_{n\le N, i\le k,j\in \mathcal{C}}\right) =^d \textbf{T}_k\left((e_{\sigma_i(n),i}(j))_{n\le N, i\le k,j\in \mathcal{C}}\right)$ which implies that $(T_{N,i}^{(j)}(\id))_{i\le k, j \in \mathcal{C}}=(T_{N,i}^{(j)}(\sigma))_{i\le k, j \in \mathcal{C}}$ for any $\sigma$ concatenation of $k$ permutations.
+
+% Now, having that by construction the connected components are each independent of each other in the sense that the hypotheses corresponding to the nodes are independent of each other. Hence, having that $(T_{N,i}^{(j)}(\id))_{i\le k, j \in \mathcal{C}}=(T_{N,i}^{(j)}(\sigma))_{i\le k, j \in \mathcal{C}}$ for each connected component $\mathcal{C}$ implies that this is also true for the union of the connected component. Hence the result.
+
+% \end{proof}
+% Define $\tilde{e}_{n,k}(j; \sigma_1^{k-1})$ conditionally on $\mathcal{F}_{k-1}$ as follows. 
+% $$\tilde{e}_{n,k}(j; \sigma_1^{k-1}) = \begin{cases} 
+% e_{n,k}(j) & \text{ if } \tilde{T}_{N,k-1}^{(j)}(\sigma_1^{k-1})  \ge \widehat{b}_{N,k-1}^{(\textbf{C}_{k-1}^-)}\\
+% 0 & \text{ if } \tilde{T}_{N,k-1}^{(j)}(\sigma_1^{k-1}) < \widehat{b}_{N,k-1}^{(\textbf{C}_{k-1}^-)}
+% \end{cases}
+% $$
+
+% % Conditional invariance, Lemma 8.8 in https://link.springer.com/book/10.1007/978-3-030-61871-1
+
+% where we define recursively $\tilde{T}_{N,1}^{(j)}(\sigma) =\left|\left(\sum_{n=1}^{N} e_{\sigma_1(n),1}(j)-\sum_{n=N+1}^{2N} e_{\sigma_1(n),1}(j)\right)\right| $ and $$\tilde{T}_{N,k}^{(j)}(\sigma) = \left|\sum_{i=1}^k\left(\sum_{n=1}^{N} \tilde{e}_{\sigma_k(n),k}(j; \sigma_1^{k-1})-\sum_{n=N+1}^{2N}  \tilde{e}_{\sigma_k(n),k}(j; \sigma_1^{k-1})\right)\right|.$$
+% Remark that $\tilde{T}_{N,k}^{(j)}(\sigma)$ verifies then $\tilde{T}_{N,k}^{((\textbf{I}\cup \textbf{C}_k)^+)}(\sigma) = T_{N,k}^{(\textbf{C}_k^+)}(\sigma)$ and hence 
+% $$\frac{1}{((2N)!)^k}\sum_{\sigma \in S_k} \1\{\tilde{T}_{N,k}^{((\textbf{I}\cup \textbf{C}_k)^+)}(\sigma) \ge  \widehat{b}_{N,k}^{(\textbf{C}_k^+)}\} = \frac{1}{((2N)!)^k}\sum_{\sigma \in S_k} \1\{T_{N,k}^{(\textbf{C}_k^+)}(\sigma) \ge  \widehat{b}_{N,k}^{(\textbf{C}_k^+)}\} \le   f^+\left(\frac{k}{K}\right) -f^+\left(\frac{k-1}{K}\right)   .$$
+% \begin{Lemma}
+% On the event that no true hypothesis has been rejected yet, $\tilde{T}_{N,k}^{(I^+)}(\sigma) =^d\tilde{T}_{N,k}^{(I^+)}(\id) $
+% \end{Lemma}
+% \begin{proof}
+% We have for any $t_k,t_{k-1}>0$
 % \begin{align*}
-% \1\left\{\max\{ T_{N,k}^{(j)}(\id), j \in \textbf{C}_k\} > \widehat{b}_{N,k}^{(\textbf{C}_k^+)},  E_k(\id, \textbf{C}_k)\right\}  &\le \1\left\{\max\{ T_{N,k}^{(j)}(\id), j \in \widehat{\textbf{I}}_k\} > \widehat{b}_{N,k}^{(\widehat{\textbf{I}}_k^+)}\right\}
+% \P &\left(\tilde{T}_{N,k}^{(I^+)}(\sigma _1^k) > \widehat{b}_{n,k}^{(I^+)}, \mathrm{NR}_{k-1}(\sigma_1^{k-1})\right)\\
+% &= \E\left[ \P \left(\tilde{T}_{N,k}^{(I^+)}(\sigma _1^k) > \widehat{b}_{n,k}^{(I^+)}, \mathrm{NR}_{k-1}(\sigma_1^{k-1}) \Big| \tilde{T}_{N,k-1}^{(I^+)}(\sigma _1^{k-1})\right)\right] \\
+% &=  \E\left[ \P \left(\tilde{T}_{N,k}^{(I^+)}(\sigma _1^k) > \widehat{b}_{n,k}^{(I^+)} \Big| \tilde{T}_{N,k-1}^{(I^+)}(\sigma _1^{k-1})\right) \1\{\mathrm{NR}_{k-1}(\sigma_1^{k-1})\}\right]
 % \end{align*}
-% Hence,
+% Then, we have that $(\tilde e_{n,k}^{(j)}(\sigma_k))_{n\le 2N, j \in \mathcal{I}}$ is invariant by permutation conditionally on the value of $\tilde{T}_{N,k-1}^{(I^+)}(\sigma _1^{k-1})$. Indeed, either $(\tilde e_{n,k}^{(j)}(\sigma_k))_{n\le 2N}$ are all $0$ in which case permutation don't change anything, either they are not $0$ in which case they are equal to $(e_{n,k}^{(j)}(\sigma_k))$ which, because they are i.i.d, have a law that does not change by permutation. Then, we have
+% $$\P \left(\tilde{T}_{N,k}^{(I^+)}(\sigma _1^k) > \widehat{b}_{n,k}^{(I^+)} \Big| \tilde{T}_{N,k-1}^{(I^+)}(\sigma _1^{k-1})\right)=\P \left(\tilde{T}_{N,k}^{(I^+)}(\sigma _1^{k-1}\cdot \id) > \widehat{b}_{n,k}^{(I^+)} \Big| \tilde{T}_{N,k-1}^{(I^+)}(\sigma _1^{k-1})\right) $$
+% and
 % \begin{align*}
-% \P\left(T_{N,k}^{(\textbf{C}_k^+)}(\id) > \widehat{b}_{N,k}^{(\textbf{C}_k^+)}, \forall m < k  \quad T_{N,m}^{(\textbf{I}^+)}(\id) \le   \widehat{b}_{N,m}^{(\textbf{I}^+)} \right)&\le \P\left(\max\{ T_{N,k}^{(j)}(\id), j \in \widehat{\textbf{I}}_k\} > \widehat{b}_{N,k}^{(\widehat{\textbf{I}}_k^+)} \right)
-% \end{align*}
-
-
-% Then, then we have the joint equality in distribution $(T_N^{(j)}(\id))_{j \in\textbf{I}} =^d (T_N^{(j)}(\sigma))_{\textbf{I}}$ for any $\sigma \in (\S_{2N})^k$. 
-% \begin{align*}
-% \P\left(T_{N,k}^{(\textbf{C}_k^+)}(\id) > \widehat{b}_{N,k}^{(\textbf{C}_k^+)}, \forall m < k  \quad T_{N,m}^{(\textbf{I}^+)}(\id) \le   \widehat{b}_{N,m}^{(\textbf{I}^+)} \right)&\le \frac{1}{((2N)!)^k}\sum_{\sigma_1,\dots,\sigma_k \in \S_{2N}}\P\left(\max\{ T_{N,k}^{(j)}(\sigma), j \in \widehat{\textbf{I}}_k\} > \widehat{b}_{N,k}^{(\widehat{\textbf{I}}_k^+)} \right)
-% \end{align*}
-
-
-% \begin{align*}
-% \P&\left(\max\{ T_{N,k}^{(j)}(\id), j \in \textbf{J}\} > \widehat{b}_{N,k}^{(\textbf{J}^+)} ,\textbf{J} = \textbf{C}_k, E_k(\id,\textbf{J})\right)\\
-% &= \frac{1}{((2N)!)^k}\sum_{\sigma_1,\dots,\sigma_k \in \S_{2N}} \P\left(\max\{ T_{N,k}^{(j)}(\sigma), j \in \textbf{J}\} > \widehat{b}_{N,k}^{(\textbf{J}^+)} ,  \textbf{J} = \textbf{C}_k,E_k(\sigma,\textbf{J})\right)\\
-% &= \frac{1}{((2N)!)^k} \E\left[\sum_{\sigma_1,\dots,\sigma_k \in \S_{2N}}\1\left\{\max\{ T_{N,k}^{(j)}(\sigma), j \in \textbf{J}\} > \widehat{b}_{N,k}^{(\textbf{J}^+)} , \textbf{J} = \textbf{C}_k,E_k(\sigma,\textbf{J})\right\}\right]\\
-% \end{align*}
-% \begin{align*}
-% \P&\left(\max\{ T_{N,k}^{(j)}(\id), j \in \textbf{J}\} > \widehat{b}_{N,k}^{(\textbf{J}^+)} ,\textbf{J} = \widehat{\textbf{I}}_k, E_k(\id,\textbf{J})\right)\\
-% &\le  \left(f^{+}\left(\frac{k}{K}\right)- f^{+}\left(\frac{k-1}{K}\right)\right)\E\left[\frac{1}{((2N)!)^k} |S_k|\1\{\textbf{J} = \widehat{\textbf{I}}_k\}\right]\\
-% &=  \left(f^{+}\left(\frac{k}{K}\right)- f^{+}\left(\frac{k-1}{K}\right)\right)\E\left[\frac{1}{((2N)!)^k} \sum_{ \sigma_1,\dots,\sigma_k \in \S_{2N}}\1\{E_k(\sigma, \textbf{J}), \textbf{J} = \widehat{\textbf{I}}_k\}\right]\\
-% &= \left(f^{+}\left(\frac{k}{K}\right)- f^{+}\left(\frac{k-1}{K}\right)\right)\frac{1}{((2N)!)^k} \sum_{ \sigma_1,\dots,\sigma_k \in \S_{2N}} \P(E_k(\sigma, \textbf{J}), \textbf{J} = \widehat{\textbf{I}}_k )\\
-% &= \left(f^{+}\left(\frac{k}{K}\right)- f^{+}\left(\frac{k-1}{K}\right)\right)
-%  \P(E_k(\id, \textbf{J}), \textbf{J} = \widehat{\textbf{I}}_k )\\
-% &\le \left(f^{+}\left(\frac{k}{K}\right)- f^{+}\left(\frac{k-1}{K}\right)\right)
-%  \P( \textbf{J} = \widehat{\textbf{I}}_k )
-% \end{align*}
-% Hence,
-% \begin{align*}
-% \P\left(T_{N,k}^{(\widehat{\textbf{I}}_k^+)}(\id) > \widehat{b}_{N,k}^{(\widehat{\textbf{I}}_k^+)} \right)&= \sum_{ \textbf{J}\subset \textbf{I} }\P\left(\max\{ T_{N,k}^{(j)}(\id), j \in \textbf{J}\} > \widehat{b}_{N,k}^{(\textbf{J}^+)} ,  E_k(\id,\textbf{J}), \textbf{J} = \widehat{\textbf{I}}_k\right)\\
-% &\le \sum_{ \textbf{J}\subset \textbf{I} }\left(f^{+}\left(\frac{k}{K}\right)- f^{+}\left(\frac{k-1}{K}\right)\right)\P( \textbf{J} = \widehat{\textbf{I}}_k ) \\
-% &= f^{+}\left(\frac{k}{K}\right)- f^{+}\left(\frac{k-1}{K}\right).
+% \P &\left(\tilde{T}_{N,k}^{(I^+)}(\sigma _1^k) > \widehat{b}_{n,k}^{(I^+)}, \mathrm{NR}_{k-1}(\sigma_1^{k-1})\right)\\
+% &= \E\left[ \P \left(\tilde{T}_{N,k}^{(I^+)}(\sigma _1^{k-1}\cdot \id ) > \widehat{b}_{n,k}^{(I^+)} \Big| \tilde{T}_{N,k-1}^{(I^+)}(\sigma _1^{k-1})\right) \1\{\mathrm{NR}_{k-1}(\sigma_1^{k-1})\}\right]\\
+% &= \P \left(\tilde{T}_{N,k}^{(I^+)}(\sigma _1^{k-1}\cdot \id) > \widehat{b}_{n,k}^{(I^+)}, \mathrm{NR}_{k-1}(\sigma_1^{k-1})\right)\\
+% &= \P \left(\tilde{T}_{N,k}^{(I^+)}(\sigma _1^{k-1}\cdot \id) > \widehat{b}_{n,k}^{(I^+)}, \tilde{T}_{N,k-1}^{(I^+)}(\sigma _1^{k-1}) \le  \widehat{b}_{n,k-1}^{(I^+)},\mathrm{NR}_{k-2}(\sigma_1^{k-2})\right)\\
+% &= \E\left[ \P \left(\tilde{T}_{N,k}^{(I^+)}(\sigma _1^{k-1}\cdot \id ) > \widehat{b}_{n,k}^{(I^+)},  \tilde{T}_{N,k-1}^{(I^+)}(\sigma _1^{k-1}) \le  \widehat{b}_{n,k-1}^{(I^+)} \Big| \tilde{T}_{N,k-2}^{(I^+)}(\sigma _1^{k-2})\right) \1\{\mathrm{NR}_{k-2}(\sigma_1^{k-2})\}\right]\\
 % \end{align*}
 % \end{proof}
-
-
 
 \subsubsection{Multiple group sequential testing}
 First we prove that the multiple testing scheme is correct for testing $ P_j = P_k$ against $ P_j \neq P_k$ for all the couples $j \neq k$. 
@@ -375,46 +349,37 @@ Suppose that $\beta = 0$, for any $\alpha \in (0,1)$ and any non-decreasing leve
 \begin{proof}
 Denote 
 $$\mathrm{NR}_k(\sigma) = \left\{\forall m < k,\quad  T_{N,m}^{(\textbf{I}^+)}(\sigma_1\cdot\ldots\cdot\sigma_m) \le   \widehat{b}_{N,m}^{(\textbf{I}^+)}\right\}$$
-and
-$$\mathrm{NA}_k(\sigma, \textbf{J}) = \left\{\forall m < k,\quad  T_{N,m}^{(\textbf{J}^-)}(\sigma_1\cdot\ldots\cdot\sigma_m) \ge   \widehat{b}_{N,m}^{(\textbf{J}^-)}\right\}$$
-$\mathrm{NR}_k(\sigma)$ is the event on which the statistics corresponding to true hypotheses, computed after permutation by $\sigma=\sigma_1\cdot \ldots \cdot \sigma_k$, are not rejected and $\mathrm{NA}_k(\sigma, \textbf{J})$ is the event on which none of the comparison from $\textbf{J}$ have been rejected after permutation by $\sigma$.
+$\mathrm{NR}_k(\sigma)$ is the event on which the statistics corresponding to true hypotheses, computed after permutation by $\sigma=\sigma_1\cdot \ldots \cdot \sigma_k$, are not rejected.
 
 Denote by $\textbf{C}_k$ the (random) value of $\textbf{C}$ at the beginning of interim $k$. 
 
-
 Let $\textbf{I}$ be the set of true hypotheses. Let E be the following event
 $$\mathrm{E}= \{ \exists j \in \textbf{I}: \quad H_j \text{ is rejected}\}.$$
+Contrary to Lemma~\ref{lem:quantile_permu_2}, we are in a multiple-testing framework and there may be a mix of true hypotheses and false hypotheses and we have to reduce the problem to studying only true hypotheses because we don't have any informations on the distributions when the hypotheses are false.
+\begin{Lemma}\label{lem:multiple_test_FWE}
 We have 
-\begin{multline*}\label{eq:multi1}
-\P_\sigma\left(\text{E is true} \right)= \sum_{k=1}^K \P\left( \exists j \in \textbf{I}: \quad H_j\text{ is rejected at interim $k$ }|\text{there were no rejection before interim $k$}\right)\\
-\le   \sum_{k=1}^K  \P\left(\exists \textbf{J}:\quad  T_{N,k}^{(\textbf{J}^+)}(\id) > \widehat{b}_{N,k}^{(\textbf{J}^+)}, \mathrm{NR}_k(\id), \mathrm{NA}_k(\id, \textbf{J}), \arg\max_{j \in \textbf{J}}T_{N,k}^{(j)}(\id) \in \textbf{I}, \forall \textbf{C}_k \supset \textbf{J}'\supsetneq\textbf{J} \quad  \arg\max_{j \in \textbf{J}'}T_{N,k}^{(j)}(\id) \notin \textbf{I} \right)
-\end{multline*}
-$\mathrm{NR}_k(\id)$ means that we look at the first interim that rejects, $\arg\max_{j \in \textbf{J}}T_{N,k}^{(j)}(\id) \in \textbf{I}$ means that we reject a true hypothesis, and $\forall \textbf{C}_k \supset \textbf{J}'\supsetneq \textbf{J} \quad  \arg\max_{j \in \textbf{J}'}T_{N,k}^{(j)}(\id) \notin \textbf{I} $ means that $\textbf{J}$ corresponds to the set for the first rejection of a true hypothesis (there can be several rejection of false hypotheses or acceptation of hypotheses before but not rejection of a true hypothesis). 
-We denote 
-$$\mathrm{FWE}_k =  \P\left(\exists \textbf{J}:\quad  T_{N,k}^{(\textbf{J}^+)}(\id) > \widehat{b}_{N,k}^{(\textbf{J}^+)}, \mathrm{NR}_k(\id), \mathrm{NA}_k(\id, \textbf{J}), \arg\max_{j \in \textbf{J}}T_{N,k}^{(j)}(\id) \in \textbf{I}, \forall \textbf{C}_k \supset \textbf{J}'\supsetneq\textbf{J} \quad  \arg\max_{j \in \textbf{J}'}T_{N,k}^{(j)}(\id) \notin \textbf{I} \right),$$ 
-the error of interim $k$ and by convention we take $f^+(-1/K)=0$.
+$$\mathrm{FWE} = \P_\sigma\left(\text{E is true} \right) \le \sum_{k=1}^K\P\left( T_{N,k}^{(\textbf{I}^+)}(\id) > \widehat{b}_{N,k}^{(\textbf{I}^+)}, \mathrm{NR}_k(\id)\right)  $$
+\end{Lemma}
+Then, similarly as in the proof of Lemma~\ref{lem:quantile_permu_2}, because we managed to reduce the problem to consider only true hypotheses thanks to Lemma~\ref{lem:multiple_test_FWE}, we want to use the invariance by permutation to make the link with the definition of $\widehat{b}_{N,k}^{(\textbf{I}^+)}$. For this purpose, we prove the following Lemma.
 
-Let $\textbf{J}\cap \textbf{I} = \textbf{I}_k$.
-Remark that on $$\mathrm{NR}_k(\id) \cap \{\arg\max_{j \in \textbf{J}}T_{N,k}^{(j)}(\id) \in \textbf{I}\}\cap\{ \forall \textbf{C}_k \supset \textbf{J}'\supsetneq\textbf{J} \quad  \arg\max_{j \in \textbf{J}'}T_{N,k}^{(j)}(\id) \notin \textbf{I}\}  $$
-$\textbf{J}$ corresponds to the first rejection to occur. Hence, having that the argmax is attaind in $\textbf{I}$,
-$$T_{N,k}^{(\textbf{J}^+)}(\id)= \max\{T_{N,k}^{(j)}(\id), j \in \textbf{J}\} = \max\{T_{N,1}^{(j)}(\id), j \in \textbf{I}\cap \textbf{J}\} = T_{N,k}^{(\textbf{I}_k^+)}(\id)$$
-Moreover, having $\textbf{J} \supset \textbf{I}_k$, we have $\widehat{b}_{N,k}^{(\textbf{J}^+)} \ge \widehat{b}_{N,k}^{(\textbf{I}_k^+)}$. And finally, we have 
-\begin{align*}
-\mathrm{FWE}_k\le \P\left(\exists \textbf{J} : \quad T_{N,k}^{(\textbf{I}_k^+)}(\id) > \widehat{b}_{N,k}^{(\textbf{I}_k^+)}, \mathrm{NR}_k(\id), \mathrm{NA}_k(\id, \mathrm{J}), \textbf{J}\cap \textbf{I} = \textbf{I}_k \right)
-\end{align*}
-Then, having that $\mathrm{NA}_k(\id, \mathrm{J}) \Rightarrow \mathrm{NA}_k(\id, \mathrm{I}_k)$, we have that 
-\begin{align*}
-\mathrm{FWE}_k\le \P\left(\exists \textbf{I}_k \subset \textbf{I} : \quad T_{N,k}^{(\textbf{I}_k^+)}(\id) > \widehat{b}_{N,k}^{(\textbf{I}_k^+)}, \mathrm{NR}_k(\id), \mathrm{NA}_k(\id, \mathrm{I}_k) \right)
-\end{align*}
 
-now, because we are only dealing with true hypotheses, we can apply the invariance principle from Lemma~\ref{lem:invariance} which assure the joint equality in distribution of $(T_{N,1}^{(j)}(\id))_{j \in \textbf{I}}$ and $( T_{N,1}^{(j)}(\sigma))_{j \in \textbf{I}}$ for any $\sigma \in (\S_{2N})^k$ to have
+\begin{Lemma}\label{lem:invariance}
+We have that for $k \le K$, for any $\sigma$ concatenation of $k$ permutations, 
+$$(T_{N,i}^{(\textbf{I}^+)}(\id),\widehat{b}_{N,i}^{(\textbf{I}^+)})_{i\le k}=(T_{N,i}^{(\textbf{I}^+)}(\sigma_1^i), \widehat{b}_{N,i}^{(\textbf{I}^+)})_{i\le k}$$
+\end{Lemma}
+Using Lemma~\ref{lem:invariance}, we have for any $\sigma$
+$$\P\left(T_{N,k}^{(\textbf{I}^+)}(\id) > \widehat{b}_{N,k}^{(\textbf{I}^+)}, \mathrm{NR}_k(\id ) \right) = \P\left(T_{N,k}^{(\textbf{I}^+)}(\sigma) > \widehat{b}_{N,k}^{(\textbf{I}^+)}, \mathrm{NR}_k(\sigma) \right)$$
+
+Hence, from Lemma~\ref{lem:multiple_test_FWE},
+
 \begin{align*}
-\mathrm{FWE}_k &\le \frac{1}{((2N)!)^k}\sum_{\sigma_1,\dots,\sigma_k \in \S_{2N}}\P\left(\exists \textbf{J}:\quad  T_{N,k}^{(\textbf{I}_k^+)}(\sigma) > \widehat{b}_{N,k}^{(\textbf{I}_k^+)}, \mathrm{NR}_k(\sigma),\mathrm{NA}_k(\sigma, \textbf{I}_k)) \right)\\
-&= \E\left[\frac{1}{((2N)!)^k}\sum_{\sigma \in (\S_{2N})^k}\1\left\{ T_{N,k}^{(\textbf{I}^+)}(\sigma) > \widehat{b}_{N,k}^{(\textbf{I}^+)}, E_k(\sigma)\right\} \right]\\
-&\le \E\left[\frac{1}{((2N)!)^k}\sum_{\sigma \in (S_k)^k}\1\left\{ T_{N,k}^{(\textbf{I}^+)}(\sigma) > \widehat{b}_{N,k}^{(\textbf{I}^+)}\right\} \right]\\
-&\le f^+\left(\frac{k}{K}\right)-f^+\left(\frac{k-1}{K}\right)\\
+\mathrm{FWE} &\le \sum_{k=1}^K\frac{1}{((2N)!)^k}\sum_{\sigma_1,\dots,\sigma_k \in \S_{2N}}\P\left(T_{N,k}^{(\textbf{I}^+)}(\sigma) > \widehat{b}_{N,k}^{(\textbf{I}^+)}, \mathrm{NR}_k(\sigma) \right)\\
+&= \sum_{k=1}^K\E\left[\frac{1}{((2N)!)^k}\sum_{\sigma \in (\S_{2N})^k}\1\left\{ T_{N,k}^{(\textbf{I}^+)}(\sigma) > \widehat{b}_{N,k}^{(\textbf{I}^+)}, \mathrm{NR}_k(\sigma)\right\} \right]\\
+&= \sum_{k=1}^K \E\left[\frac{1}{((2N)!)^k}\sum_{\sigma \in S_k}\1\left\{ T_{N,k}^{(\textbf{I}^+)}(\sigma) > \widehat{b}_{N,k}^{(\textbf{I}^+)}\right\} \right]\\
+&\le \sum_{k=1}^K\left(f^+\left(\frac{k}{K}\right)-f^+\left(\frac{k-1}{K}\right)\right)\\
+&= \alpha
 \end{align*}
-the last inequality follows by definition of $\widehat{b}_{N,k}^{(\textbf{I}^+)}$.
+where we used the definition of $\widehat{b}_{N,k}^{(\textbf{I}^+)}$ to make the link with the increments of the level-spending function $f^+\left(\frac{k}{K}\right)-f^+\left(\frac{k-1}{K}\right)$.
 \end{proof}
 
 
@@ -426,7 +391,54 @@ the last inequality follows by definition of $\widehat{b}_{N,k}^{(\textbf{I}^+)}
 
 \appendix
 
+\section{Proof of Lemmas}
+\subsection{Proof of Lemma~\ref{lem:multiple_test_FWE}}
 
+
+We have 
+\begin{multline*}\label{eq:multi1}
+\P_\sigma\left(\text{E is true} \right)= \sum_{k=1}^K \P\left( \exists j \in \textbf{I}: \quad H_j\text{ is rejected at interim $k$ },\forall j \in \textbf{I}: \quad H_j\text{was not rejected before interim $k$}\right)\\
+\le   \sum_{k=1}^K  \P\left(T_{N,k}^{(\textbf{J}^+)}(\id) > \widehat{b}_{N,k}^{(\textbf{J}^+)}, \mathrm{NR}_k(\id),\arg\max_{j \in \textbf{J}}T_{N,k}^{(j)}(\id) \in \textbf{I}, \forall \textbf{C}_k \supset \textbf{J}'\supsetneq\textbf{J} \quad  \arg\max_{j \in \textbf{J}'}T_{N,k}^{(j)}(\id) \notin \textbf{I} \right)
+\end{multline*}
+$\mathrm{NR}_k(\id)$ means that we look at the first interim that rejects, $\arg\max_{j \in \textbf{J}}T_{N,k}^{(j)}(\id) \in \textbf{I}$ means that we reject a true hypothesis, and $\forall \textbf{C}_k \supset \textbf{J}'\supsetneq \textbf{J} \quad  \arg\max_{j \in \textbf{J}'}T_{N,k}^{(j)}(\id) \notin \textbf{I} $ means that $\textbf{J}$ corresponds to the set for the first rejection of a true hypothesis (there can be several rejection of false hypotheses or acceptation of hypotheses before but not rejection of a true hypothesis). 
+We denote 
+$$\mathrm{FWE}_k =  \P\left(\exists \textbf{J}:\quad  T_{N,k}^{(\textbf{J}^+)}(\id) > \widehat{b}_{N,k}^{(\textbf{J}^+)}, \mathrm{NR}_k(\id), \arg\max_{j \in \textbf{J}}T_{N,k}^{(j)}(\id) \in \textbf{I}, \forall \textbf{C}_k \supset \textbf{J}'\supsetneq\textbf{J} \quad  \arg\max_{j \in \textbf{J}'}T_{N,k}^{(j)}(\id) \notin \textbf{I} \right),$$ 
+the error of interim $k$ and by convention we take $f^+(-1/K)=0$.
+
+Remark that on $$\mathrm{NR}_k(\id) \cap \{\arg\max_{j \in \textbf{J}}T_{N,k}^{(j)}(\id) \in \textbf{I}\}\cap\{ \forall \textbf{C}_k \supset \textbf{J}'\supsetneq\textbf{J} \quad  \arg\max_{j \in \textbf{J}'}T_{N,k}^{(j)}(\id) \notin \textbf{I}\}  $$
+$\textbf{J}$ corresponds to the first rejection to occur. Hence, having that the argmax is attaind in $\textbf{I}$,
+$$T_{N,k}^{(\textbf{J}^+)}(\id)= \max\{T_{N,k}^{(j)}(\id), j \in \textbf{J}\} = \max\{T_{N,1}^{(j)}(\id), j \in \textbf{I}\} = T_{N,k}^{(\textbf{I}^+)}(\id)$$
+Moreover, having $\textbf{J} \supset \textbf{I}$, we have $\widehat{b}_{N,k}^{(\textbf{J}^+)} \ge \widehat{b}_{N,k}^{(\textbf{I}^+)}$. And finally, we have 
+\begin{align*}
+\mathrm{FWE}_k\le \P\left( T_{N,k}^{(\textbf{I}^+)}(\id) > \widehat{b}_{N,k}^{(\textbf{I}^+)}, \mathrm{NR}_k(\id)\right)
+\end{align*}
+which proves the lemma.
+\subsection{Proof of Lemma~\ref{lem:invariance}}
+We denote the comparisons we do as $(c_i)_{i \in \textbf{I}}$, they describe a graph with the nodes being the agents denoted $1,\dots,L$ and $(j_1,j_2)$ has an edge if $(j_1,j_2)\in(c_i)_{i \in \textbf{I}}$ is one of the comparisons that correspond to a true hypothesis. This graph is not necessarily connected, we denote $C(i)$ the connected component to which node $i$ (e.g. agent $i$) belongs, i.e. for any $i,j \in C(i)$ there exists a path going from $i$ to $j$. Remark that $C(i)$ cannot be equal to the singleton $\{i\}$, because it would mean that all the comparisons with $i$ are in fact false hypotheses, and then $i$ would not belong to a couple in $\textbf{I}$.
+
+Now, let us look at how a concatenation of permutations $\sigma_1\cdot\ldots\cdot\sigma_m$ for $m\le k$ acts on the evaluations $e_{n,i}(j)$ for $i \le m$, $1\le n\le 2N$ and $j \in \mathcal{C}(i)$. We have
+\begin{align*}
+T_{N,k}^{(j)}(\sigma_1 \cdot  \sigma_2 \cdot  \ldots  \cdot  \sigma_k)&=  \left|\sum_{i=1}^k\left(\sum_{n=1}^{N} e_{\sigma_i(n),i}(j)-\sum_{n=N+1}^{2N} e_{\sigma_i(n),i}(j)\right)\right|
+\end{align*}
+
+Hence, $T_{N,k}^{(j)}(\sigma) = T_{N,k}^{(j)}(\sigma')$ where $\sigma'_i(n)=\sigma_i(n+N)$ if $n \le N$ and $\sigma_i(n) = \sigma_i(n-N)$ otherwise. This corresponds to changing the sign $-1$ to $+1$ inside the absolute value. Now, let us consider two different comparisons $j=(i_1,i_2)$ and $j'=(i_2,i_3)$, i.e. the two couples share one agent. We can consider that in both $T_{N,k}^{(j)}(\sigma)$ and $T_{N,k}^{(j')}(\sigma)$ the permutation acts in the same way on agent $i_2$.
+
+As a consequence transformation by $\sigma_1\cdot\ldots\cdot\sigma_k$ can be seen as a global transformation of the concatenation of all the points (with repetition removed) $(e_{n,i}(j))_{n\le 2N, i\le k,j\in \textbf{I}}$ becoming $(e_{\sigma_i(n),i}(j))_{n\le 2N, i\le k,j\in \textbf{I}}$ . Moreover, we have that for any connected composant $\mathcal{C}$ in the graph, the random variables $(e_{n,i}(j), e_{n,i}(j))_{n\le 2N, i\le k,j\in \mathcal{C}}$ are i.i.d because all comparisons of $\mathcal{C}$ correspond true hypotheses $P_i = P_j$ and by transitivity of the equality, all the laws are equal in the whole connected component.
+
+To conclude, we will use that functions of variables equal in distributions are also equal in distribution themselves.
+
+Let $\mathcal{C}$ be one connected component in the graph and denote $\textbf{I}_\mathcal{C} \subset \textbf{I}$ the subset of $\textbf{I}$ containing only comparisons of agents in $\mathcal{C}$. Let us consider the function $\textbf{T}_k : \R^{2N}\times\R^k\times\R^{\textbf{I}}\to \R^{Bk|\textbf{I}_\mathcal{C}|}$ defined by 
+$$\textbf{T}_k\left((e_{n,i}(j))_{n\le 2N, i\le k,j\in \mathcal{C}}\right) =(T_{N,i}^{(\textbf{I}_\mathcal{C}^+)}(\id), \widehat{b}_{N,i}^{(\textbf{I}_\mathcal{C}^+)})_{i\le k}$$
+$\textbf{T}_k$ is a measurable function of the sample $(e_{n,i}(j))_{n\le 2N, i\le k,j\in \mathcal{C}}$ and this sample is composed of i.i.d random variables (because they belong to the same connected component), hence the law of $(e_{n,i}(j))_{n\le N, i\le k,j\in \mathcal{C}}$ is invariant by permutation and this implies that for any $\sigma$ $(e_{n,i}(j))_{n\le N, i\le k,j\in \mathcal{C}} \dec (e_{\sigma_i(n),i}(j))_{n\le N, i\le k,j\in \mathcal{C}}$. Hence, $$\textbf{T}_k\left((e_{n,i}(j))_{n\le N, i\le k,j\in \mathcal{C}}\right) \dec \textbf{T}_k\left((e_{\sigma_i(n),i}(j))_{n\le N, i\le k,j\in \mathcal{C}}\right)$$ 
+which implies that $(T_{N,i}^{(\textbf{I}_\mathcal{C}^+)}(\id), \widehat{b}_{N,i}^{(\textbf{I}_\mathcal{C}^+)})_{i\le k}=(T_{N,i}^{(\textbf{I}_\mathcal{C}^+)}(\sigma), \widehat{b}_{N,i}^{(\textbf{I}_\mathcal{C}^+)})_{i\le k}$ for any $\sigma$ concatenation of $k$ permutations.
+
+Remark then that by construction the connected components are each independent of each other in the sense that the hypotheses corresponding to the nodes are independent of each other. Hence, 
+
+$$(T_{N,i}^{(\textbf{I}_\mathcal{C}^+)}(\id), \widehat{b}_{N,i}^{(\textbf{I}_\mathcal{C}^+)})_{i\le k, \mathcal{C}}=(T_{N,i}^{(\textbf{I}_\mathcal{C}^+)}(\sigma), \widehat{b}_{N,i}^{(\textbf{I}_\mathcal{C}^+)})_{i\le k, \mathcal{C}}$$
+and then, by taking the maximum,
+$$(\max_{\mathcal{C}}T_{N,i}^{(\textbf{I}_\mathcal{C}^+)}(\id), \max_{\mathcal{C}}\widehat{b}_{N,i}^{(\textbf{I}_\mathcal{C}^+)})_{i\le k}=(\max_{\mathcal{C}}T_{N,i}^{(\textbf{I}_\mathcal{C}^+)}(\sigma), \max_{\mathcal{C}}\widehat{b}_{N,i}^{(\textbf{I}_\mathcal{C}^+)})_{i\le k}$$
+which may be rewritten as 
+$$(T_{N,i}^{(\textbf{I}^+)}(\id),\widehat{b}_{N,i}^{(\textbf{I}^+)})_{i\le k}=(T_{N,i}^{(\textbf{I}^+)}(\sigma), \widehat{b}_{N,i}^{(\textbf{I}^+)})_{i\le k}$$
 \bibliographystyle{plain}
 \bibliography{Adastop}
 \end{document}
