@@ -351,7 +351,6 @@ Denote
 $$\mathrm{NR}_k(\sigma) = \left\{\forall m < k,\quad  T_{N,m}^{(\textbf{I}^+)}(\sigma_1\cdot\ldots\cdot\sigma_m) \le   \widehat{b}_{N,m}^{(\textbf{I}^+)}\right\}$$
 $\mathrm{NR}_k(\sigma)$ is the event on which the statistics corresponding to true hypotheses, computed after permutation by $\sigma=\sigma_1\cdot \ldots \cdot \sigma_k$, are not rejected.
 
-Denote by $\textbf{C}_k$ the (random) value of $\textbf{C}$ at the beginning of interim $k$. 
 
 Let $\textbf{I}$ be the set of true hypotheses. Let E be the following event
 $$\mathrm{E}= \{ \exists j \in \textbf{I}: \quad H_j \text{ is rejected}\}.$$
@@ -394,7 +393,7 @@ where we used the definition of $\widehat{b}_{N,k}^{(\textbf{I}^+)}$ to make the
 \section{Proof of Lemmas}
 \subsection{Proof of Lemma~\ref{lem:multiple_test_FWE}}
 
-
+Denote by $\textbf{C}_k$ the (random) value of $\textbf{C}$ at the beginning of interim $k$. 
 We have 
 \begin{multline*}\label{eq:multi1}
 \P_\sigma\left(\text{E is true} \right)= \sum_{k=1}^K \P\left( \exists j \in \textbf{I}: \quad H_j\text{ is rejected at interim $k$ },\forall j \in \textbf{I}: \quad H_j\text{was not rejected before interim $k$}\right)\\
