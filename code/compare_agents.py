@@ -6,6 +6,7 @@ from scipy import stats
 from scipy.special import binom
 from scipy.stats import norm
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 import rlberry
 from rlberry.agents import Agent
@@ -983,65 +984,38 @@ class MultipleAgentsComparator:
         if agent_names is None:
             agent_name = self.agent_names
 
-        def make_link(couple, ax, xshift=0, yshift=0, current_y=0, lengths=None, i=0):
+
+        links = np.zeros([len(agent_names),len(agent_names)])
+        for i in range(len(self.comparisons)):
+            c = self.comparisons[i]
             if self.decisions[i] == "accept":
-                colors = plt.cm.Blues
+                links[c[0],c[1]] = -1
             else:
-                colors = plt.cm.Reds
-
-            color = colors(1 - 0.4 * lengths[i] / np.max(lengths))
-            profondeur = len(set(lengths)) - lengths[i]
-            num_smaller = np.sum(lengths < lengths[i])
-            xs = [1 + id_sort[c] + xshift for c in couple]
-            xs = np.sort(xs)
-            xs = [xs[0] + 0.03 * profondeur, xs[1] - 0.03 * profondeur]
-            ax.vlines(
-                xs,
-                0,
-                current_y + yshift,
-                colors="k",
-                alpha=1,
-                linewidth=0.5,
-                linestyle="--",
-            )
-            ax.hlines(
-                [current_y + yshift], xs[0], xs[1], colors=color, alpha=1, linewidth=1
-            )
-            return current_y + yshift
-
-        def argsort_smallest_first(couples):
-            lengths = [np.abs(c[1] - c[0]) for c in couples]
-            return np.sort(lengths), np.argsort(lengths)
+                links[c[0],c[1]] = 1
+        links = links + links.T
+        links = links[id_sort,:][:, id_sort]
 
         fig, (ax1, ax2) = plt.subplots(
-            2, 1, gridspec_kw={"height_ratios": [1, 2], "hspace": 0}, sharex=True
+            2, 1, gridspec_kw={"height_ratios": [1, 2], "hspace": 0}, figsize=(6,5)
         )
-
         the_table = ax1.table(
             cellText=[self.n_iters], rowLabels=["n_iter"], loc="top", cellLoc="center"
         )
 
-        for cell in the_table.get_children():
-            cell.set_edgecolor("#AAA9AD")
 
-        plt.subplots_adjust(left=0.1, top=0.9)
+        # Generate a mask for the upper triangle
+        #mask = np.triu(np.ones_like(links, dtype=bool))
+        # Generate a custom diverging colormap
+        cmap = sns.diverging_palette(230, 20, as_cmap=True)
 
-        lengths, idsort2 = argsort_smallest_first(self.comparisons)
+        # Draw the heatmap with the mask and correct aspect ratio
+        res = sns.heatmap(links,cmap=cmap, vmax=1, center=0,linewidths=.5, ax =ax1, 
+                          cbar=False, yticklabels=np.array(agent_names)[id_sort])
 
-        ax1.get_yaxis().set_ticks([])
-
-        current_y = 0.02
-        for i, couple in enumerate(np.array(self.comparisons)[idsort2]):
-            current_y = make_link(
-                couple,
-                ax1,
-                xshift=0,
-                yshift=0.05,
-                current_y=current_y,
-                lengths=lengths,
-                i=i,
-            )
-        ax1.set_ylim(0, current_y + 0.1) 
+        # Drawing the frame
+        for _, spine in res.spines.items():
+            spine.set_visible(True)
+            spine.set_linewidth(1)
 
         ax2.boxplot(Z, labels=np.array(agent_names)[id_sort])
 
