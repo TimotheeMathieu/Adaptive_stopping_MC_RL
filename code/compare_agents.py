@@ -496,8 +496,13 @@ class MultipleAgentsComparator:
         number of fits before each early stopping check
 
     K: int, default=5
-        number of checks
-
+        number of check
+    
+    B: int, default=None
+        Number of random permutations used to approximate permutation distribution.
+    comparisons: list of tuple of indices or None
+        if None, all the pairwise comparison are done.
+        If = [(0,1), (0,2)] for instance, the compare only 0 vs 1  and 0 vs 2
     alpha: float, default=0.05
         level of the test
 
@@ -523,6 +528,27 @@ class MultipleAgentsComparator:
 
     rejected_decision: list of Tuple (comparison, bool)
        the choice of which agent is better in each rejected comparison
+
+
+    Examples
+    --------
+    One can either use rlberry with self.compare, pre-computed scalars with self.compare_scalar or one can use
+    the following code compatible with basically anything:
+
+    >>> comparator = Comparator(n=n, K=K, B=B, alpha=alpha, n_evaluations = 10, beta=0.01)
+    >>>
+    >>> Z = [np.array([]) for _ in agents]
+    >>>
+    >>> for k in range(self.K):
+    >>>    for i, agent in enumerate(agents):
+    >>>        # If the agent is still in one of the comparison considered, then generate new evaluations.
+    >>>        if agent in comparator.current_comparisons.ravel():
+    >>>            Z[i] = np.hstack([Z[i], train_evaluate(agent, n)])
+    >>>    decisions, T = self.partial_compare(Z, verbose)
+    >>>    if np.all([d in ["accept", "reject"] for d in decisions]):
+    >>>        break
+
+    Where train_evaluate(agent, n) is a function that trains n copies of agent and returns n evaluation values.
     """
 
     def __init__(
@@ -530,6 +556,7 @@ class MultipleAgentsComparator:
         n=5,
         K=5,
         B=None,
+        comparisons = None,
         alpha=0.05,
         beta=0,
         name="PK",
@@ -546,6 +573,7 @@ class MultipleAgentsComparator:
         self.n_evaluations = n_evaluations
         self.boundary = []
         self.test_stats = []
+        self.k = 0
         self.level_spent = 0
         self.power_spent = 0
         self.seeder = Seeder(seed)
@@ -554,6 +582,9 @@ class MultipleAgentsComparator:
         self.rejected_sign = []
         self.joblib_backend = joblib_backend
         self.agent_names = []
+        self.comparisons = comparisons
+        self.current_comparisons = copy(comparisons)
+        self.n_iters = None
 
     def compute_sum_diffs(self, k, Z, comparisons, boundary):
         """
@@ -598,16 +629,14 @@ class MultipleAgentsComparator:
 
         return self.sum_diffs
 
-    def partial_compare(self, Z, comparisons, k, verbose=True):
+    def partial_compare(self, Z, verbose=True):
         """
         Do the test of the k^th interim.
 
         Parameters
         ----------
-        Z: array of size n_comparisons x 2*self.n*(k+1)
-            Concatenation All the evaluations of Agent 1 and Agent2 up till interim k
-        k: int
-            index of the interim, in {0,...,K-1}
+        Z: array of size n_agents x k
+            Concatenation All the evaluations all Agents till interim k
         verbose: bool
             print Steps
         Returns
@@ -616,19 +645,32 @@ class MultipleAgentsComparator:
            decision of the test at this step.
         T: float
            Test statistic.
-        bk: gloat
-           threshold.
-
-
+        bk: float
+           thresholds.
         """
+        if self.k == 0:
+            # initialization
+            n_managers = len(Z)
+            if self.comparisons is None:
+                self.comparisons = np.array(
+                    [(i, j) for i in range(n_managers) for j in range(n_managers) if i < j]
+                )
+            self.current_comparisons = copy(self.comparisons)
+            self.sum_diffs = []
+            if self.n_iters is None:
+                self.n_iters = [0] * n_managers
+            self.decisions = np.array(["continue"] * len(self.comparisons))
+            self.current_decisions = copy(self.decisions)
+            self.id_tracked = np.arange(len(self.decisions))
+        k = self.k
         spending_fun_a = self.get_spending_fun(self.alpha)
         spending_fun_b = self.get_spending_fun(self.beta)
 
         clevel = spending_fun_a((k + 1) / self.K)
         dlevel = spending_fun_b((k + 1) / self.K)
 
-        rs = np.abs(np.array(self.compute_sum_diffs(k, Z, comparisons, self.boundary)))
-        decisions = np.array(["continue"] * len(comparisons))
+        rs = np.abs(np.array(self.compute_sum_diffs(k, Z, self.current_comparisons, self.boundary)))
+        decisions = np.array(["continue"] * len(self.current_comparisons))
 
         if verbose:
             print("Step {}".format(k))
@@ -676,7 +718,7 @@ class MultipleAgentsComparator:
             Tmin = np.inf
             Tmaxsigned = 0
             Tminsigned = 0
-            for i, comp in enumerate(comparisons[decisions == "continue"]):
+            for i, comp in enumerate(self.current_comparisons[decisions == "continue"]):
                 Ti = np.abs(
                     np.sum(
                         Z[comp[0]][: ((k + 1) * self.n)]
@@ -702,7 +744,7 @@ class MultipleAgentsComparator:
             if Tmax > bk_sup:
                 id_reject = np.arange(len(decisions))[decisions == "continue"][imax]
                 decisions[id_reject] = "reject"
-                self.rejected_decision.append(comparisons[id_reject])
+                self.rejected_decision.append(self.current_comparisons[id_reject])
                 self.rejected_sign.append(Tmaxsigned > 0)
                 print("reject")
             elif Tmin < bk_inf:
@@ -711,170 +753,91 @@ class MultipleAgentsComparator:
             else:
                 break
 
+            
+        
         self.boundary.append((bk_inf, bk_sup))
-
-        self._writer.add_scalar("Stat_val_max", Tmax, k)
-        self._writer.add_scalar("Stat_val_min", Tmin, k)
-
-        self._writer.add_scalar("sup_bound", bk_sup, k)
-        self._writer.add_scalar("inf_bound", bk_inf, k)
 
         self.level_spent += level_to_add  # level effectively used at this point
         self.power_spent += power_to_add
+        
+        if k == self.K - 1:
+            self.decisions[decisions == "continue"] = "accept"
+        
+        self.k = self.k + 1
+        self.eval_values = Z
+        self.mean_eval_values = [np.mean(z) for z in Z]
+        self.n_iters = [len(z.ravel()) for z in Z]
 
-        return decisions, Tmaxsigned, bk_sup, bk_inf
 
-    def compare(self, managers, comparisons=None, clean_after=True, verbose=True):
+        self.test_stats.append(Tmaxsigned)
+
+        id_decided = np.array(decisions) != "continue"
+        id_rejected = np.array(decisions) == "reject"
+        id_accepted = np.array(decisions) == "accept"
+
+        self.decisions[self.id_tracked[id_rejected]] = "reject"
+        self.decisions[self.id_tracked[id_accepted]] = "accept"
+
+        self.id_tracked = self.id_tracked[~id_decided]
+        self.current_comparisons = self.current_comparisons[~id_decided]
+        self.sum_diffs = np.array(self.sum_diffs)[:, ~id_decided]
+        return self.decisions, Tmaxsigned
+
+    def compare(self, managers,  clean_after=True, verbose=True):
         """
         Compare the managers pair by pair using Bonferroni correction.
 
         Parameters
         ----------
         managers : list of tuple of agent_class and init_kwargs for the agent.
-        comparisons: list of tuple of indices or None
-                if None, all the pairwise comparison are done.
-                If = [(0,1), (0,2)] for instance, the compare only 0 vs 1  and 0 vs 2
+        clean_after: boolean
         verbose: boolean
-
         """
-        n_managers = len(managers)
-        if comparisons is None:
-            comparisons = np.array(
-                [(i, j) for i in range(n_managers) for j in range(n_managers) if i < j]
-            )
-        self.comparisons = comparisons
         Z = [np.array([]) for _ in managers]
-
-        # Initialization of the permutation distribution
-        self.sum_diffs = []
-        self.n_iters = [0] * len(managers)
-
         # spawn independent seeds, one for each fit and one for the comparator.
         seeders = self.seeder.spawn(len(managers) * self.K + 1)
         self.rng = seeders[-1].rng
-        decisions = np.array(["continue"] * len(comparisons))
-        id_tracked = np.arange(len(decisions))
+        
         for k in range(self.K):
-
-            Z = self._fit(managers, comparisons, Z, k, seeders, clean_after)
-            self.decisions, T, bk_sup, bk_inf = self.partial_compare(
-                Z, comparisons, k, verbose
-            )
-            self.test_stats.append(T)
-
-            id_decided = np.array(self.decisions) != "continue"
-            id_rejected = np.array(self.decisions) == "reject"
-            id_accepted = np.array(self.decisions) == "accept"
-
-            decisions[id_tracked[id_rejected]] = "reject"
-            decisions[id_tracked[id_accepted]] = "accept"
-
-            id_tracked = id_tracked[~id_decided]
-            comparisons = comparisons[~id_decided]
-            self.sum_diffs = np.array(self.sum_diffs)[:, ~id_decided]
-
-            if np.all([d in ["accept", "reject"] for d in self.decisions]):
+            Z = self._fit(managers, Z, k, seeders, clean_after)
+            decisions, T = self.partial_compare(Z, verbose)
+            if np.all([d in ["accept", "reject"] for d in self.current_decisions]):
                 break
-            else:
-                logger.info(
-                    "Rejected "
-                    + str(np.sum(np.array(self.decisions) == "reject"))
-                    + " on interim "
-                    + str(k + 1)
-                )
 
-        if k == self.K - 1:
-            decisions[decisions == "continue"] = "accept"
+        return self.decisions
 
-        self.decisions = decisions
-        self.eval_values = Z
-        self.mean_eval_values = [np.mean(z) for z in Z]
-        return decisions
-
-    def compare_scalars(self, scalars, comparisons=None, clean_after=True):
+    def compare_scalars(self, scalars):
         """
         Compare the managers pair by pair using Bonferroni correction.
-
         Parameters
         ----------
         scalars : list of list of scalars.
-        comparisons: list of tuple of indices or None
-                if None, all the pairwise comparison are done.
-                If = [(0,1), (0,2)] for instance, the compare only 0 vs 1  and 0 vs 2
-
         """
-        if comparisons is None:
-            comparisons = np.array(
-                [
-                    (i, j)
-                    for i in range(len(scalars))
-                    for j in range(len(scalars))
-                    if i < j
-                ]
-            )
-        self.comparisons = comparisons
         Z = [np.array([]) for _ in scalars]
 
-        # Initialization of the permutation distribution
-        self.sum_diffs = []
-        self.n_iters = [0] * len(scalars)
-
-        # spawn independent seeds, one for each fit and one for the comparator.
-        seeders = self.seeder.spawn(len(scalars) * self.K + 1)
-        self.rng = seeders[-1].rng
-        decisions = np.array(["continue"] * len(comparisons))
-        id_tracked = np.arange(len(decisions))
         for k in range(self.K):
-
-            Z = self._get_z_scalars(scalars, comparisons, Z, k, seeders, clean_after)
-            self.decisions, T, bk_sup, bk_inf = self.partial_compare(Z, comparisons, k)
-            id_decided = np.array(self.decisions) != "continue"
-            id_rejected = np.array(self.decisions) == "reject"
-            id_accepted = np.array(self.decisions) == "accept"
-
-            decisions[id_tracked[id_rejected]] = "reject"
-            decisions[id_tracked[id_accepted]] = "accept"
-
-            id_tracked = id_tracked[~id_decided]
-            comparisons = comparisons[~id_decided]
-
-            self.sum_diffs = np.array(self.sum_diffs)[:, ~id_decided]
-
+            Z = self._get_z_scalars(scalars, Z, k)
+            decisions, T = self.partial_compare(Z, k)
             if np.all([d in ["accept", "reject"] for d in self.decisions]):
                 break
-            else:
-                logger.info(
-                    "Rejected "
-                    + str(np.sum(np.array(self.decisions) == "reject"))
-                    + " on interim "
-                    + str(k + 1)
-                )
+        return 
 
-        if k == self.K - 1:
-            decisions[decisions == "continue"] = "accept"
-            logger.info(
-                "Did not reject all the null hypothesis: either K, n are too small or the agents perform similarly"
-            )
-        self.decisions = decisions
-        self.eval_values = Z
-        self.mean_eval_values = [np.mean(z) for z in Z]
-        return decisions
+    def _get_z_scalars(self, scalars, Z, k):
 
-    def _get_z_scalars(self, scalars, comparisons, Z, k, seeders, clean_after):
+
         for i in range(len(scalars)):
-            if i in np.array(comparisons).ravel():
-                self.n_iters[i] += self.n
+            if (self.current_comparisons is None) or (i in np.array(self.current_comparisons).ravel()):
                 Z[i] = np.hstack([Z[i], scalars[i][k * self.n : (k + 1) * self.n]])
         return Z
 
-    def _fit(self, managers, comparisons, Z, k, seeders, clean_after):
+    def _fit(self, managers, Z, k, seeders, clean_after):
         agent_classes = [manager[0] for manager in managers]
         kwargs_list = [manager[1] for manager in managers]
         for kwarg in kwargs_list:
             kwarg["n_fit"] = self.n
         managers_in = []
         for i in range(len(agent_classes)):
-            if i in np.array(comparisons).ravel():
+            if (self.current_comparisons is None) or (i in np.array(self.current_comparisons).ravel()):
                 agent_class = agent_classes[i]
                 kwargs = kwargs_list[i]
                 seeder = seeders[i]
@@ -888,9 +851,7 @@ class MultipleAgentsComparator:
 
         idz = 0
         for i in range(len(agent_classes)):
-            if i in np.array(comparisons).ravel():
-
-                self.n_iters[i] += self.n
+            if (self.current_comparisons is None) or (i in np.array(self.current_comparisons).ravel()):
                 Z[i] = np.hstack([Z[i], self._get_evals(managers_in[idz])])
                 idz += 1
         if clean_after:
@@ -1002,7 +963,6 @@ class MultipleAgentsComparator:
             cellText=[self.n_iters], rowLabels=["n_iter"], loc="top", cellLoc="center"
         )
 
-
         # Generate a mask for the upper triangle
         #mask = np.triu(np.ones_like(links, dtype=bool))
         # Generate a custom diverging colormap
@@ -1017,7 +977,7 @@ class MultipleAgentsComparator:
             spine.set_visible(True)
             spine.set_linewidth(1)
 
-        ax2.boxplot(Z, labels=np.array(agent_names)[id_sort])
+        ax2.boxplot(Z.T, labels=np.array(agent_names)[id_sort])
 
 
 def _fit_agent(manager):
