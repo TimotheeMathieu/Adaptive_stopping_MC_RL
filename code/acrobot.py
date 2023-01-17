@@ -18,7 +18,7 @@ hash_cmd = ("git", "rev-parse", "HEAD")
 revision = subprocess.check_output(hash_cmd)
 
 # parameters definitions
-n_fit = 2
+n_fit = 30
 params = dict(mlp_size = (256, 256),
               learning_rate = 3e-4,
               gamma = 0.99,
