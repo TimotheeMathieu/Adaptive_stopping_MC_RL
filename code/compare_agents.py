@@ -539,12 +539,12 @@ class MultipleAgentsComparator:
     >>>
     >>> Z = [np.array([]) for _ in agents]
     >>>
-    >>> for k in range(self.K):
+    >>> for k in range(comparator.K):
     >>>    for i, agent in enumerate(agents):
     >>>        # If the agent is still in one of the comparison considered, then generate new evaluations.
     >>>        if agent in comparator.current_comparisons.ravel():
     >>>            Z[i] = np.hstack([Z[i], train_evaluate(agent, n)])
-    >>>    decisions, T = self.partial_compare(Z, verbose)
+    >>>    decisions, T = comparator.partial_compare(Z, verbose)
     >>>    if np.all([d in ["accept", "reject"] for d in decisions]):
     >>>        break
 
