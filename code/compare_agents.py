@@ -660,7 +660,6 @@ class MultipleAgentsComparator:
             if self.n_iters is None:
                 self.n_iters = [0] * n_managers
             self.decisions = np.array(["continue"] * len(self.comparisons))
-            self.current_decisions = copy(self.decisions)
             self.id_tracked = np.arange(len(self.decisions))
         k = self.k
         spending_fun_a = self.get_spending_fun(self.alpha)
@@ -670,12 +669,14 @@ class MultipleAgentsComparator:
         dlevel = spending_fun_b((k + 1) / self.K)
 
         rs = np.abs(np.array(self.compute_sum_diffs(k, Z, self.current_comparisons, self.boundary)))
-        decisions = np.array(["continue"] * len(self.current_comparisons))
 
         if verbose:
             print("Step {}".format(k))
-        for j in range(len(decisions)):
-            rs_now = rs[:, decisions == "continue"]
+
+        current_decisions = self.decisions[self.decisions == "continue"]
+
+        for j in range(len(current_decisions)):
+            rs_now = rs[:,current_decisions == "continue"]
             values = np.sort(
                 np.max(rs_now, axis=1)
             )  # for now, don't care about ties. And there are ties, for instance when B is None, there are at least two of every values !
@@ -718,7 +719,7 @@ class MultipleAgentsComparator:
             Tmin = np.inf
             Tmaxsigned = 0
             Tminsigned = 0
-            for i, comp in enumerate(self.current_comparisons[decisions == "continue"]):
+            for i, comp in enumerate(self.current_comparisons[current_decisions == "continue"]):
                 Ti = np.abs(
                     np.sum(
                         Z[comp[0]][: ((k + 1) * self.n)]
@@ -742,14 +743,14 @@ class MultipleAgentsComparator:
                     )
 
             if Tmax > bk_sup:
-                id_reject = np.arange(len(decisions))[decisions == "continue"][imax]
-                decisions[id_reject] = "reject"
+                id_reject = np.arange(len(current_decisions))[current_decisions== "continue"][imax]
+                current_decisions[id_reject] = "reject"
                 self.rejected_decision.append(self.current_comparisons[id_reject])
                 self.rejected_sign.append(Tmaxsigned > 0)
                 print("reject")
             elif Tmin < bk_inf:
-                id_accept = np.arange(len(decisions))[decisions == "continue"][imin]
-                decisions[id_accept] = "accept"
+                id_accept = np.arange(len(current_decisions))[current_decisions == "continue"][imin]
+                current_decisions[id_accept] = "accept"
             else:
                 break
 
@@ -761,7 +762,7 @@ class MultipleAgentsComparator:
         self.power_spent += power_to_add
         
         if k == self.K - 1:
-            self.decisions[decisions == "continue"] = "accept"
+            self.decisions[self.decisions == "continue"] = "accept"
         
         self.k = self.k + 1
         self.eval_values = Z
@@ -771,9 +772,9 @@ class MultipleAgentsComparator:
 
         self.test_stats.append(Tmaxsigned)
 
-        id_decided = np.array(decisions) != "continue"
-        id_rejected = np.array(decisions) == "reject"
-        id_accepted = np.array(decisions) == "accept"
+        id_decided = np.array(current_decisions) != "continue"
+        id_rejected = np.array(current_decisions) == "reject"
+        id_accepted = np.array(current_decisions) == "accept"
 
         self.decisions[self.id_tracked[id_rejected]] = "reject"
         self.decisions[self.id_tracked[id_accepted]] = "accept"
@@ -781,7 +782,7 @@ class MultipleAgentsComparator:
         self.id_tracked = self.id_tracked[~id_decided]
         self.current_comparisons = self.current_comparisons[~id_decided]
         self.sum_diffs = np.array(self.sum_diffs)[:, ~id_decided]
-        return self.decisions, Tmaxsigned
+        return current_decisions, Tmaxsigned
 
     def compare(self, managers,  clean_after=True, verbose=True):
         """
@@ -800,8 +801,8 @@ class MultipleAgentsComparator:
         
         for k in range(self.K):
             Z = self._fit(managers, Z, k, seeders, clean_after)
-            decisions, T = self.partial_compare(Z, verbose)
-            if np.all([d in ["accept", "reject"] for d in self.current_decisions]):
+            current_decisions, T = self.partial_compare(Z, verbose)
+            if np.all([d in ["accept", "reject"] for d in self.decisions]):
                 break
 
         return self.decisions
