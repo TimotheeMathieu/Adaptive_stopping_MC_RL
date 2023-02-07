@@ -1,3 +1,17 @@
+# import os
+# os.chdir("/home/ashilova/Adaptive_stopping_MC_RL/code")
+
+# print(os.getcwd())s
+
+
+import sys
+sys.path.insert(0, "/home/ashilova/Adaptive_stopping_MC_RL/code")
+
+# import os
+# print(os.getcwd())
+# os.chdir("/home/ashilova/Adaptive_stopping_MC_RL/code")
+# print(os.getcwd())
+
 from rlberry.agents import Agent
 from rlberry.envs import Model
 import rlberry.spaces as spaces
@@ -6,6 +20,7 @@ import time
 import numpy as np
 from tqdm import tqdm
 from joblib import Parallel, delayed
+
 
 
 # GST definition
@@ -27,6 +42,26 @@ class RandomAgent(Agent):
     def eval(self, n_simulations=1, **kwargs):
         return self.drift + self.rng.normal(size=n_simulations)
 
+#TODO check that comparator is using n_simulations
+class MixtureGaussianAgent(Agent):
+    def __init__(self, env, means=[0], stds=[1], prob_mixture = [1], **kwargs):
+        Agent.__init__(self, env, **kwargs)
+        self.means = np.array(means)
+        self.prob_mixture = np.array(prob_mixture)
+        self.stds = np.array(stds)
+
+    def fit(self, budget: int, **kwargs):
+        pass
+
+    def eval(self, n_simulations=1, **kwargs):
+        idxs = self.rng.choice(np.arange(len(self.means)), size=n_simulations, p=self.prob_mixture)
+        ret = self.means[idxs] + self.rng.normal(size=n_simulations)*self.stds[idxs]
+
+        # print("Gaussians", idxs)
+        # print("sampled_proba", sum(idxs)/ len(idxs))
+        return ret
+
+
 
 class DummyEnv(Model):
     def __init__(self, **kwargs):
@@ -43,27 +78,40 @@ class DummyEnv(Model):
 
 if __name__ == "__main__":
 
+    # mga = MixtureGaussianAgent(DummyEnv(), means=[0, 2], stds=[0.1, 1], prob_mixture=[0.3, 0.7])
+    # print(mga.eval(100))
+
     manager1 = (
-        RandomAgent,
+        MixtureGaussianAgent,
         dict(
             train_env=(DummyEnv, {}),
-            init_kwargs={"drift": 0},
+            init_kwargs={"means": [0,2], "stds": [0.1, 1], "prob_mixture": [0.3, 0.7]},
             fit_budget=1,
             agent_name="Agent1",
         ),
     )
 
     manager2 = (
-        RandomAgent,
+        MixtureGaussianAgent,
         dict(
             train_env=(DummyEnv, {}),
-            init_kwargs={"drift": 0},
+            init_kwargs={"means": [0,2], "stds": [0.1, 1], "prob_mixture": [0.3, 0.7]},
             fit_budget=1,
             agent_name="Agent2",
         ),
     )
 
-    M = 200
+    # manager2 = (
+    #     RandomAgent,
+    #     dict(
+    #         train_env=(DummyEnv, {}),
+    #         init_kwargs={"drift": 0},
+    #         fit_budget=1,
+    #         agent_name="Agent2",
+    #     ),
+    # )
+
+    M = 50
     res = []
     restime = []
     p_vals = []
@@ -80,7 +128,9 @@ if __name__ == "__main__":
     #     res.append(comparator.decision)
     #     p_vals.append(comparator.p_val)
     #     restime.append(time.time()-a)
-    res = Parallel(n_jobs=6, backend="multiprocessing")(delayed(decision)(i) for i in tqdm(range(500)))
+    res = Parallel(n_jobs=6, backend="multiprocessing")(delayed(decision)(i) for i in tqdm(range(M)))
     idxs = np.array(res) == "accept"
+
     #print("mean running time", np.mean(np.array(restime)[idxs]))
     print("proba to reject", np.mean(1 - idxs))
+    print("proba to accept", np.mean(idxs))
