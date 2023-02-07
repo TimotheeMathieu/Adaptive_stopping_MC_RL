@@ -1,3 +1,7 @@
+import sys
+sys.path.insert(0, "/home/rdellave/Adaptive_stopping_MC_RL/code")
+print(sys.path)
+
 from rlberry.agents import Agent
 from rlberry.envs import Model
 import rlberry.spaces as spaces
@@ -6,6 +10,7 @@ import time
 import numpy as np
 from tqdm import tqdm
 from joblib import Parallel, delayed
+
 
 
 # GST definition
