@@ -20,9 +20,9 @@ from joblib import Parallel, delayed
 
 # GST definition
 
-K = 4  # at most 4 groups
+K = 16  # at most 4 groups
 alpha = 0.05
-n = 4  # size of a group
+n = 1  # size of a group
 
 B = 10000
 
@@ -106,7 +106,7 @@ if __name__ == "__main__":
     #     ),
     # )
 
-    M = 50
+    M = 70
     res = []
     restime = []
     p_vals = []
