@@ -16,6 +16,8 @@ import numpy as np
 from tqdm import tqdm
 from joblib import Parallel, delayed
 
+import pickle
+
 
 
 # GST definition
@@ -71,16 +73,13 @@ class DummyEnv(Model):
         return 0
 
 
-if __name__ == "__main__":
-
-    # mga = MixtureGaussianAgent(DummyEnv(), means=[0, 2], stds=[0.1, 1], prob_mixture=[0.3, 0.7])
-    # print(mga.eval(100))
+def make_same_agents(diff_means):
 
     manager1 = (
         MixtureGaussianAgent,
         dict(
             train_env=(DummyEnv, {}),
-            init_kwargs={"means": [0,2], "stds": [0.1, 1], "prob_mixture": [0.3, 0.7]},
+            init_kwargs={"means": [0, 0+diff_means], "stds": [0.1, 0.1], "prob_mixture": [0.5, 0.5]},
             fit_budget=1,
             agent_name="Agent1",
         ),
@@ -90,11 +89,69 @@ if __name__ == "__main__":
         MixtureGaussianAgent,
         dict(
             train_env=(DummyEnv, {}),
-            init_kwargs={"means": [0,2], "stds": [0.1, 1], "prob_mixture": [0.3, 0.7]},
+            init_kwargs={"means": [0, 0 + diff_means], "stds": [0.1, 0.1], "prob_mixture": [0.5, 0.5]},
             fit_budget=1,
             agent_name="Agent2",
         ),
     )
+    return manager1, manager2
+
+
+
+if __name__ == "__main__":
+
+    M=5
+    seeds = np.arange(M)
+    K_list = np.arange(2)+1
+    n_list = np.arange(1)*2 + 1
+    B_list = np.array([5*10**3,])# 10**4, 5*10**4, 10**5])
+    dmu_list = np.linspace(0, 1, 1)
+
+    mesh = np.meshgrid(seeds, K_list, n_list, B_list, dmu_list)
+
+    seed_iter = mesh[0].reshape(-1)
+    K_iter = mesh[1].reshape(-1)
+    n_iter = mesh[2].reshape(-1)
+    B_iter = mesh[3].reshape(-1)
+    dmu_iter = mesh[4].reshape(-1)
+
+    num_comb = len(mesh[0].reshape(-1))
+
+
+
+
+
+
+    # manager1 = (
+    #     MixtureGaussianAgent,
+    #     dict(
+    #         train_env=(DummyEnv, {}),
+    #         init_kwargs={"means": [0,2], "stds": [0.1, 0.1], "prob_mixture": [0.5, 0.5]},
+    #         fit_budget=1,
+    #         agent_name="Agent1",
+    #     ),
+    # )
+
+    # manager2 = (
+    #     MixtureGaussianAgent,
+    #     dict(
+    #         train_env=(DummyEnv, {}),
+    #         init_kwargs={"means": [0,2], "stds": [0.1, 0.1], "prob_mixture": [0.5, 0.5]},
+    #         fit_budget=1,
+    #         agent_name="Agent2",
+    #     ),
+    # )
+
+    # manager1 = (
+    #     RandomAgent,
+    #     dict(
+    #         train_env=(DummyEnv, {}),
+    #         init_kwargs={"drift": 0},
+    #         fit_budget=1,
+    #         agent_name="Agent1",
+    #     ),
+    # )
+
 
     # manager2 = (
     #     RandomAgent,
@@ -112,18 +169,27 @@ if __name__ == "__main__":
     p_vals = []
 
 
-    def decision(seed):
-        comparator = Two_AgentsComparator(n, K,B,  alpha, seed=seed)
+    def decision(**kwargs):
+        os.makedirs("mgres", exist_ok=True)
+        filename = "mgres/result_K={}-n={}-B={}-dmu={}-seed={}.pickle".format(kwargs["K"], kwargs["n"], kwargs["B"], kwargs["diff_means"], kwargs["seed"])
+        comparator = Two_AgentsComparator(kwargs["n"], kwargs["K"], kwargs["B"],  alpha, seed=kwargs["seed"])
+        manager1, manager2 = make_same_agents(kwargs["diff_means"])
         comparator.compare(manager2, manager1)
-        return comparator.decision
-    # for _ in tqdm(range(M)):
-    #     a = time.time()
-    #     comparator = Two_AgentsComparator(n, K,B,  alpha)
-    #     comparator.compare(manager2, manager1)
-    #     res.append(comparator.decision)
-    #     p_vals.append(comparator.p_val)
-    #     restime.append(time.time()-a)
-    res = Parallel(n_jobs=6, backend="multiprocessing")(delayed(decision)(i) for i in tqdm(range(M)))
+        with open(filename, "wb") as f:
+            pickle.dump(kwargs, f)
+            pickle.dump(comparator.__dict__, f)
+        
+        return comparator.decision, comparator.n_iter / 2
+
+    def decision_par(i):
+        return decision(seed=seed_iter[i], n=n_iter[i],K= K_iter[i], B=B_iter[i],diff_means= dmu_iter[i])
+
+    # decision_par = lambda i: decision(seed_iter[i], n_iter[i], K_iter[i], B_iter[i], dmu_iter[i])
+
+    print("checkpoint")
+
+    res = Parallel(n_jobs=6, backend="multiprocessing")(delayed(decision_par)(i) for i in tqdm(range(num_comb)))
+    # decision(0)
     idxs = np.array(res) == "accept"
 
     #print("mean running time", np.mean(np.array(restime)[idxs]))
