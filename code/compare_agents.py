@@ -269,7 +269,7 @@ class Two_AgentsComparator:
         kwargs1 = manager1[1]
         kwargs1["n_fit"] = self.n
 
-        agent_class2 = manager1[0]
+        agent_class2 = manager2[0]
         kwargs2 = manager2[1]
         kwargs2["n_fit"] = self.n
 

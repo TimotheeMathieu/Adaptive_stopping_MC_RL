@@ -201,7 +201,6 @@ if __name__ == "__main__":
     #     return non_adaptive_decision(seed=seed_iter2[i], nk=nk_iter[i], B=B_iter2[i], diff_means= dmu_iter2[i])
     #TODO
 
-
     res = Parallel(n_jobs=6, backend="multiprocessing")(delayed(decision_par)(i) for i in tqdm(range(num_comb)))
     print("Done!")
     # res2 = Parallel(n_jobs=6, backend="multiprocessing")(delayed(non_adaptive_decision_par)(i) for i in tqdm(range(num_comb2)))
