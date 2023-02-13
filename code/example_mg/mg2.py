@@ -97,14 +97,21 @@ def make_same_agents(diff_means, probas = [0.5, 0.5]):
     )
     return manager1, manager2
 
+def exp1(diff_means):
+    mus = [0-diff_means/2, 0+diff_means/2]
+    return make_different_agents(mus = mus)
 
-def make_different_agents(diff_means, probas = [0.5, 0.5]):
+def exp2(diff_means):
+    mus = [0, diff_means]
+    return make_different_agents(mus = mus)
+
+def make_different_agents(mus, probas = [0.5, 0.5]):
 
     manager1 = (
         MixtureGaussianAgent,
         dict(
             train_env=(DummyEnv, {}),
-            init_kwargs={"means": [0-diff_means/2, 0+diff_means/2], "stds": [0.1, 0.1], "prob_mixture": probas},
+            init_kwargs={"means": mus, "stds": [0.1, 0.1], "prob_mixture": probas},
             fit_budget=1,
             agent_name="Agent1",
         ),
@@ -119,6 +126,8 @@ def make_different_agents(diff_means, probas = [0.5, 0.5]):
             agent_name="Agent2",
         ),
     )
+
+    
     return manager1, manager2
 
 
@@ -172,11 +181,10 @@ if __name__ == "__main__":
         filename = "mgres/result_K={}-n={}-B={}-dmu={}-seed={}.pickle".format(kwargs["K"], kwargs["n"], kwargs["B"], kwargs["diff_means"], kwargs["seed"])
         comparator = Two_AgentsComparator(kwargs["n"], kwargs["K"], kwargs["B"],  alpha, seed=kwargs["seed"])
         # manager1, manager2 = make_same_agents(kwargs["diff_means"])
-        manager1, manager2 = make_different_agents(kwargs["diff_means"])
+        manager1, manager2 = exp2(kwargs["diff_means"])
         comparator.compare(manager2, manager1)
         with open(filename, "wb") as f:
-            pickle.dump(kwargs, f)
-            pickle.dump(comparator.__dict__, f)
+            pickle.dump([kwargs, comparator.__dict__], f)
         
         return comparator.decision, comparator.n_iter / 2
 
@@ -201,7 +209,7 @@ if __name__ == "__main__":
     #     return non_adaptive_decision(seed=seed_iter2[i], nk=nk_iter[i], B=B_iter2[i], diff_means= dmu_iter2[i])
     #TODO
 
-    res = Parallel(n_jobs=6, backend="multiprocessing")(delayed(decision_par)(i) for i in tqdm(range(num_comb)))
+    res = Parallel(n_jobs=24, backend="multiprocessing")(delayed(decision_par)(i) for i in tqdm(range(num_comb)))
     print("Done!")
     # res2 = Parallel(n_jobs=6, backend="multiprocessing")(delayed(non_adaptive_decision_par)(i) for i in tqdm(range(num_comb2)))
     # decision(0)
