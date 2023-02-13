@@ -1,4 +1,5 @@
 import sys
+import os
 sys.path.insert(0, "/home/rdellave/Adaptive_stopping_MC_RL/code")
 print(sys.path)
 
