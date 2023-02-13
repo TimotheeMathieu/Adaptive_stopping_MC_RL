@@ -140,6 +140,7 @@ def make_different_agents(mus, probas = [0.5, 0.5]):
 if __name__ == "__main__":
 
     M=10000
+    EXP = "exp2"
     # max_num_seeds = 
 
     seeds = np.arange(M)
@@ -183,11 +184,17 @@ if __name__ == "__main__":
 
 
     def decision(**kwargs):
-        os.makedirs("mgres", exist_ok=True)
-        filename = "mgres/result_K={}-n={}-B={}-dmu={}-seed={}.pickle".format(kwargs["K"], kwargs["n"], kwargs["B"], kwargs["diff_means"], kwargs["seed"])
+        exp_name = kwargs["exp_name"]
+        os.makedirs("mgres/"+ exp_name, exist_ok=True)
+        filename = "mgres/"+ exp_name + "exp2/result_K={}-n={}-B={}-dmu={}-seed={}.pickle".format(kwargs["K"], kwargs["n"], kwargs["B"], kwargs["diff_means"], kwargs["seed"])
         comparator = Two_AgentsComparator(kwargs["n"], kwargs["K"], kwargs["B"],  alpha, seed=kwargs["seed"])
         # manager1, manager2 = make_same_agents(kwargs["diff_means"])
-        manager1, manager2 = exp2(kwargs["diff_means"])
+        if exp_name == "exp1":
+            manager1, manager2 = exp1(kwargs["diff_means"])
+        elif exp_name == "exp2":
+            manager1, manager2 = exp2(kwargs["diff_means"])
+        else:
+            raise ValueError
         comparator.compare(manager2, manager1)
         with open(filename, "wb") as f:
             pickle.dump([kwargs, comparator.__dict__], f)
@@ -195,7 +202,7 @@ if __name__ == "__main__":
         return comparator.decision, comparator.n_iter / 2
 
     def decision_par(i):
-        return decision(seed=seed_iter[i], n=n_iter[i],K= K_iter[i], B=B_iter[i],diff_means= dmu_iter[i])
+        return decision(seed=seed_iter[i], n=n_iter[i],K= K_iter[i], B=B_iter[i],diff_means= dmu_iter[i], exp_name = EXP)
 
     #TODO
     # def non_adaptive_decision(**kwargs):
