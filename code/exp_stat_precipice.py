@@ -2,7 +2,7 @@ import numpy as np
 from compare_agents import MultipleAgentsComparator
 import matplotlib.pyplot as plt
 import seaborn as sns
-import pickle
+import pickle, json
 
 with open('stat_precipice/stat_preci_data.pkl', 'rb') as handle:
     data = pickle.load(handle)
