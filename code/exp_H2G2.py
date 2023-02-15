@@ -36,6 +36,6 @@ for comb in combs:
             comparator = MultipleAgentsComparator(B = 100_000, K = k,n = n)
             scal1 = np.random.choice(scalar_list1, size = len(scalar_list1), replace = True)
             scal2 = np.random.choice(scalar_list2, size = len(scalar_list1), replace = True)
-            comparator.compare_scalars(scal1, scal2)
+            comparator.compare_scalars([scal1, scal2])
             with open(filename, "wb") as f:
                 pickle.dump(comparator.__dict__, f)
