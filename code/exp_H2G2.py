@@ -1,5 +1,5 @@
 import numpy as np
-from compare_agents import Two_AgentsComparator
+from compare_agents import MultipleAgentsComparator
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pickle, json
@@ -27,13 +27,13 @@ parameters["numpy_version"] = np.__version__
 with open("h2g2/parameters.json", "w") as file:
     file.write(json.dumps(parameters))
 
-    
+
 for comb in combs:
     for i in range(2):
         n, k = comb[i], comb[1-i]
         for exps in range(100):
             filename = "h2g2/n-{}-k-{}-rep-{}.pkl".format(n,k,exps)
-            comparator = Two_AgentsComparator(B = 100_000, K = k,n = n)
+            comparator = MultipleAgentsComparator(B = 100_000, K = k,n = n)
             scal1 = np.random.choice(scalar_list1, size = len(scalar_list1), replace = True)
             scal2 = np.random.choice(scalar_list2, size = len(scalar_list1), replace = True)
             comparator.compare_scalars(scal1, scal2)
