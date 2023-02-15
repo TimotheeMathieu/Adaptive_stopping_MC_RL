@@ -3,6 +3,7 @@ from compare_agents import MultipleAgentsComparator
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pickle
+import json
 
 with open('stat_precipice/stat_preci_data.pkl', 'rb') as handle:
     data = pickle.load(handle)
@@ -20,15 +21,15 @@ for comb in combs:
     for i in range(2):
         n, k = comb[i], comb[1-i]
         for exps in range(100):
-            filename = "stat_precipice/n-{}-k-{}-rep-{}.pkl".format(n,k,exps)
+            filename = "stat_precipice/n-{}-k-{}-rep-{}.json".format(n,k,exps)
             comparator = MultipleAgentsComparator(B = 100_000, K = k,n = n)
             rands_scal = []
             for scal_list in all_scalars:
                 rands_scal.append(np.random.choice(scal_list, size = len(scal_list), replace = True))
             comparator.compare_scalars(rands_scal)
-            with open(filename, "wb") as f:
-                pickle.dump(comparator.__dict__, f)
-# 
+            with open(filename, "w") as file:
+                file.write(json.dumps(comparator.__dict__))
+#
 #
 # plt.xlabel("evaluations means")
 # plt.legend()
