@@ -39,12 +39,38 @@ class RandomAgent(Agent):
         Agent.__init__(self, env, **kwargs)
         self.drift = drift
         self.std = std
+        if "type" in kwargs.keys():
+            self.type = kwargs["type"]
+        else:
+            self.type = "normal"
+        self.kwargs = kwargs
 
     def fit(self, budget: int, **kwargs):
         pass
 
     def eval(self, n_simulations=1, **kwargs):
-        return self.drift + self.rng.normal(size=n_simulations)*self.std
+        if self.type == "normal":
+            noise = self.rng.normal(size=n_simulations)*self.std
+        elif self.type == "student":
+            if "df" in self.kwargs.keys():
+                df = self.kwargs["df"]
+            else:
+                df = 2.
+            noise = self.rng.standard_t(df, size=n_simulations)
+        return self.drift + noise
+
+
+# class RandomStudentAgent(Agent):
+#     def __init__(self, env, drift=0, df= 1, **kwargs):
+#         Agent.__init__(self, env, **kwargs)
+#         self.drift = drift
+#         self.df = df
+    
+#     def fit(self, budget: int, **kwargs):
+#         pass
+    
+#     def eval(self, n_simulations=1, **kwargs):
+#         return self.drift + self.rng.standard_t(self.df, size=n_simulations)
 
 #TODO check that comparator is using n_simulations
 class MixtureGaussianAgent(Agent):
@@ -137,10 +163,36 @@ def make_different_agents(mus, probas = [0.5, 0.5]):
     return manager1, manager2
 
 
+def exp3(df):
+
+    manager1 = (
+        RandomAgent,
+        dict(
+            train_env=(DummyEnv, {}),
+            init_kwargs={"drift": 0, "df": df, "type": "student"},
+            fit_budget=1,
+            agent_name="Agent1",
+        ),
+    )
+
+    manager2 = (
+        RandomAgent,
+        dict(
+            train_env=(DummyEnv, {}),
+            init_kwargs={"drift": 0, "std": 1.},
+            fit_budget=1,
+            agent_name="Agent2",
+        ),
+    )
+
+    
+    return manager1, manager2
+
+
 if __name__ == "__main__":
 
     M=10000
-    EXP = "exp2"
+    EXP = "exp3"
     # max_num_seeds = 
 
     seeds = np.arange(M)
@@ -148,15 +200,17 @@ if __name__ == "__main__":
     K_list = np.array([5])
     n_list = np.array([5])
     B_list = np.array([10**4])# 10**4, 5*10**4, 10**5])
-    dmu_list = np.linspace(0, 1, 10)
+    # dmu_list = np.linspace(0, 1, 10)
+    dist_params_list = np.array([2., 4., 8., 64., 1024.])
 
-    mesh = np.meshgrid(seeds, K_list, n_list, B_list, dmu_list)
+    mesh = np.meshgrid(seeds, K_list, n_list, B_list, dist_params_list)
 
     seed_iter = mesh[0].reshape(-1)
     K_iter = mesh[1].reshape(-1)
     n_iter = mesh[2].reshape(-1)
     B_iter = mesh[3].reshape(-1)
-    dmu_iter = mesh[4].reshape(-1)
+    # dmu_iter = mesh[4].reshape(-1)
+    dist_params_iter = mesh[4].reshape(-1)
 
     num_comb = len(mesh[0].reshape(-1))
 
@@ -185,14 +239,16 @@ if __name__ == "__main__":
 
     def decision(**kwargs):
         exp_name = kwargs["exp_name"]
-        os.makedirs("mgres/"+ exp_name, exist_ok=True)
-        filename = "mgres/"+ exp_name + "exp2/result_K={}-n={}-B={}-dmu={}-seed={}.pickle".format(kwargs["K"], kwargs["n"], kwargs["B"], kwargs["diff_means"], kwargs["seed"])
+        os.makedirs(os.path.join("mgres/", exp_name), exist_ok=True)
+        filename = os.path.join("mgres/", exp_name, "/result_K={}-n={}-B={}-dist_params={}-seed={}.pickle".format(kwargs["K"], kwargs["n"], kwargs["B"], kwargs["dist_params"], kwargs["seed"]))
         comparator = Two_AgentsComparator(kwargs["n"], kwargs["K"], kwargs["B"],  alpha, seed=kwargs["seed"])
         # manager1, manager2 = make_same_agents(kwargs["diff_means"])
         if exp_name == "exp1":
-            manager1, manager2 = exp1(kwargs["diff_means"])
+            manager1, manager2 = exp1(kwargs["dist_params"])
         elif exp_name == "exp2":
-            manager1, manager2 = exp2(kwargs["diff_means"])
+            manager1, manager2 = exp2(kwargs["dist_params"])
+        elif exp_name == "exp2":
+            manager1, manager2 = exp2(kwargs["dist_params"])
         else:
             raise ValueError
         comparator.compare(manager2, manager1)
@@ -202,7 +258,7 @@ if __name__ == "__main__":
         return comparator.decision, comparator.n_iter / 2
 
     def decision_par(i):
-        return decision(seed=seed_iter[i], n=n_iter[i],K= K_iter[i], B=B_iter[i],diff_means= dmu_iter[i], exp_name = EXP)
+        return decision(seed=seed_iter[i], n=n_iter[i],K= K_iter[i], B=B_iter[i],dist_params= dist_params_iter[i], exp_name = EXP)
 
     #TODO
     # def non_adaptive_decision(**kwargs):
