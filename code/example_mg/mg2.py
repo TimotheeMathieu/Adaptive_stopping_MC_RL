@@ -31,7 +31,7 @@ B = 10000
 
 class RandomAgent(Agent):
     def __init__(self, env, drift=0, std = 1, **kwargs):
-        Agent.__init__(self, env, **kwargs)
+        Agent.__init__(self, env)
         self.drift = drift
         self.std = std
         if "type" in kwargs.keys():
@@ -186,7 +186,7 @@ def exp3(df):
 
 if __name__ == "__main__":
 
-    M=10000
+    M=5000
     EXP = "exp3"
     # max_num_seeds = 
 
@@ -234,16 +234,16 @@ if __name__ == "__main__":
 
     def decision(**kwargs):
         exp_name = kwargs["exp_name"]
-        os.makedirs(os.path.join("mgres/", exp_name), exist_ok=True)
-        filename = os.path.join("mgres/", exp_name, "/result_K={}-n={}-B={}-dist_params={}-seed={}.pickle".format(kwargs["K"], kwargs["n"], kwargs["B"], kwargs["dist_params"], kwargs["seed"]))
+        os.makedirs(os.path.join("mgres", exp_name), exist_ok=True)
+        filename = os.path.join("mgres", exp_name, "result_K={}-n={}-B={}-dist_params={}-seed={}.pickle".format(kwargs["K"], kwargs["n"], kwargs["B"], kwargs["dist_params"], kwargs["seed"]))
         comparator = Two_AgentsComparator(kwargs["n"], kwargs["K"], kwargs["B"],  alpha, seed=kwargs["seed"])
         # manager1, manager2 = make_same_agents(kwargs["diff_means"])
         if exp_name == "exp1":
             manager1, manager2 = exp1(kwargs["dist_params"])
         elif exp_name == "exp2":
             manager1, manager2 = exp2(kwargs["dist_params"])
-        elif exp_name == "exp2":
-            manager1, manager2 = exp2(kwargs["dist_params"])
+        elif exp_name == "exp3":
+            manager1, manager2 = exp3(kwargs["dist_params"])
         else:
             raise ValueError
         comparator.compare(manager2, manager1)
@@ -274,6 +274,7 @@ if __name__ == "__main__":
     #TODO
 
     res = Parallel(n_jobs=24, backend="multiprocessing")(delayed(decision_par)(i) for i in tqdm(range(num_comb)))
+    # decision_par(0)
     print("Done!")
     # res2 = Parallel(n_jobs=6, backend="multiprocessing")(delayed(non_adaptive_decision_par)(i) for i in tqdm(range(num_comb2)))
     # decision(0)
