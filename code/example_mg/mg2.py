@@ -1,17 +1,12 @@
-# import os
-# os.chdir("/home/ashilova/Adaptive_stopping_MC_RL/code")
-
-# print(os.getcwd())s
-
-
 import sys
 import os
 sys.path.insert(0, "/home/rdellave/Adaptive_stopping_MC_RL/code")
+print(sys.path)
 
-# import os
-# print(os.getcwd())
-# os.chdir("/home/ashilova/Adaptive_stopping_MC_RL/code")
-# print(os.getcwd())
+
+# import sys
+# sys.path.insert(0, "/home/ashilova/Adaptive_stopping_MC_RL/code")
+
 
 from rlberry.agents import Agent
 from rlberry.envs import Model
@@ -28,9 +23,9 @@ import pickle
 
 # GST definition
 
-K = 1  # at most 4 groups
+K = 16  # at most 4 groups
 alpha = 0.05
-n = 16  # size of a group
+n = 1  # size of a group
 
 B = 10000
 
