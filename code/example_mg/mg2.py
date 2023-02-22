@@ -143,7 +143,7 @@ if __name__ == "__main__":
     K_list = np.array([5])
     n_list = np.array([5])
     B_list = np.array([10**4])# 10**4, 5*10**4, 10**5])
-    dmu_list = np.linspace(0, 1, 10)
+    dmu_list = np.linspace(0, 1, 11)
 
     mesh = np.meshgrid(seeds, K_list, n_list, B_list, dmu_list)
 
