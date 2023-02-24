@@ -1,19 +1,21 @@
+import sys
+import os
+sys.path.insert(0, "/home/rdellave/Adaptive_stopping_MC_RL/code")
+sys.path.insert(0, "/home/ashilova/Adaptive_stopping_MC_RL/code")
+# print(sys.path)
 from rlberry.agents import Agent
 from rlberry.envs import Model
 import rlberry.spaces as spaces
-import sys
-sys.path.insert(0, "/home/rdellave/Adaptive_stopping_MC_RL/code")
-# print(sys.path)
 from compare_agents import MultipleAgentsComparator
 import time
 import numpy as np
 from tqdm import tqdm
 from joblib import Parallel, delayed
-import os
 import pickle
 
 from rlberry.utils.logging import set_level
 set_level('ERROR')
+
 
 class DummyEnv(Model):
     def __init__(self, **kwargs):
@@ -121,29 +123,15 @@ def exp4():
 
 if __name__ == "__main__":
 
-    # managers = [(
-    #     RandomAgent,
-    #     dict(
-    #         train_env=(DummyEnv, {}),
-    #         init_kwargs={"drift": 0},
-    #         fit_budget=1,
-    #         agent_name="Agent"+str(k),
-    #     ),
-    # ) for k in range(3)]
-
-    EXP = "exp4"
-    K = 5  # at most 4 groups
-    alpha = 0.05
-    n = 5  # size of a group
-    B = 10000
-    M = 100
-
     res = []
     restime = []
     p_vals = []
 
+    EXP = "exp4"
+    alpha = 0.05
+    M = 1
+
     seeds = np.arange(M)
-    # K_list = np.arange(4) + 1
     K_list = np.array([5])
     n_list = np.array([5])
     B_list = np.array([10**4])# 10**4, 5*10**4, 10**5])
@@ -163,41 +151,29 @@ if __name__ == "__main__":
 
     def decision(**kwargs):
         exp_name = kwargs["exp_name"]
-        os.makedirs(os.path.join("different_distribution_res", exp_name), exist_ok=True)
-        filename = os.path.join("different_distribution_res", exp_name, "result_K={}-n={}-B={}-dist_params={}-seed={}.pickle".format(kwargs["K"], kwargs["n"], kwargs["B"], kwargs["dist_params"], kwargs["seed"]))
+        os.makedirs(os.path.join("multc_sd_res", exp_name), exist_ok=True)
+        filename = os.path.join("multc_sd_res", exp_name, "result_K={}-n={}-B={}-dist_params={}-seed={}.pickle".format(kwargs["K"], kwargs["n"], kwargs["B"], kwargs["dist_params"], kwargs["seed"]))
         comparator = MultipleAgentsComparator(n = kwargs["n"], K = kwargs["K"], B = kwargs["B"], alpha = alpha, seed=kwargs["seed"], beta=0.01)
-        
         if exp_name == "exp4":
             managers = exp4()
         else:
             raise ValueError
-        
         comparator.compare(managers, verbose = False)
-
         with open(filename, "wb") as f:
             pickle.dump([kwargs, comparator.__dict__], f)
-        
         return comparator.decisions
 
     def decision_par(i):
         return decision(seed = seed_iter[i], n = n_iter[i], K = K_iter[i], B = B_iter[i], dist_params = dist_params_iter[i], exp_name = EXP)
 
-    # def decision(seed):
-    #     comparator = MultipleAgentsComparator(n=n, K=K, B=B, alpha=alpha, n_evaluations = 10, beta=0.01)
-    #     # comparator  = Comparator(n=n, K=K, B=B, alpha=alpha, beta=0.5, joblib_backend = "multiprocessing")
-    #     comparator.compare(managers)
-    #     print(comparator.n_iters)
-    #     return comparator.decisions    
-
-
-    res = Parallel(n_jobs=-1, backend="multiprocessing")(delayed(decision_par)(i) for i in tqdm(range(M))) # n_jobs=1 for debugging
-    # res = [decision_par(i) for i in tqdm(range(M))]
-
+    res = Parallel(n_jobs=1, backend="multiprocessing")(delayed(decision_par)(i) for i in tqdm(range(M))) # n_jobs=1 for debugging
 
     # estimate of the Family-Wise Error Rate (FWER)
     idxs = [ 'reject' in a for a in res]
     print(res)
     print("proba to reject", np.mean(idxs))
+
+
 
 
     # print(comparator.decisions,
