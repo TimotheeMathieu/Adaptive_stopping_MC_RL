@@ -364,12 +364,12 @@ Then, similarly as in the proof of Lemma~\ref{lem:quantile_permu_2}, because we 
 
 \begin{Lemma}\label{lem:invariance}
 We have that for $k \le K$, for any $\sigma$ concatenation of $k$ permutations, 
-$$(T_{N,i}^{(\textbf{I}^+)}(\id),\widehat{b}_{N,i}^{(\textbf{I}^+)})_{i\le k}=(T_{N,i}^{(\textbf{I}^+)}(\sigma_1^i), \widehat{b}_{N,i}^{(\textbf{I}^+)})_{i\le k}$$
+$$(T_{N,l}^{(\textbf{I}^+)}(\id),\widehat{b}_{N,i}^{(\textbf{I}^+)})_{l\le k}=(T_{N,i}^{(\textbf{I}^+)}(\sigma_1^l), \widehat{b}_{N,l}^{(\textbf{I}^+)})_{l\le k}$$
 \end{Lemma}
 Using Lemma~\ref{lem:invariance}, we have for any $\sigma$
 $$\P\left(T_{N,k}^{(\textbf{I}^+)}(\id) > \widehat{b}_{N,k}^{(\textbf{I}^+)}, \mathrm{NR}_k(\id ) \right) = \P\left(T_{N,k}^{(\textbf{I}^+)}(\sigma) > \widehat{b}_{N,k}^{(\textbf{I}^+)}, \mathrm{NR}_k(\sigma) \right)$$
 
-Hence, from Lemma~\ref{lem:multiple_test_FWE},
+Hence, from Lemma~\ref{lem:multiple_test_FWE}, and Lemma~\ref{lem:invariance},
 
 \begin{align*}
 \mathrm{FWE} &\le \sum_{k=1}^K\frac{1}{((2N)!)^k}\sum_{\sigma_1,\dots,\sigma_k \in \S_{2N}}\P\left(T_{N,k}^{(\textbf{I}^+)}(\sigma) > \widehat{b}_{N,k}^{(\textbf{I}^+)}, \mathrm{NR}_k(\sigma) \right)\\
@@ -391,6 +391,46 @@ where we used the definition of $\widehat{b}_{N,k}^{(\textbf{I}^+)}$ to make the
 \appendix
 
 \section{Proof of Lemmas}
+
+% \paragraph{Proof that what I wanted to use do not work}
+% Consider the case $N=2$, $L=3$ agents. Then, we have 
+% $$T_{N,1}^{(1,2)}(\id)=|e_{1,1}(A_1)+e_{1,2}(A_1)-e_{1,1}(A_2)-e_{1,2}(A_2)| $$
+% $$T_{N,1}^{(2,3)}(\id)=|e_{1,1}(A_3)+e_{1,2}(A_3)-e_{1,1}(A_2)-e_{1,2}(A_2)| $$
+% $$T_{N,1}^{(1,3)}(\id)=|e_{1,1}(A_1)+e_{1,2}(A_1)-e_{1,1}(A_3)-e_{1,2}(A_3)| $$
+% that we represent by the matrix
+% \[
+%   M = 
+%   \begin{pmatrix}
+%     1 & 1 & -1 & -1 & 0 & 0 \\
+%     0 & 0 & -1 & -1 & 1 & 1 \\
+%     1 & 1 & 0 & 0 & -1 & -1 \\
+%   \end{pmatrix}
+% \]
+% and $T(M)=(T^{(1,2)}(\id),T^{(2,3)}(\id), T^{(1,3)}(\id)) = M\cdot(e_{1,1}(A_1),e_{1,2}(A_1),e_{1,1}(A_2),e_{1,2}(A_2),e_{1,1}(A_3),e_{1,2}(A_3) )^T$.
+ 
+% One simple rule:  multiplying a line of $M$ by $-1$ does not change the value of $T(M)$.
+
+% Consider the permutation 
+% \[
+%   \sigma = 
+%   \begin{pmatrix}
+%     1 & 2 & 3 & 4\\
+%     3 & 1 & 2 & 4 
+%   \end{pmatrix}
+% \]
+% with representation
+% \[
+%   M_\sigma = 
+%   \begin{pmatrix}
+%     -1 & 1 & 1 & -1 & 0 & 0 \\
+%     0 & 0 & -1 & 1 & 1 & -1 \\
+%     -1 & 1 & 0 & 0 & 1 & -1 \\
+%   \end{pmatrix}
+% \]
+% Remark that there is no permutation of the columns of $M_\sigma$ and operation of multiplying lines by -1 which would transform $M_\sigma$ in $M$ . Hence, there is not global permutation such that $T(M)$ on the permuted sample is equal to $T(M_\sigma)$.
+
+\paragraph{``proof'' that it is obvious  and I was making things complicated ?}
+
 \subsection{Proof of Lemma~\ref{lem:multiple_test_FWE}}
 
 Denote by $\textbf{C}_k$ the (random) value of $\textbf{C}$ at the beginning of interim $k$. 
@@ -413,31 +453,65 @@ Moreover, having $\textbf{J} \supset \textbf{I}$, we have $\widehat{b}_{N,k}^{(\
 \end{align*}
 which proves the lemma.
 \subsection{Proof of Lemma~\ref{lem:invariance}}
-We denote the comparisons we do as $(c_i)_{i \in \textbf{I}}$, they describe a graph with the nodes being the agents denoted $1,\dots,L$ and $(j_1,j_2)$ has an edge if $(j_1,j_2)\in(c_i)_{i \in \textbf{I}}$ is one of the comparisons that correspond to a true hypothesis. This graph is not necessarily connected, we denote $C(i)$ the connected component to which node $i$ (e.g. agent $i$) belongs, i.e. for any $i,j \in C(i)$ there exists a path going from $i$ to $j$. Remark that $C(i)$ cannot be equal to the singleton $\{i\}$, because it would mean that all the comparisons with $i$ are in fact false hypotheses, and then $i$ would not belong to a couple in $\textbf{I}$.
+We denote the comparisons we do as $(c_i)_{i \in \textbf{I}}$, they describe a graph with the nodes being the agents denoted $1,\dots,L$ and $(j_1,j_2)$ has an edge if $(j_1,j_2)\in(c_i)_{i \in \textbf{I}}$ is one of the comparisons that correspond to a true hypothesis. This graph is not necessarily connected, we denote $C(i)$ the connected component to which node $a$ (e.g. agent $a$) belongs, i.e. for any $a_1,a_2 \in C(a)$ there exists a path going from $a_1$ to $a_2$. Remark that $C(a)$ cannot be equal to the singleton $\{a\}$, because it would mean that all the comparisons with $a$ are in fact false hypotheses, and then $a$ would not belong to a couple in $\textbf{I}$.
 
-Now, let us look at how a concatenation of permutations $\sigma_1\cdot\ldots\cdot\sigma_m$ for $m\le k$ acts on the evaluations $e_{n,i}(j)$ for $i \le m$, $1\le n\le 2N$ and $j \in \mathcal{C}(i)$. We have
-\begin{align*}
-T_{N,k}^{(j)}(\sigma_1 \cdot  \sigma_2 \cdot  \ldots  \cdot  \sigma_k)&=  \left|\sum_{i=1}^k\left(\sum_{n=1}^{N} e_{\sigma_i(n),i}(j)-\sum_{n=N+1}^{2N} e_{\sigma_i(n),i}(j)\right)\right|
-\end{align*}
+Then, it follows from the construction of permutation test that jointly on $k\le K$ and $a_1,a_2 \in C(i)$, we have $T_{N,k}^{(a_1,a_2)}(\id)=^d T_{N,1}^{(a_1,a_2)}(\sigma_1^k)$ for any $\sigma_1,\dots,\sigma_k \in  \S_{2N}$.
 
-Hence, $T_{N,k}^{(j)}(\sigma) = T_{N,k}^{(j)}(\sigma')$ where $\sigma'_i(n)=\sigma_i(n+N)$ if $n \le N$ and $\sigma_i(n) = \sigma_i(n-N)$ otherwise. This corresponds to changing the sign $-1$ to $+1$ inside the absolute value. Now, let us consider two different comparisons $j=(i_1,i_2)$ and $j'=(i_2,i_3)$, i.e. the two couples share one agent. We can consider that in both $T_{N,k}^{(j)}(\sigma)$ and $T_{N,k}^{(j')}(\sigma)$ the permutation acts in the same way on agent $i_2$.
+Let us illustrate that on an example. Suppose that $N=2$ and $J=3$.  Consider the permutation 
+\[
+  \sigma = 
+  \begin{pmatrix}
+    1 & 2 & 3 & 4\\
+    3 & 1 & 2 & 4 
+  \end{pmatrix}
+\]
+Because all the evaluations are i.i.d., we have the joint equality in distribution
+$$
+\begin{pmatrix}
+|e_{1,1}(A_1)+e_{2,1}(A_1)-e_{1,1}(A_2)-e_{2,1}(A_2)| \\
+|e_{1,1}(A_3)+e_{2,1}(A_3)-e_{1,1}(A_2)-e_{2,1}(A_2)| \\
+|e_{1,1}(A_1)+e_{2,1}(A_1)-e_{1,1}(A_3)-e_{2,1}(A_3)|
+ \end{pmatrix} 
+=^d
+\begin{pmatrix}
+|e_{1,1}(A_1)+e_{2,1}(A_2)-e_{1,1}(A_1)-e_{2,1}(A_2)| \\
+|e_{1,1}(A_3)+e_{2,1}(A_2)-e_{1,1}(A_3)-e_{2,1}(A_2)| \\
+|e_{1,1}(A_1)+e_{2,1}(A_3)-e_{1,1}(A_1)-e_{2,1}(A_3)|
+ \end{pmatrix} 
+$$
+and hence, 
+$$(T_{N,1}^{(j)}(\id))_{1\le j\le 3}=^d(T_{N,1}^{(j)}(\sigma))_{1\le j\le 3}.$$
+For $k=2$, we have for $\sigma_2 = \sigma$,
+\begin{multline*}
+\begin{pmatrix}
+|e_{1,1}(A_1)+e_{2,1}(A_1)-e_{1,1}(A_2)-e_{2,1}(A_2)| \\
+|e_{1,1}(A_3)+e_{2,1}(A_3)-e_{1,1}(A_2)-e_{2,1}(A_2)| \\
+|e_{1,1}(A_1)+e_{2,1}(A_1)-e_{1,1}(A_3)-e_{2,1}(A_3)| \\
+|e_{1,1}(A_1)+e_{2,1}(A_1)-e_{1,1}(A_2)-e_{2,1}(A_2)+e_{1,2}(A_1)+e_{2,2}(A_1)-e_{1,2}(A_2)-e_{2,2}(A_2)| \\
+|e_{1,1}(A_3)+e_{2,1}(A_3)-e_{1,1}(A_2)-e_{2,1}(A_2)+e_{1,2}(A_3)+e_{2,2}(A_3)-e_{1,2}(A_2)-e_{2,2}(A_2)| \\
+|e_{1,1}(A_1)+e_{2,1}(A_1)-e_{1,1}(A_3)-e_{2,1}(A_3)+e_{1,2}(A_1)+e_{2,2}(A_1)-e_{1,2}(A_3)-e_{2,2}(A_3)|
+ \end{pmatrix} \\
+=^d
+\begin{pmatrix}
+|e_{1,1}(A_1)+e_{2,1}(A_2)-e_{1,1}(A_1)-e_{2,1}(A_2)| \\
+|e_{1,1}(A_3)+e_{2,1}(A_2)-e_{1,1}(A_3)-e_{2,1}(A_2)| \\
+|e_{1,1}(A_1)+e_{2,1}(A_3)-e_{1,1}(A_1)-e_{2,1}(A_3)|\\
+|e_{1,1}(A_1)+e_{2,1}(A_2)-e_{1,1}(A_1)-e_{2,1}(A_2)+e_{1,2}(A_1)+e_{2,2}(A_2)-e_{1,2}(A_1)-e_{2,2}(A_2)| \\
+|e_{1,1}(A_3)+e_{2,1}(A_2)-e_{1,1}(A_3)-e_{2,1}(A_2)+e_{1,2}(A_3)+e_{2,2}(A_2)-e_{1,2}(A_3)-e_{2,2}(A_2)| \\
+|e_{1,1}(A_1)+e_{2,1}(A_3)-e_{1,1}(A_1)-e_{2,1}(A_3)+e_{1,2}(A_1)+e_{2,2}(A_3)-e_{1,2}(A_1)-e_{2,2}(A_3)|
+ \end{pmatrix} 
+\end{multline*}
+and then, taking the max on the three first line and three last lines separately, we get jointly
+$$(T_{N,k}^{(j)}(\id))_{1\le j\le 3, k\le 2}=^d(T_{N,k}^{(j)}(\sigma))_{1\le j\le 3, k\le 2}.$$
+This reasoning can be generalized to general $N$, $J$ and $K$:
 
-As a consequence transformation by $\sigma_1\cdot\ldots\cdot\sigma_k$ can be seen as a global transformation of the concatenation of all the points (with repetition removed) $(e_{n,i}(j))_{n\le 2N, i\le k,j\in \textbf{I}}$ becoming $(e_{\sigma_i(n),i}(j))_{n\le 2N, i\le k,j\in \textbf{I}}$ . Moreover, we have that for any connected composant $\mathcal{C}$ in the graph, the random variables $(e_{n,i}(j), e_{n,i}(j))_{n\le 2N, i\le k,j\in \mathcal{C}}$ are i.i.d because all comparisons of $\mathcal{C}$ correspond true hypotheses $P_i = P_j$ and by transitivity of the equality, all the laws are equal in the whole connected component.
+$$(T_{N,k}^{(a_1,a_2)}(\id))_{ k\le K, a_1 \in C(i), a_2 \in C(i)}=^d(T_{N,k}^{(a_1,a_2)}(\sigma))_{ k\le K, a_1 \in C(i), a_2 \in C(i)}.$$
 
-To conclude, we will use that functions of variables equal in distributions are also equal in distribution themselves.
+Then, use that by construction, the different connected component $C(i)$ are independent from one another and hence, 
 
-Let $\mathcal{C}$ be one connected component in the graph and denote $\textbf{I}_\mathcal{C} \subset \textbf{I}$ the subset of $\textbf{I}$ containing only comparisons of agents in $\mathcal{C}$. Let us consider the function $\textbf{T}_k : \R^{2N}\times\R^k\times\R^{\textbf{I}}\to \R^{Bk|\textbf{I}_\mathcal{C}|}$ defined by 
-$$\textbf{T}_k\left((e_{n,i}(j))_{n\le 2N, i\le k,j\in \mathcal{C}}\right) =(T_{N,i}^{(\textbf{I}_\mathcal{C}^+)}(\id), \widehat{b}_{N,i}^{(\textbf{I}_\mathcal{C}^+)})_{i\le k}$$
-$\textbf{T}_k$ is a measurable function of the sample $(e_{n,i}(j))_{n\le 2N, i\le k,j\in \mathcal{C}}$ and this sample is composed of i.i.d random variables (because they belong to the same connected component), hence the law of $(e_{n,i}(j))_{n\le N, i\le k,j\in \mathcal{C}}$ is invariant by permutation and this implies that for any $\sigma$ $(e_{n,i}(j))_{n\le N, i\le k,j\in \mathcal{C}} \dec (e_{\sigma_i(n),i}(j))_{n\le N, i\le k,j\in \mathcal{C}}$. Hence, $$\textbf{T}_k\left((e_{n,i}(j))_{n\le N, i\le k,j\in \mathcal{C}}\right) \dec \textbf{T}_k\left((e_{\sigma_i(n),i}(j))_{n\le N, i\le k,j\in \mathcal{C}}\right)$$ 
-which implies that $(T_{N,i}^{(\textbf{I}_\mathcal{C}^+)}(\id), \widehat{b}_{N,i}^{(\textbf{I}_\mathcal{C}^+)})_{i\le k}=(T_{N,i}^{(\textbf{I}_\mathcal{C}^+)}(\sigma), \widehat{b}_{N,i}^{(\textbf{I}_\mathcal{C}^+)})_{i\le k}$ for any $\sigma$ concatenation of $k$ permutations.
+$$(T_{N,k}^{(c_i)}(\id))_{ k\le K, c_i \in \textbf{I}}=^d(T_{N,k}^{(c_i)}(\sigma))_{ k\le K,  c_i \in \textbf{I}}.$$
+The results follows from taking the maximum on all the comparisons.
 
-Remark then that by construction the connected components are each independent of each other in the sense that the hypotheses corresponding to the nodes are independent of each other. Hence, 
-
-$$(T_{N,i}^{(\textbf{I}_\mathcal{C}^+)}(\id), \widehat{b}_{N,i}^{(\textbf{I}_\mathcal{C}^+)})_{i\le k, \mathcal{C}}=(T_{N,i}^{(\textbf{I}_\mathcal{C}^+)}(\sigma), \widehat{b}_{N,i}^{(\textbf{I}_\mathcal{C}^+)})_{i\le k, \mathcal{C}}$$
-and then, by taking the maximum,
-$$(\max_{\mathcal{C}}T_{N,i}^{(\textbf{I}_\mathcal{C}^+)}(\id), \max_{\mathcal{C}}\widehat{b}_{N,i}^{(\textbf{I}_\mathcal{C}^+)})_{i\le k}=(\max_{\mathcal{C}}T_{N,i}^{(\textbf{I}_\mathcal{C}^+)}(\sigma), \max_{\mathcal{C}}\widehat{b}_{N,i}^{(\textbf{I}_\mathcal{C}^+)})_{i\le k}$$
-which may be rewritten as 
-$$(T_{N,i}^{(\textbf{I}^+)}(\id),\widehat{b}_{N,i}^{(\textbf{I}^+)})_{i\le k}=(T_{N,i}^{(\textbf{I}^+)}(\sigma), \widehat{b}_{N,i}^{(\textbf{I}^+)})_{i\le k}$$
 \bibliographystyle{plain}
 \bibliography{Adastop}
 \end{document}
