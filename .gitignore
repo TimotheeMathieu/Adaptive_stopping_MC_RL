@@ -1,3 +1,4 @@
 rlberry_data
 *.pdf
 *.pkl
+__pycache__
