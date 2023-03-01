@@ -286,7 +286,7 @@ class MultipleAgentsComparator:
                 id_reject = np.arange(len(current_decisions))[current_decisions== "continue"][imax]
                 current_decisions[id_reject] = "reject"
                 self.rejected_decision.append(self.current_comparisons[id_reject])
-                current_sign[id_reject].append(2*(Tmaxsigned > 0)-1)
+                current_sign[id_reject] = 2*(Tmaxsigned > 0)-1
                 print("reject")
             elif Tmin < bk_inf:
                 id_accept = np.arange(len(current_decisions))[current_decisions == "continue"][imin]
@@ -479,11 +479,9 @@ class MultipleAgentsComparator:
         links = np.zeros([len(agent_names),len(agent_names)])
         for i in range(len(self.comparisons)):
             c = self.comparisons[i]
-            if self.decisions[i] == "accept":
-                links[c[0],c[1]] = -1
-            else:
-                links[c[0],c[1]] = 1
-        links = links + links.T
+            links[c[0],c[1]] = self.decisions_num[i]
+            
+        links = links + links.T 
         links = links[id_sort,:][:, id_sort]
 
         fig, (ax1, ax2) = plt.subplots(
