@@ -7,6 +7,8 @@ from scipy.special import binom
 from scipy.stats import norm
 import matplotlib.pyplot as plt
 import seaborn as sns
+from matplotlib.colors import LinearSegmentedColormap
+import matplotlib.patches as mpatches
 
 import rlberry
 from rlberry.agents import Agent
@@ -481,7 +483,7 @@ class MultipleAgentsComparator:
             c = self.comparisons[i]
             links[c[0],c[1]] = self.decisions_num[i]
             
-        links = links + links.T 
+        links = links - links.T
         links = links[id_sort,:][:, id_sort]
 
         fig, (ax1, ax2) = plt.subplots(
@@ -491,10 +493,9 @@ class MultipleAgentsComparator:
             cellText=[self.n_iters], rowLabels=["n_iter"], loc="top", cellLoc="center"
         )
 
-        # Generate a mask for the upper triangle
-        #mask = np.triu(np.ones_like(links, dtype=bool))
-        # Generate a custom diverging colormap
-        cmap = sns.diverging_palette(230, 20, as_cmap=True)
+        # Generate a custom colormap
+        colors = np.array([(255, 80, 80), (102, 255, 102), (102, 153, 255)])/256
+        cmap = LinearSegmentedColormap.from_list("my_cmap", colors, N=3)
 
         # Draw the heatmap with the mask and correct aspect ratio
         res = sns.heatmap(links,cmap=cmap, vmax=1, center=0,linewidths=.5, ax =ax1, 
@@ -506,6 +507,12 @@ class MultipleAgentsComparator:
             spine.set_linewidth(1)
 
         ax2.boxplot(Z.T, labels=np.array(agent_names)[id_sort])
+        # Creating legend with color box
+        blue_patch = mpatches.Patch(color=colors[0], label='smaller')
+        green_patch = mpatches.Patch(color=colors[1], label='equal')
+        red_patch = mpatches.Patch(color=colors[2], label='larger')
+
+        plt.legend(handles=[blue_patch, green_patch, red_patch],loc='center left', bbox_to_anchor=(1, 0.5))
 
 
 def _fit_agent(manager):
