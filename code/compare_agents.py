@@ -198,6 +198,9 @@ class MultipleAgentsComparator:
                 self.n_iters = [0] * n_managers
             self.decisions = np.array(["continue"] * len(self.comparisons))
             self.id_tracked = np.arange(len(self.decisions))
+            if self.rng is None:
+                seeder = self.seeder.spawn(1)
+                self.rng = seeders.rng
         k = self.k
 
         clevel = self.alpha*(k + 1) / self.K
@@ -350,15 +353,14 @@ class MultipleAgentsComparator:
         scalars : list of list of scalars.
         """
         Z = [np.array([]) for _ in scalars]
-        seeders = self.seeder.spawn(1)
-        self.rng = seeders.rng
+
 
         for k in range(self.K):
             Z = self._get_z_scalars(scalars, Z, k)
             decisions, T = self.partial_compare(Z, k)
             if np.all([d in ["accept", "reject"] for d in self.decisions]):
                 break
-        return 
+        return decisions
 
     def _get_z_scalars(self, scalars, Z, k):
 
