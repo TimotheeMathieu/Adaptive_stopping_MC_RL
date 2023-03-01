@@ -487,19 +487,19 @@ class MultipleAgentsComparator:
         links = links[id_sort,:][:, id_sort]
 
         fig, (ax1, ax2) = plt.subplots(
-            2, 1, gridspec_kw={"height_ratios": [1, 2], "hspace": 0}, figsize=(6,5)
+            2, 1, gridspec_kw={"height_ratios": [1, 2]}, figsize=(6,5)
         )
         the_table = ax1.table(
             cellText=[self.n_iters], rowLabels=["n_iter"], loc="top", cellLoc="center"
         )
 
         # Generate a custom colormap
-        colors = np.array([(255, 80, 80), (102, 255, 102), (102, 153, 255)])/256
+        colors = np.array([(255, 80, 80), (51, 204, 51), (102, 153, 255)])/256
         cmap = LinearSegmentedColormap.from_list("my_cmap", colors, N=3)
 
         # Draw the heatmap with the mask and correct aspect ratio
         res = sns.heatmap(links,cmap=cmap, vmax=1, center=0,linewidths=.5, ax =ax1, 
-                          cbar=False, yticklabels=np.array(agent_names)[id_sort])
+                          cbar=False, yticklabels=np.array(agent_names)[id_sort],  xticklabels=[])
 
         # Drawing the frame
         for _, spine in res.spines.items():
@@ -507,6 +507,8 @@ class MultipleAgentsComparator:
             spine.set_linewidth(1)
 
         ax2.boxplot(Z.T, labels=np.array(agent_names)[id_sort])
+        ax2.xaxis.set_label([])
+        ax2.xaxis.tick_top()
         # Creating legend with color box
         blue_patch = mpatches.Patch(color=colors[0], label='smaller')
         green_patch = mpatches.Patch(color=colors[1], label='equal')
