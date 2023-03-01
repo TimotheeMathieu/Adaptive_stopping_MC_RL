@@ -116,12 +116,12 @@ class MultipleAgentsComparator:
         self.seeder = Seeder(seed)
         self._writer = DefaultWriter("Comparator")
         self.rejected_decision = []
-        self.rejected_sign = []
         self.joblib_backend = joblib_backend
         self.agent_names = []
         self.comparisons = comparisons
         self.current_comparisons = copy(comparisons)
         self.n_iters = None
+        self.rng = None
 
     def compute_sum_diffs(self, k, Z, comparisons, boundary):
         """
@@ -197,10 +197,11 @@ class MultipleAgentsComparator:
             if self.n_iters is None:
                 self.n_iters = [0] * n_managers
             self.decisions = np.array(["continue"] * len(self.comparisons))
+            self.decisions_num = np.array([np.nan] * len(self.comparisons))
             self.id_tracked = np.arange(len(self.decisions))
             if self.rng is None:
                 seeder = self.seeder.spawn(1)
-                self.rng = seeders.rng
+                self.rng = seeder.rng
         k = self.k
 
         clevel = self.alpha*(k + 1) / self.K
@@ -212,7 +213,8 @@ class MultipleAgentsComparator:
             print("Step {}".format(k))
 
         current_decisions = self.decisions[self.decisions == "continue"]
-
+        current_sign = np.zeros(len(current_decisions))
+        
         for j in range(len(current_decisions)):
             rs_now = rs[:,current_decisions == "continue"]
             values = np.sort(
@@ -284,7 +286,7 @@ class MultipleAgentsComparator:
                 id_reject = np.arange(len(current_decisions))[current_decisions== "continue"][imax]
                 current_decisions[id_reject] = "reject"
                 self.rejected_decision.append(self.current_comparisons[id_reject])
-                self.rejected_sign.append(Tmaxsigned > 0)
+                current_sign[id_reject].append(2*(Tmaxsigned > 0)-1)
                 print("reject")
             elif Tmin < bk_inf:
                 id_accept = np.arange(len(current_decisions))[current_decisions == "continue"][imin]
@@ -316,6 +318,8 @@ class MultipleAgentsComparator:
 
         self.decisions[self.id_tracked[id_rejected]] = "reject"
         self.decisions[self.id_tracked[id_accepted]] = "accept"
+
+        self.decisions_num[self.id_tracked] = current_sign
 
         self.id_tracked = self.id_tracked[~id_decided]
         self.current_comparisons = self.current_comparisons[~id_decided]
@@ -471,7 +475,6 @@ class MultipleAgentsComparator:
 
         if agent_names is None:
             agent_name = self.agent_names
-
 
         links = np.zeros([len(agent_names),len(agent_names)])
         for i in range(len(self.comparisons)):
