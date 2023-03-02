@@ -111,7 +111,6 @@ class MultipleAgentsComparator:
         self.beta = beta
         self.n_evaluations = n_evaluations
         self.boundary = []
-        self.test_stats = []
         self.k = 0
         self.level_spent = 0
         self.power_spent = 0
@@ -125,11 +124,12 @@ class MultipleAgentsComparator:
         self.n_iters = None
         self.rng = None
 
-    def compute_sum_diffs(self, k, Z, comparisons, boundary):
+    def compute_sum_diffs(self, k, Z):
         """
         Compute the absolute value of the sum differences.
         """
-
+        comparisons = self.current_comparisons
+        boundary = self.boundary
         if k == 0:
             for _ in range(self.B):
                 sum_diff = []
@@ -152,15 +152,12 @@ class MultipleAgentsComparator:
                     sum_diffs.append(np.abs(zval))
 
             # add a new random permutation
+            Zk = np.zeros(2*self.n)
             for j in range(len(self.sum_diffs)):
                 id_pos = self.rng.choice(2 * self.n, self.n, replace=False)
                 for i, comp in enumerate(comparisons):
-                    Zk = np.hstack(
-                        [
-                            Z[comp[0]][(k * self.n) : ((k + 1) * self.n)],
-                            Z[comp[1]][(k * self.n) : ((k + 1) * self.n)],
-                        ]
-                    )
+                    Zk[:self.n]=Z[comp[0]][(k * self.n) : ((k + 1) * self.n)]
+                    Zk[self.n:(2*self.n)] = Z[comp[1]][(k * self.n) : ((k + 1) * self.n)]
                     mask = np.zeros(2 * self.n)
                     mask[list(id_pos)] = 1
                     mask = mask == 1
@@ -187,20 +184,23 @@ class MultipleAgentsComparator:
         bk: float
            thresholds.
         """
+        n_managers = len(Z)
+
         if self.k == 0:
             # initialization
-            n_managers = len(Z)
             if self.comparisons is None:
                 self.comparisons = np.array(
                     [(i, j) for i in range(n_managers) for j in range(n_managers) if i < j]
                 )
             self.current_comparisons = copy(self.comparisons)
             self.sum_diffs = []
-            if self.n_iters is None:
-                self.n_iters = [0] * n_managers
-            self.decisions = np.array(["continue"] * len(self.comparisons))
-            self.decisions_num = np.array([np.nan] * len(self.comparisons))
-            self.id_tracked = np.arange(len(self.decisions))
+            
+            self.n_iters = {"Agent "+str(i):0 for i in range(n_managers)}
+                
+            self.decisions = {str(c):"continue" for c in self.comparisons}
+            self.id_tracked = np.arange(len(self.decisions)) # ids of comparisons effectively tracked
+
+            # Initialize the seed if not already done.
             if self.rng is None:
                 seeder = self.seeder.spawn(1)
                 self.rng = seeder.rng
@@ -209,19 +209,19 @@ class MultipleAgentsComparator:
         clevel = self.alpha*(k + 1) / self.K
         dlevel = self.beta*(k + 1) / self.K
 
-        rs = np.abs(np.array(self.compute_sum_diffs(k, Z, self.current_comparisons, self.boundary)))
+        rs = np.abs(np.array(self.compute_sum_diffs(k, Z)))
 
         if verbose:
             print("Step {}".format(k))
 
-        current_decisions = self.decisions[self.decisions == "continue"]
+        current_decisions = np.array(["continue"]*len(self.id_tracked))
         current_sign = np.zeros(len(current_decisions))
         
         for j in range(len(current_decisions)):
             rs_now = rs[:,current_decisions == "continue"]
             values = np.sort(
                 np.max(rs_now, axis=1)
-            )  # for now, don't care about ties. And there are ties, for instance when B is None, there are at least two of every values !
+            )  
 
             icumulative_probas = np.arange(len(rs_now))[::-1] / self.B  # This corresponds to 1 - F(t) = P(T > t)
 
@@ -287,12 +287,16 @@ class MultipleAgentsComparator:
             if Tmax > bk_sup:
                 id_reject = np.arange(len(current_decisions))[current_decisions== "continue"][imax]
                 current_decisions[id_reject] = "reject"
-                self.rejected_decision.append(self.current_comparisons[id_reject])
-                current_sign[id_reject] = 2*(Tmaxsigned > 0)-1
+
+                if Tmaxsigned >0:
+                    self.decisions[str(self.current_comparisons[id_reject])] = "larger"
+                else:
+                    self.decisions[str(self.current_comparisons[id_reject])] = "smaller"
                 print("reject")
             elif Tmin < bk_inf:
                 id_accept = np.arange(len(current_decisions))[current_decisions == "continue"][imin]
                 current_decisions[id_accept] = "accept"
+                self.decisions[str(self.current_comparisons[id_accept])] = "equal"
             else:
                 break
 
@@ -301,32 +305,24 @@ class MultipleAgentsComparator:
         self.boundary.append((bk_inf, bk_sup))
 
         self.level_spent += level_to_add  # level effectively used at this point
-        self.power_spent += power_to_add
+        self.power_spent += power_to_add 
         
         if k == self.K - 1:
-            self.decisions[self.decisions == "continue"] = "accept"
+            for c in self.comparisons:
+                if self.decisions[str(c)]=="continue":
+                    self.decisions[str(c)] = "equal"
         
         self.k = self.k + 1
         self.eval_values = Z
         self.mean_eval_values = [np.mean(z) for z in Z]
-        self.n_iters = [len(z.ravel()) for z in Z]
-
-
-        self.test_stats.append(Tmaxsigned)
+        for i in range(n_managers):
+            self.n_iters["Agent "+str(i)] = len(Z[i].ravel())
 
         id_decided = np.array(current_decisions) != "continue"
-        id_rejected = np.array(current_decisions) == "reject"
-        id_accepted = np.array(current_decisions) == "accept"
-
-        self.decisions[self.id_tracked[id_rejected]] = "reject"
-        self.decisions[self.id_tracked[id_accepted]] = "accept"
-
-        self.decisions_num[self.id_tracked] = current_sign
 
         self.id_tracked = self.id_tracked[~id_decided]
         self.current_comparisons = self.current_comparisons[~id_decided]
         self.sum_diffs = np.array(self.sum_diffs)[:, ~id_decided]
-        return current_decisions, Tmaxsigned
 
     def compare(self, managers,  clean_after=True, verbose=True):
         """
@@ -345,8 +341,9 @@ class MultipleAgentsComparator:
         
         for k in range(self.K):
             Z = self._fit(managers, Z, k, seeders, clean_after)
-            current_decisions, T = self.partial_compare(Z, verbose)
-            if np.all([d in ["accept", "reject"] for d in self.decisions]):
+            self.partial_compare(Z, verbose)
+            decisions = np.array(list(self.decisions.values()))
+            if np.all([d in ["smaller", "larger", "equal"] for d in decisions]):
                 break
 
         return self.decisions
@@ -363,10 +360,11 @@ class MultipleAgentsComparator:
 
         for k in range(self.K):
             Z = self._get_z_scalars(scalars, Z, k)
-            decisions, T = self.partial_compare(Z, k)
-            if np.all([d in ["accept", "reject"] for d in self.decisions]):
+            self.partial_compare(Z, k)
+            decisions = np.array(list(self.decisions.values()))
+            if np.all([d in ["smaller", "larger", "equal"] for d in decisions]):
                 break
-        return decisions
+        return self.decisions
 
     def _get_z_scalars(self, scalars, Z, k):
 
@@ -473,7 +471,7 @@ class MultipleAgentsComparator:
         """
 
         id_sort = np.argsort(self.mean_eval_values)
-        Z = np.array(self.eval_values)[id_sort]
+        Z = [self.eval_values[i] for i  in id_sort]
 
         if agent_names is None:
             agent_name = self.agent_names
@@ -481,7 +479,13 @@ class MultipleAgentsComparator:
         links = np.zeros([len(agent_names),len(agent_names)])
         for i in range(len(self.comparisons)):
             c = self.comparisons[i]
-            links[c[0],c[1]] = self.decisions_num[i]
+            decision = self.decisions[str(c)]
+            if decision == "equal":
+                links[c[0],c[1]] = 0
+            elif decision == "larger":
+                links[c[0],c[1]] = 1
+            else:
+                links[c[0],c[1]] = -1
             
         links = links - links.T
         links = links[id_sort,:][:, id_sort]
@@ -489,8 +493,9 @@ class MultipleAgentsComparator:
         fig, (ax1, ax2) = plt.subplots(
             2, 1, gridspec_kw={"height_ratios": [1, 2]}, figsize=(6,5)
         )
+        n_iterations = [self.n_iters["Agent "+str(i)] for i in id_sort]
         the_table = ax1.table(
-            cellText=[self.n_iters], rowLabels=["n_iter"], loc="top", cellLoc="center"
+            cellText=[n_iterations], rowLabels=["n_iter"], loc="top", cellLoc="center"
         )
 
         # Generate a custom colormap
@@ -506,7 +511,7 @@ class MultipleAgentsComparator:
             spine.set_visible(True)
             spine.set_linewidth(1)
 
-        ax2.boxplot(Z.T, labels=np.array(agent_names)[id_sort])
+        ax2.boxplot(Z, labels=np.array(agent_names)[id_sort])
         ax2.xaxis.set_label([])
         ax2.xaxis.tick_top()
         # Creating legend with color box
