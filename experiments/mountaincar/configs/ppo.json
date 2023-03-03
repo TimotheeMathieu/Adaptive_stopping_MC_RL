@@ -1,0 +1,5 @@
+{
+    "pre_cmd": "source activate as_rlb",
+    "train_cmd": "python /Users/mmcenta/adastop/Adaptive_stopping_MC_RL/code/deep_rl_agents/ppo.py",
+    "eval": "train_stdout"
+}

@@ -1,0 +1,5 @@
+{
+    "pre_cmd": "source activate as_sb",
+    "train_cmd": "python /Users/mmcenta/adastop/Adaptive_stopping_MC_RL/code/deep_rl_agents/sac.py",
+    "eval": "train_stdout"
+}
