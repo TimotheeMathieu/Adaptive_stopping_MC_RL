@@ -1,2 +1,5 @@
 rlberry_data
 *.pdf
+*.pkl
+*.pyc
+results/
