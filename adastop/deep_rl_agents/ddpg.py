@@ -17,13 +17,13 @@ from stable_baselines3.common.buffers import ReplayBuffer
 from torch.utils.tensorboard import SummaryWriter
 
 
-N_EVALS = 2
+N_EVALS = 20
 
 
 # Parameters
 parameters = dict(
     env_id="MountainCarContinuous-v0",
-    budget=1_000,
+    budget=50_000,
     learning_rate=0.001,
     buffer_size=1_000_000,
     gamma=0.99,

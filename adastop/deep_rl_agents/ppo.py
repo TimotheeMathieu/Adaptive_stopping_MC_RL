@@ -13,7 +13,7 @@ import gym
 import torch
 
 
-N_EVALS = 2
+N_EVALS = 20
 
 
 # Parameters
@@ -31,7 +31,7 @@ parameters = dict(
     k_epochs=10,
     gae_lambda=0.9,
     normalize_advantages=True,
-    fit_budget=1_000,
+    fit_budget=50_000,
     eval_horizon=500,
     n_eval_episodes=3,
     n_fit=1,

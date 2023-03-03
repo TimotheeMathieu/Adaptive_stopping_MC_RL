@@ -12,12 +12,12 @@ from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.callbacks import EvalCallback
 
 
-N_EVALS = 2
+N_EVALS = 20
 
 
 # Parameters
 parameters = dict(
-    budget=1_000,
+    budget=50_000,
     policy= "MlpPolicy",
     env_id="MountainCarContinuous-v0",
     learning_rate=3e-4,

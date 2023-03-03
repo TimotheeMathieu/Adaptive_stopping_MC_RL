@@ -20,12 +20,12 @@ from mushroom_rl.policy import GaussianTorchPolicy
 from mushroom_rl.utils.dataset import compute_J
 
 
-N_EVALS = 2
+N_EVALS = 20
 
 # Parameters
 parameters = dict(
     env_id="MountainCarContinuous-v0",
-    budget=1_000,
+    budget=50_000,
     n_eval_episodes=3,
     horizon=200,
     gamma=0.99,
