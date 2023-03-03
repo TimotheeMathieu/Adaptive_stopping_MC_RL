@@ -7,7 +7,7 @@ import rlberry
 from rlberry.agents.torch import PPOAgent
 from rlberry.envs import gym_make
 from rlberry.manager import AgentManager, evaluate_agents
-from rlberry.wrappers import WriterWrapper # In case you want to save anything during training.
+from rlberry.utils.torch import choose_device
 
 import gym
 import torch
@@ -99,6 +99,7 @@ if __name__ == "__main__":
             normalize_advantages=normalize_advantages, 
             policy_net_fn=policy_net_fn,
             policy_net_kwargs=policy_net_kwargs,
+            device=choose_device("cuda:best" if gpu else "cpu"),
         ),
         fit_budget=fit_budget,
         eval_kwargs=dict(eval_horizon=eval_horizon),
