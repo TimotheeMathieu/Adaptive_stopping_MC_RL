@@ -6,10 +6,13 @@ import seaborn as sns
 from matplotlib.colors import LinearSegmentedColormap
 import matplotlib.patches as mpatches
 
-from rlberry.manager import AgentManager
-from rlberry.seeding import Seeder
-from rlberry.utils.writers import DefaultWriter
-
+_RLBERRY_INSTALLED = True
+try:
+    from rlberry.manager import AgentManager
+    from rlberry.seeding import Seeder
+except Exception:
+    _RLBERRY_INSTALLED = False
+    
 from joblib import Parallel, delayed
 
 logger = logging.getLogger()
@@ -102,15 +105,13 @@ class MultipleAgentsComparator:
         self.k = 0
         self.level_spent = 0
         self.power_spent = 0
-        self.seeder = Seeder(seed)
-        self._writer = DefaultWriter("Comparator")
+        self.rng = np.random.RandomState(seed)
         self.rejected_decision = []
         self.joblib_backend = joblib_backend
         self.agent_names = None
         self.comparisons = comparisons
         self.current_comparisons = copy(comparisons)
         self.n_iters = None
-        self.rng = None
 
     def compute_sum_diffs(self, k, Z):
         """
@@ -188,10 +189,6 @@ class MultipleAgentsComparator:
             self.decisions = {str(c):"continue" for c in self.comparisons}
             self.id_tracked = np.arange(len(self.decisions)) # ids of comparisons effectively tracked
 
-            # Initialize the seed if not already done.
-            if self.rng is None:
-                seeder = self.seeder.spawn(1)
-                self.rng = seeder.rng
         k = self.k
 
         clevel = self.alpha*(k + 1) / self.K
@@ -322,9 +319,14 @@ class MultipleAgentsComparator:
         clean_after: boolean
         verbose: boolean
         """
+
+        if not _RLBERRY_INSTALLED :
+            raise ValueError("Automatic comparison via `compare` needs the library `rlberry` which is not installed.") 
+        
         Z = [np.array([]) for _ in managers]
         # spawn independent seeds, one for each fit and one for the comparator.
-        seeders = self.seeder.spawn(len(managers) * self.K + 1)
+        seeder = Seeder(self.rng.randint(10000))
+        seeders = seeder.spawn(len(managers) * self.K + 1)
         self.rng = seeders[-1].rng
         
         for k in range(self.K):
