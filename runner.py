@@ -161,8 +161,13 @@ if __name__ == "__main__":
 
     # Load agent configs
     agent_configs = get_agent_configs(os.path.join(dirpath, CONFIG_DIRNAME))
+
     nb_agents = len(agent_configs)
     assert nb_agents > 0, "No agent config found in '{}'!".format(os.path.join(dirpath, CONFIG_DIRNAME))
+
+    print(f"Found {nb_agents} agents in '{dirpath}':")
+    for i, ac in enumerate(agent_configs):
+        print(f"  Agent {i}: {ac['name']}")
 
     # Reset comparison if needed
     if args.reset:
@@ -189,7 +194,7 @@ if __name__ == "__main__":
     if os.path.exists(Z_path):
         Z = np.load(Z_path, allow_pickle=True).tolist()
     else:
-        Z = {a['name']: np.array([]) for a in agent_configs}
+        Z = {ac['name']: np.array([]) for ac in agent_configs}
 
     for k in range(args.K):
         print(f'Batch {k}:')
@@ -242,7 +247,7 @@ if __name__ == "__main__":
                 eval_seeds = list(seeds[k * args.nb_fits: (k+1) * args.nb_fits, i].ravel())
                 Z[name] = np.hstack([Z[name], parse_files(eval_dir, eval_seeds, file_regex=eval_file_regex)])
             else:
-                raise ValueError("Unknown evaluation method for agent {}!".format(i))
+                raise ValueError(f"Unknown evaluation method for agent {i}!")
         print('done.')
 
         # Save batch results
@@ -267,4 +272,5 @@ if __name__ == "__main__":
     # Print final results
     print("Final results:")
     for k, v in comparator.decisions.items():
-        print("Comparison {} : {}".format(k, v))
+        i, j = tuple(map(int, k[1:-1].split(' ')))
+        print(f"Comparison <{agent_configs[i]['name']}, {agent_configs[j]['name']}> : {v}")
