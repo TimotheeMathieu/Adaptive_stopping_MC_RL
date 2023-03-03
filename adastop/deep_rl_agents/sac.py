@@ -6,6 +6,7 @@ import sys
 import gym
 import torch
 
+import stable_baselines3
 from stable_baselines3 import SAC
 from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.callbacks import EvalCallback
