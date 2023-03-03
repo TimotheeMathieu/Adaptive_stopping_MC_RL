@@ -1,4 +1,5 @@
 {
+    "name": "PPO",
     "pre_cmd": "source activate as_rlb",
     "train_cmd": "python /home/mmedeiro/Adaptive_stopping_MC_RL/adastop/deep_rl_agents/ppo.py",
     "eval": "train_stdout"

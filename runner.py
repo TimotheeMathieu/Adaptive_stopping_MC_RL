@@ -189,7 +189,7 @@ if __name__ == "__main__":
     if os.path.exists(Z_path):
         Z = np.load(Z_path, allow_pickle=True).tolist()
     else:
-        Z = [np.array([]) for _ in agent_configs]
+        Z = {a['name']: np.array([]) for a in agent_configs}
 
     for k in range(args.K):
         print(f'Batch {k}:')
@@ -231,15 +231,16 @@ if __name__ == "__main__":
         # Collect evaluations
         print('\tcollecting results...', end=' ')
         for i in agents_to_train:
-            if agent_configs[i]['eval'] == 'train_stdout':
-                Z[i] = np.hstack([Z[i], parse_stdout(train_output[i])])
-            elif agent_configs[i]['eval'] == 'eval_stdout':
-                Z[i] = np.hstack([Z[i], parse_stdout(eval_output[i])])
+            name, eval_type = agent_configs[i]['name'], agent_configs[i]['eval']
+            if eval_type == 'train_stdout':
+                Z[name] = np.hstack([Z[name], parse_stdout(train_output[i])])
+            elif eval_type == 'eval_stdout':
+                Z[name] = np.hstack([Z[name], parse_stdout(eval_output[i])])
             elif agent_configs[i].get('eval_dir', None) is not None:
                 eval_dir = agent_configs[i]['eval_dir']
                 eval_file_regex = agent_configs[i].get('eval_file_regex', 'adastop_{seed}.*')
                 eval_seeds = list(seeds[k * args.nb_fits: (k+1) * args.nb_fits, i].ravel())
-                Z[i] = np.hstack([Z[i], parse_files(eval_dir, eval_seeds, file_regex=eval_file_regex)])
+                Z[name] = np.hstack([Z[name], parse_files(eval_dir, eval_seeds, file_regex=eval_file_regex)])
             else:
                 raise ValueError("Unknown evaluation method for agent {}!".format(i))
         print('done.')
@@ -248,18 +249,22 @@ if __name__ == "__main__":
         np.save(Z_path, Z)
 
         # Make early stopping if necessary
-        decisions, T = comparator.partial_compare(Z, args.verbose)
+        comparator.partial_compare(Z, args.verbose)
         save(dirpath, comparator, config)
 
         counts = {}
-        for d in comparator.decisions:
-            counts[d] = counts.get(d, 0) + 1
-        print('\tdecision summary: {} accept, {} reject, {} continue'.format(
-            counts.get('accept', 0), counts.get('reject', 0), counts.get('continue', 0)))
-        if np.all([d in ["accept", "reject"] for d in decisions]):
+        for d in comparator.decisions.values():
+            if d == 'continue':
+                counts['continue'] = counts.get('continue', 0) + 1
+            else:
+                counts['reject'] = counts.get('reject', 0) + 1
+        print('\tdecision summary: {} reject, {} continue'.format(
+            counts.get('reject', 0), counts.get('continue', 0)))
+        
+        if np.all([d != 'continue' for d in comparator.decisions.values()]):
             break
 
     # Print final results
     print("Final results:")
-    for i, decision in enumerate(comparator.decisions):
-        print("Comparison {} : {}".format(comparator.comparisons[i], decision))
+    for k, v in comparator.decisions.items():
+        print("Comparison {} : {}".format(k, v))
