@@ -5,13 +5,6 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from matplotlib.colors import LinearSegmentedColormap
 import matplotlib.patches as mpatches
-
-_RLBERRY_INSTALLED = True
-try:
-    from rlberry.manager import AgentManager
-    from rlberry.seeding import Seeder
-except Exception:
-    _RLBERRY_INSTALLED = False
     
 from joblib import Parallel, delayed
 
@@ -39,13 +32,13 @@ class MultipleAgentsComparator:
     comparisons: list of tuple of indices or None
         if None, all the pairwise comparison are done.
         If = [(0,1), (0,2)] for instance, the compare only 0 vs 1  and 0 vs 2
-    alpha: float, default=0.05
+    alpha: float, default=0.01
         level of the test
 
     beta: float, default=0
         power spent in early accept.
 
-    n_evaluations: int, default=10
+    n_evaluations: int, default=100
         number of evaluations used in the function _get_rewards.
 
     seed: int or None, default = None
@@ -55,7 +48,8 @@ class MultipleAgentsComparator:
 
     Attributes
     ----------
-
+    agent_names: list of str
+        list of the agents' names.
     decision: dict
         decision of the tests for each comparison, keys are the comparisons and values are in {"equal", "larger", "smaller"}.
 
@@ -69,14 +63,14 @@ class MultipleAgentsComparator:
 
     >>> comparator = Comparator(n=6, K=6, B=10000, alpha=0.05, beta=0.01)
     >>>
-    >>> Z = [np.array([]) for _ in agents]
+    >>> eval_values = {agent.name: [] for agent in agents}
     >>>
     >>> for k in range(comparator.K):
-    >>>    for i, agent in enumerate(agents):
+    >>>    for  agent in enumerate(agents):
     >>>        # If the agent is still in one of the comparison considered, then generate new evaluations.
     >>>        if agent in comparator.current_comparisons.ravel():
-    >>>            Z[i] = np.hstack([Z[i], train_evaluate(agent, n)])
-    >>>    decisions, T = comparator.partial_compare(Z, verbose)
+    >>>            eval_values[agent.name].append(train_evaluate(agent, n))
+    >>>    decisions, T = comparator.partial_compare(eval_values, verbose)
     >>>    if np.all([d in ["accept", "reject"] for d in decisions]):
     >>>        break
 
@@ -89,9 +83,9 @@ class MultipleAgentsComparator:
         K=5,
         B=10000,
         comparisons = None,
-        alpha=0.05,
+        alpha=0.01,
         beta=0,
-        n_evaluations=1,
+        n_evaluations=100,
         seed=None,
         joblib_backend="threading",
     ):
@@ -100,6 +94,7 @@ class MultipleAgentsComparator:
         self.B = B
         self.alpha = alpha
         self.beta = beta
+        self.comparisons = comparisons
         self.n_evaluations = n_evaluations
         self.boundary = []
         self.k = 0
@@ -109,9 +104,10 @@ class MultipleAgentsComparator:
         self.rejected_decision = []
         self.joblib_backend = joblib_backend
         self.agent_names = None
-        self.comparisons = comparisons
         self.current_comparisons = copy(comparisons)
         self.n_iters = None
+        self.sum_diffs = None
+        self.id_tracked = None
 
     def compute_sum_diffs(self, k, Z):
         """
@@ -154,14 +150,14 @@ class MultipleAgentsComparator:
 
         return self.sum_diffs
 
-    def partial_compare(self, Z, verbose=True):
+    def partial_compare(self, eval_values, verbose=True):
         """
         Do the test of the k^th interim.
 
         Parameters
         ----------
-        Z: array of size n_agents x k
-            Concatenation All the evaluations all Agents till interim k
+        eval_values: dict of agents and evaluations
+            keys are agent names and values are concatenation of evaluations till interim k
         verbose: bool
             print Steps
         Returns
@@ -173,9 +169,12 @@ class MultipleAgentsComparator:
         bk: float
            thresholds.
         """
+        Z = [eval_values[agent] for agent in eval_values]
         n_managers = len(Z)
 
         if self.k == 0:
+            if self.agent_names is None:
+                self.agent_names = list(eval_values.keys())
             # initialization
             if self.comparisons is None:
                 self.comparisons = np.array(
@@ -319,7 +318,13 @@ class MultipleAgentsComparator:
         clean_after: boolean
         verbose: boolean
         """
-
+        _RLBERRY_INSTALLED = True
+        try:
+            from rlberry.manager import AgentManager
+            from rlberry.seeding import Seeder
+        except Exception:
+            _RLBERRY_INSTALLED = False
+        
         if not _RLBERRY_INSTALLED :
             raise ValueError("Automatic comparison via `compare` needs the library `rlberry` which is not installed.") 
         
@@ -331,7 +336,7 @@ class MultipleAgentsComparator:
         
         for k in range(self.K):
             Z = self._fit(managers, Z, k, seeders, clean_after)
-            self.partial_compare(Z, verbose)
+            self.partial_compare({self.agent_names[i] : Z[i] for i in range(len(managers))}, verbose)
             decisions = np.array(list(self.decisions.values()))
             if np.all([d in ["smaller", "larger", "equal"] for d in decisions]):
                 break
@@ -353,7 +358,7 @@ class MultipleAgentsComparator:
 
         for k in range(self.K):
             Z = self._get_z_scalars(scalars, Z, k)
-            self.partial_compare(Z, k)
+            self.partial_compare({self.agent_names[i] : Z[i] for i in range(len(managers))}, k)
             decisions = np.array(list(self.decisions.values()))
             if np.all([d in ["smaller", "larger", "equal"] for d in decisions]):
                 break

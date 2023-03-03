@@ -12,6 +12,10 @@ import gym
 import torch
 # * Parameters
 
+hash_cmd = ("git", "rev-parse", "HEAD")
+revision = subprocess.check_output(hash_cmd)
+
+
 parameters = dict(
     env_id="MountainCar-v0",
     layer_sizes=[256, 256],
@@ -33,15 +37,14 @@ parameters = dict(
     gpu=False, # Say whether you use GPU!
     gym_version=gym.__version__,
     numpy_version=np.__version__,
-    python_version=sys.version,
-    torch_version=torch.__version__
+    torch_version=torch.__version__,
+    adastop_version=revision
 )
 
-output_dir_name = "results/Gaussian_corrupted/" # experiment folder
+output_dir_name = "results/DQN_MontainCar/" # experiment folder
 os.makedirs(output_dir_name, exist_ok=True)
 
 locals().update(parameters)  # load all the variables defined in parameters dict
-
 
 model_configs = {
     "type": "MultiLayerPerceptron",
