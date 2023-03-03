@@ -155,14 +155,17 @@ class Actor(nn.Module):
         return x * self.action_scale + self.action_bias
 
 
-def evaluate(actor, env, n_eval_episodes=3):
+def evaluate(actor, env, n_eval_episodes=3, noise_scale=None):
     evaluations = np.zeros(n_eval_episodes)
     for i in range(n_eval_episodes):
         obs, done = env.reset(), False
         while not done:
             with torch.no_grad():
-                action = actor(torch.Tensor(obs).to(device))
-            obs, reward, done, _ = env.step(action)
+                actions = actor(torch.Tensor(obs).to(device))
+                if noise_scale is not None:
+                    actions += torch.normal(0, actor.action_scale * noise_scale)
+                actions = actions.cpu().numpy().clip(envs.single_action_space.low, envs.single_action_space.high)
+            obs, reward, done, _ = env.step(actions)
             evaluations[i] += reward
     return evaluations
 
@@ -229,7 +232,7 @@ if __name__ == "__main__":
     # evaluation arrays
     timesteps = np.zeros(N_EVALS + 1, dtype=int)
     evaluations = np.zeros(N_EVALS + 1, dtype=float)
-    evaluations[0] = np.mean(evaluate(actor, eval_envs, args.n_eval_episodes))
+    evaluations[0] = np.mean(evaluate(actor, eval_envs, args.n_eval_episodes, noise_scale=args.exploration_noise))
 
     # TRY NOT TO MODIFY: start the game
     n_evals, eval_freq = 0, args.total_timesteps // N_EVALS
@@ -302,7 +305,7 @@ if __name__ == "__main__":
 
         # ALGO LOGIC: evaluation
         if global_step > 0 and global_step % eval_freq == 0:
-            evaluation = evaluate(actor, eval_envs, args.n_eval_episodes)
+            evaluation = evaluate(actor, eval_envs, args.n_eval_episodes, noise_scale=args.exploration_noise)
 
             print(f"global_step={global_step}, evaluation={np.mean(evaluation):.3f} +- {np.std(evaluation):.3f}")
             writer.add_scalar("charts/evaluation", np.mean(evaluation), global_step)
@@ -324,7 +327,7 @@ if __name__ == "__main__":
         file.write(json.dumps(parameters))
 
     # evaluate the agent last time
-    r_mean = np.mean(evaluate(actor, eval_envs, args.n_eval_episodes))
+    r_mean = np.mean(evaluate(actor, eval_envs, args.n_eval_episodes, noise_scale=args.exploration_noise))
     print(f"AdaStop Evaluation: {r_mean}")
 
     envs.close()
