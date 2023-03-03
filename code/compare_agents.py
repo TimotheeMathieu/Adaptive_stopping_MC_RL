@@ -1,27 +1,16 @@
 import logging
 import numpy as np
 from copy import copy
-import os
-from scipy import stats
-from scipy.special import binom
-from scipy.stats import norm
 import matplotlib.pyplot as plt
 import seaborn as sns
 from matplotlib.colors import LinearSegmentedColormap
 import matplotlib.patches as mpatches
 
-import rlberry
-from rlberry.agents import Agent
-from rlberry.envs import Model
-import rlberry.spaces as spaces
 from rlberry.manager import AgentManager
-from rlberry.envs.interface import Model
 from rlberry.seeding import Seeder
 from rlberry.utils.writers import DefaultWriter
 
-import itertools
 from joblib import Parallel, delayed
-from tqdm import tqdm
 
 logger = logging.getLogger()
 
@@ -64,13 +53,12 @@ class MultipleAgentsComparator:
     Attributes
     ----------
 
-    decision: list of str in {"accept" , "reject"}
-        decision of the tests for each comparison.
+    decision: dict
+        decision of the tests for each comparison, keys are the comparisons and values are in {"equal", "larger", "smaller"}.
 
-    rejected_decision: list of Tuple (comparison, bool)
-       the choice of which agent is better in each rejected comparison
-
-
+    n_iters: dict
+        number of iterations (i.e. number of fits) used for each agent. Keys are the agents' names and values are ints.
+    
     Examples
     --------
     One can either use rlberry with self.compare, pre-computed scalars with self.compare_scalar or one can use
@@ -118,7 +106,7 @@ class MultipleAgentsComparator:
         self._writer = DefaultWriter("Comparator")
         self.rejected_decision = []
         self.joblib_backend = joblib_backend
-        self.agent_names = []
+        self.agent_names = None
         self.comparisons = comparisons
         self.current_comparisons = copy(comparisons)
         self.n_iters = None
@@ -195,7 +183,7 @@ class MultipleAgentsComparator:
             self.current_comparisons = copy(self.comparisons)
             self.sum_diffs = []
             
-            self.n_iters = {"Agent "+str(i):0 for i in range(n_managers)}
+            self.n_iters = {self.agent_names[i] : 0 for i in range(n_managers)}
                 
             self.decisions = {str(c):"continue" for c in self.comparisons}
             self.id_tracked = np.arange(len(self.decisions)) # ids of comparisons effectively tracked
@@ -316,7 +304,7 @@ class MultipleAgentsComparator:
         self.eval_values = Z
         self.mean_eval_values = [np.mean(z) for z in Z]
         for i in range(n_managers):
-            self.n_iters["Agent "+str(i)] = len(Z[i].ravel())
+            self.n_iters[self.agent_names[i]] = len(Z[i].ravel())
 
         id_decided = np.array(current_decisions) != "continue"
 
@@ -326,7 +314,7 @@ class MultipleAgentsComparator:
 
     def compare(self, managers,  clean_after=True, verbose=True):
         """
-        Compare the managers pair by pair.
+        Compare the managers for each of the comparisons in `comparisons`.
 
         Parameters
         ----------
@@ -348,15 +336,18 @@ class MultipleAgentsComparator:
 
         return self.decisions
 
-    def compare_scalars(self, scalars):
+    def compare_scalars(self, scalars, agent_names=None):
         """
-        Compare the managers pair by pair.
+        Compare the managers for each of the comparisons in `comparisons`.
+
         Parameters
         ----------
         scalars : list of list of scalars.
+        agent_names : list of str or None
         """
         Z = [np.array([]) for _ in scalars]
-
+        if agent_names is None:
+            self.agent_names = ["Agent "+str(i) for i in range(len(scalars))]
 
         for k in range(self.K):
             Z = self._get_z_scalars(scalars, Z, k)
@@ -367,7 +358,6 @@ class MultipleAgentsComparator:
         return self.decisions
 
     def _get_z_scalars(self, scalars, Z, k):
-
 
         for i in range(len(scalars)):
             if (self.current_comparisons is None) or (i in np.array(self.current_comparisons).ravel()):
@@ -386,8 +376,9 @@ class MultipleAgentsComparator:
                 kwargs = kwargs_list[i]
                 seeder = seeders[i]
                 managers_in.append(AgentManager(agent_class, **kwargs, seed=seeder))
-        if len(self.agent_names) == 0:
-            self.agent_names = [m.agent_name for m in managers_in]
+        if self.agent_names is None:
+            self.agent_names = [manager.agent_name for manager in managers_in]
+
         # For now, paralellize only training because _get_evals not pickleable
         managers_in = Parallel(n_jobs=-1, backend=self.joblib_backend)(
             delayed(_fit_agent)(manager) for manager in managers_in
@@ -465,16 +456,23 @@ class MultipleAgentsComparator:
         plt.xlabel("$k$")
         plt.ylabel("test stat.")
 
-    def plot_results(self, agent_names=None):
+    def plot_results(self, agent_names=None, axes = None):
         """
         visual representation of results.
+
+        Parameters
+        ----------
+        agent_names : list of str or None
+        axes : tuple of two matplotlib axes of None
+             if None, use the following:
+             `fig, (ax1, ax2) = plt.subplots(2, 1, gridspec_kw={"height_ratios": [1, 2]}, figsize=(6,5))`
         """
 
         id_sort = np.argsort(self.mean_eval_values)
         Z = [self.eval_values[i] for i  in id_sort]
 
         if agent_names is None:
-            agent_name = self.agent_names
+            agent_names = self.agent_names
 
         links = np.zeros([len(agent_names),len(agent_names)])
         for i in range(len(self.comparisons)):
@@ -490,16 +488,20 @@ class MultipleAgentsComparator:
         links = links - links.T
         links = links[id_sort,:][:, id_sort]
 
-        fig, (ax1, ax2) = plt.subplots(
-            2, 1, gridspec_kw={"height_ratios": [1, 2]}, figsize=(6,5)
-        )
-        n_iterations = [self.n_iters["Agent "+str(i)] for i in id_sort]
+        if axes is None:
+            fig, (ax1, ax2) = plt.subplots(
+                2, 1, gridspec_kw={"height_ratios": [1, 2]}, figsize=(6,5)
+            )
+        else:
+            (ax1, ax2) = axes
+            
+        n_iterations = [self.n_iters[self.agent_names[i]] for i in id_sort]
         the_table = ax1.table(
             cellText=[n_iterations], rowLabels=["n_iter"], loc="top", cellLoc="center"
         )
 
         # Generate a custom colormap
-        colors = np.array([(255, 80, 80), (51, 204, 51), (102, 153, 255)])/256
+        colors = np.array([(255, 153, 0), (51, 204, 51), (255, 51, 51)])/256
         cmap = LinearSegmentedColormap.from_list("my_cmap", colors, N=3)
 
         # Draw the heatmap with the mask and correct aspect ratio
@@ -515,11 +517,11 @@ class MultipleAgentsComparator:
         ax2.xaxis.set_label([])
         ax2.xaxis.tick_top()
         # Creating legend with color box
-        blue_patch = mpatches.Patch(color=colors[0], label='smaller')
+        orange_patch = mpatches.Patch(color=colors[0], label='smaller')
         green_patch = mpatches.Patch(color=colors[1], label='equal')
         red_patch = mpatches.Patch(color=colors[2], label='larger')
 
-        plt.legend(handles=[blue_patch, green_patch, red_patch],loc='center left', bbox_to_anchor=(1, 0.5))
+        plt.legend(handles=[orange_patch, green_patch, red_patch],loc='center left', bbox_to_anchor=(1, 0.5))
 
 
 def _fit_agent(manager):
