@@ -2,4 +2,5 @@ rlberry_data
 *.pdf
 *.pkl
 *.pyc
+*.egg-info
 results/
