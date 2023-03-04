@@ -45,8 +45,7 @@ def make_agent(seed, env_id):
         buffer_size=buffer_size, learning_starts=learning_starts,
         batch_size=batch_size, tau=tau, gamma=gamma, train_freq=train_freq,
         gradient_steps=gradient_steps, ent_coef=ent_coef, use_sde=use_sde,
-        policy_kwargs=policy_kwargs, tensorboard_log=output_dir_name,
-        seed=seed)
+        tensorboard_log=output_dir_name, seed=seed)
 
 
 # * Training and saving training data

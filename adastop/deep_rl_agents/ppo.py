@@ -81,7 +81,7 @@ if __name__ == "__main__":
         "reshape": False,
         "is_policy": True,
         "ctns_actions": True,
-        "out_size": 2,
+        "out_size": env_ctor(**env_kwargs).action_space.shape[0],
     }
 
     agent = AgentManager(
