@@ -313,13 +313,13 @@ if __name__ == "__main__":
             n_evals += 1
             timesteps[n_evals] = global_step
             evaluations[n_evals] = np.mean(evaluation)
-            np.savez(os.path.join(output_dir_name, f"evaluations.npz"), timesteps=timesteps, evaluations=evaluations)
+            np.savez(os.path.join(output_dir_name, "evaluations.npz"), timesteps=timesteps, evaluations=evaluations)
 
     # save the model
-    torch.save(actor.state_dict(), os.path.join(output_dir_name, f"{run_name}_actor.pth"))
-    torch.save(qf1.state_dict(), os.path.join(output_dir_name, f"{run_name}_qf1.pth"))
-    torch.save(qf1_target.state_dict(), os.path.join(output_dir_name, f"{run_name}_qf1_target.pth"))
-    torch.save(target_actor.state_dict(), os.path.join(output_dir_name, f"{run_name}_target_actor.pth"))
+    torch.save(actor.state_dict(), os.path.join(output_dir_name, "actor.pth"))
+    torch.save(qf1.state_dict(), os.path.join(output_dir_name, "qf1.pth"))
+    torch.save(qf1_target.state_dict(), os.path.join(output_dir_name, "qf1_target.pth"))
+    torch.save(target_actor.state_dict(), os.path.join(output_dir_name, "target_actor.pth"))
     
     # save parameters
     parameters["save_path"] = output_dir_name
@@ -327,8 +327,10 @@ if __name__ == "__main__":
         file.write(json.dumps(parameters))
 
     # evaluate the agent last time
-    r_mean = np.mean(evaluate(actor, eval_envs, args.n_eval_episodes, noise_scale=args.exploration_noise))
-    print(f"AdaStop Evaluation: {r_mean}")
+    timesteps[-1] = args.total_timesteps
+    evaluations[-1] = np.mean(evaluate(actor, eval_envs, args.n_eval_episodes, noise_scale=args.exploration_noise))
+    np.savez(os.path.join(output_dir_name, "evaluations.npz"), timesteps=timesteps, evaluations=evaluations)
+    print(f"AdaStop Evaluation: {evaluations[-1]}")
 
     envs.close()
     writer.close()
