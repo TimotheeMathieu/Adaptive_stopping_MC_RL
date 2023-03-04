@@ -52,7 +52,6 @@ class MultipleAgentsComparator:
         list of the agents' names.
     decision: dict
         decision of the tests for each comparison, keys are the comparisons and values are in {"equal", "larger", "smaller"}.
-
     n_iters: dict
         number of iterations (i.e. number of fits) used for each agent. Keys are the agents' names and values are ints.
     
@@ -276,7 +275,7 @@ class MultipleAgentsComparator:
                     self.decisions[str(self.current_comparisons[id_reject])] = "larger"
                 else:
                     self.decisions[str(self.current_comparisons[id_reject])] = "smaller"
-                print("reject")
+                # print("reject")
             elif Tmin < bk_inf:
                 id_accept = np.arange(len(current_decisions))[current_decisions == "continue"][imin]
                 current_decisions[id_accept] = "accept"
