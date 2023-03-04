@@ -1,22 +1,48 @@
 from ast import literal_eval
 import copy
-import functools
 import glob
 import json
+import logging
 import os
 import pickle
 import re
 import subprocess
+import time
 
 from joblib import Parallel, delayed
 import numpy as np
 
 from adastop.compare_agents import MultipleAgentsComparator
 
+
 CONFIG_DIRNAME = "configs/"
 COMP_CONFIG_FILENAME = "config.json"
 COMP_FILENAME = "comparator.pkl"
 RESULTS_FILENAME = "results.npy"
+LOGFILE = "log.txt"
+
+logger = logging.getLogger(__name__)
+
+
+def setup_logger(dirpath):
+    logger.setLevel(logging.INFO)
+
+    # create file handler which logs even debug messages
+    fh = logging.FileHandler(os.path.join(dirpath, LOGFILE))
+    fh.setLevel(logging.INFO)
+
+    # create console handler with a higher log level
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.INFO)
+
+    # create formatter and add it to the handlers
+    formatter = logging.Formatter('%(asctime)s | runner | %(levelname)s | %(message)s')
+    fh.setFormatter(formatter)
+    ch.setFormatter(formatter)
+
+    # add the handlers to the logger
+    logger.addHandler(fh)
+    #logger.addHandler(ch)
 
 
 def get_agent_configs(dirpath):
@@ -89,9 +115,13 @@ def run_batch(seeds, config, agent_idx, mode='train'):
         cmds.append(template.format(" ".join(seed_cmd)))
 
     # execute all calls
+    start = time.time()
     rets = Parallel(n_jobs=n_jobs, prefer="processes")(
         delayed(subprocess.run)(c, shell=True, capture_output=True)
         for c in cmds)
+    duration = time.time() - start
+
+    logger.info(f"[{config['name']}] Ran {mode} batch of {len(seeds)} seeds in {duration:.5f}s.")
     return agent_idx, rets
 
 
@@ -153,21 +183,6 @@ if __name__ == "__main__":
         "seed": args.seed,
     }
     dirpath = args.dir
-    gen = np.random.default_rng(args.seed)
-
-    # Make sure that the directory exists
-    assert os.path.isdir(dirpath), "'dir' must be a directory!"
-    assert os.path.exists(dirpath), "'dir' must exist!"
-
-    # Load agent configs
-    agent_configs = get_agent_configs(os.path.join(dirpath, CONFIG_DIRNAME))
-
-    nb_agents = len(agent_configs)
-    assert nb_agents > 0, "No agent config found in '{}'!".format(os.path.join(dirpath, CONFIG_DIRNAME))
-
-    print(f"Found {nb_agents} agents in '{dirpath}':")
-    for i, ac in enumerate(agent_configs):
-        print(f"  Agent {i}: {ac['name']}")
 
     # Reset comparison if needed
     if args.reset:
@@ -178,6 +193,29 @@ if __name__ == "__main__":
             os.remove(os.path.join(dirpath, COMP_FILENAME))
         if os.path.exists(os.path.join(dirpath, RESULTS_FILENAME)):
             os.remove(os.path.join(dirpath, RESULTS_FILENAME))
+        if os.path.exists(os.path.join(dirpath, LOGFILE)):
+            os.remove(os.path.join(dirpath, LOGFILE))
+
+    # Make sure that the directory exists
+    assert os.path.isdir(dirpath), "'dir' must be a directory!"
+    assert os.path.exists(dirpath), "'dir' must exist!"
+
+    # Setup logger
+    setup_logger(dirpath)
+    gen = np.random.default_rng(args.seed)
+
+    # Load agent configs
+    agent_configs = get_agent_configs(os.path.join(dirpath, CONFIG_DIRNAME))
+    agent_names = [ac['name'] for ac in agent_configs]
+    nb_agents = len(agent_configs)
+    assert nb_agents > 0, "No agent config found in '{}'!".format(os.path.join(dirpath, CONFIG_DIRNAME))
+
+    print(f"Found {nb_agents} agents in '{dirpath}':")
+    for i, ac in enumerate(agent_configs):
+        print(f"  Agent {i}: {ac['name']}")
+    print()
+
+    
 
     # Initialize the comparator (or load it if it already exists)
     if not (os.path.exists(os.path.join(dirpath, COMP_CONFIG_FILENAME)) and 
@@ -190,17 +228,19 @@ if __name__ == "__main__":
 
     # Run comparison
     seeds = gen.integers(0, 2**32, size=(args.nb_fits * args.K, nb_agents))
-    Z_path = os.path.join(dirpath, RESULTS_FILENAME)
-    if os.path.exists(Z_path):
-        Z = np.load(Z_path, allow_pickle=True).tolist()
+    eval_values_path = os.path.join(dirpath, RESULTS_FILENAME)
+    if os.path.exists(eval_values_path):
+        eval_values = np.load(eval_values_path, allow_pickle=True).tolist()
     else:
-        Z = {ac['name']: np.array([]) for ac in agent_configs}
+        eval_values = {name: np.array([]) for name in agent_names}
 
     for k in range(args.K):
-        print(f'Batch {k}:')
+        print(f'Step {k}:')
+
         # Run training
         # If the agent is still in one of the comparison considered, then run another batch of fits
-        print('\ttraining agents...', end=' ')
+        print('  training agents...', end=' ')
+
         if k == 0:
             agents_to_train = list(range(nb_agents))
         else:
@@ -220,7 +260,7 @@ if __name__ == "__main__":
         # Run evaluations (if necessary)
         agents_to_eval = [i for i in agents_to_train if agent_configs[i].get('eval_cmd', None) is not None]
         if len(agents_to_eval) > 0:
-            print('\tevaluating agents...', end=' ')
+            print('  evaluating agents...', end=' ')
 
             batch_args = []
             for i in agents_to_eval:
@@ -234,43 +274,51 @@ if __name__ == "__main__":
             print('done.')
         
         # Collect evaluations
-        print('\tcollecting results...', end=' ')
+        print('  collecting results...', end=' ')
         for i in agents_to_train:
             name, eval_type = agent_configs[i]['name'], agent_configs[i]['eval']
             if eval_type == 'train_stdout':
-                Z[name] = np.hstack([Z[name], parse_stdout(train_output[i])])
+                eval_values[name] = np.hstack([eval_values[name], parse_stdout(train_output[i])])
             elif eval_type == 'eval_stdout':
-                Z[name] = np.hstack([Z[name], parse_stdout(eval_output[i])])
+                eval_values[name] = np.hstack([eval_values[name], parse_stdout(eval_output[i])])
             elif agent_configs[i].get('eval_dir', None) is not None:
                 eval_dir = agent_configs[i]['eval_dir']
                 eval_file_regex = agent_configs[i].get('eval_file_regex', 'adastop_{seed}.*')
                 eval_seeds = list(seeds[k * args.nb_fits: (k+1) * args.nb_fits, i].ravel())
-                Z[name] = np.hstack([Z[name], parse_files(eval_dir, eval_seeds, file_regex=eval_file_regex)])
+                eval_values[name] = np.hstack([eval_values[name], parse_files(eval_dir, eval_seeds, file_regex=eval_file_regex)])
             else:
                 raise ValueError(f"Unknown evaluation method for agent {i}!")
         print('done.')
 
         # Save batch results
-        np.save(Z_path, Z)
+        np.save(eval_values_path, eval_values)
 
         # Make early stopping if necessary
-        comparator.partial_compare(Z, args.verbose)
+        comparator.partial_compare(eval_values, args.verbose)
         save(dirpath, comparator, config)
 
+        # Print and log decision summary
+        print('  current evaluations:')
+        for name in agent_names:
+            mean, std = np.mean(eval_values[name]), np.std(eval_values[name])
+            print(f"    {name}: mean = {mean:.3f} +/- {std:.3f}")
+            logger.info(f"[batch={k}] evaluation {name} = {mean:.6f} +/- {std:.6f}")
+        
+        print('  current decisions:')
         counts = {}
-        for d in comparator.decisions.values():
-            if d == 'continue':
+        for pair, decision in comparator.decisions.items():
+            if decision in 'continue':
                 counts['continue'] = counts.get('continue', 0) + 1
             else:
                 counts['reject'] = counts.get('reject', 0) + 1
-        print('\tdecision summary: {} reject, {} continue'.format(
-            counts.get('reject', 0), counts.get('continue', 0)))
-        
+
+            i, j = tuple(map(int, pair[1:-1].split(' ')))
+            name_i, name_j = agent_configs[i]['name'], agent_configs[j]['name']
+
+            print(f"    decision <{name_i}, {name_j}>: {decision}")
+            logger.info(f"[batch={k}] comparison <{name_i}, {name_j}> = {decision}")
+
+        print(f"  decision summary: {counts.get('reject', 0)} reject, {counts.get('continue', 0)} continue")
+
         if np.all([d != 'continue' for d in comparator.decisions.values()]):
             break
-
-    # Print final results
-    print("Final results:")
-    for k, v in comparator.decisions.items():
-        i, j = tuple(map(int, k[1:-1].split(' ')))
-        print(f"Comparison <{agent_configs[i]['name']}, {agent_configs[j]['name']}> : {v}")
