@@ -2,8 +2,5 @@
     "name": "DDPG",
     "pre_cmd": "source activate as_crl",
     "train_cmd": "python /home/mmedeiro/Adaptive_stopping_MC_RL/adastop/deep_rl_agents/ddpg.py",
-    "train_args": {
-        "--env-id": "HalfCheetah-v1"
-    },
     "eval": "train_stdout"
 }
