@@ -20,32 +20,31 @@ from mushroom_rl.policy import GaussianTorchPolicy
 from mushroom_rl.utils.dataset import compute_J
 
 
-N_EVALS = 20
-
 # Parameters
 parameters = dict(
-    env_id="MountainCarContinuous-v0",
-    budget=50_000,
-    n_eval_episodes=3,
+    env_id="HalfCheetah-v3",
+    budget=1_000_000,
+    n_eval_episodes=50,
+    eval_freq=100_000,
     horizon=200,
     gamma=0.99,
-    n_steps_per_fit=2048,
+    n_steps_per_fit=1024,
     ent_coeff=0.0,
     max_kl=0.01,
     lam=0.95,
     n_epochs_line_search=10,
-    n_epochs_cg=15,
+    n_epochs_cg=25,
     cg_damping=0.1,
     cg_residual_tol=1e-10,
     policy_params=dict(
         std_0=1.,
-        n_features=32,
+        n_features=64,
         use_cuda=False,
     ),
     critic_params=dict(
-        n_features=32,
-        batch_size=64,
-        learning_rate=3e-4,
+        n_features=64,
+        batch_size=128,
+        learning_rate=1e-3,
     ),
     gpu=False, # Say whether you use GPU!
     mushroom_rl_version=mushroom_rl.__version__,
@@ -93,12 +92,15 @@ if __name__ == '__main__':
         help='Environment id (default: {})'.format(env_id))
     parser.add_argument('--n-eval-episodes', '-n', type=int, default=n_eval_episodes,
         help='Number of episodes for evaluation (default: {})'.format(n_eval_episodes))
+    parser.add_argument('--eval-freq', '-f', type=int, default=eval_freq,
+        help='Evaluation frequency (default: {})'.format(eval_freq))
     args = parser.parse_args()
 
     # gather parameters
     parameters['seed'] = args.seed
     parameters['env_id'] = args.env_id
     parameters['n_eval_episodes'] = args.n_eval_episodes
+    parameters['eval_freq'] = args.eval_freq
     locals().update(parameters)  # load all the variables defined in parameters dict
  
     # update directory for this run
@@ -146,8 +148,9 @@ if __name__ == '__main__':
     core = Core(agent, mdp)
 
     # evaluation arrays
-    timesteps = np.zeros(N_EVALS + 1, dtype=int)
-    evaluations = np.zeros(N_EVALS + 1, dtype=float)
+    n_evals = budget // eval_freq
+    timesteps = np.zeros(n_evals + 1, dtype=int)
+    evaluations = np.zeros(n_evals + 1, dtype=float)
 
     # initial eval
     dataset = core.evaluate(n_episodes=n_eval_episodes, render=False)
@@ -160,8 +163,7 @@ if __name__ == '__main__':
     evaluations[0] = R
 
     # training
-    eval_freq = budget // N_EVALS
-    for it in trange(N_EVALS, leave=False):
+    for it in trange(n_evals, leave=False):
         core.learn(n_steps=eval_freq, n_steps_per_fit=n_steps_per_fit)
         dataset = core.evaluate(n_episodes=n_eval_episodes, render=False)
 

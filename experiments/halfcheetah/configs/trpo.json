@@ -1,0 +1,6 @@
+{
+    "name": "TRPO",
+    "pre_cmd": "source activate as_mrl",
+    "train_cmd": "python /home/mmedeiro/Adaptive_stopping_MC_RL/adastop/deep_rl_agents/trpo.py",
+    "eval": "train_stdout"
+}

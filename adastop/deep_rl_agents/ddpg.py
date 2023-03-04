@@ -17,23 +17,21 @@ from stable_baselines3.common.buffers import ReplayBuffer
 from torch.utils.tensorboard import SummaryWriter
 
 
-N_EVALS = 20
-
-
 # Parameters
 parameters = dict(
-    env_id="MountainCarContinuous-v0",
-    budget=50_000,
+    env_id="HalfCheetah-v3",
+    budget=1_000_000,
     learning_rate=0.001,
     buffer_size=1_000_000,
     gamma=0.99,
     tau=0.005,
     batch_size=128,
-    exploration_noise=0.5,
-    learning_starts=100,
+    exploration_noise=0.1,
+    learning_starts=10_000,
     policy_frequency=32,
     noise_clip=0.5,
-    n_eval_episodes=3,
+    n_eval_episodes=50,
+    eval_freq=100_000,
     gpu=False, # Say whether you use GPU!
     gym_version=gym.__version__,
     numpy_version=np.__version__,
@@ -91,6 +89,8 @@ def parse_args():
         help="noise clip parameter of the Target Policy Smoothing Regularization")
     parser.add_argument('--n-eval-episodes', type=int, default=n_eval_episodes,
         help='the number of episodes to evaluate the agent')
+    parser.add_argument('--eval-freq', type=int, default=eval_freq,
+        help='the frequency of evaluation in terms of environment steps')
     args = parser.parse_args()
 
     # Update parameters dict
@@ -155,7 +155,7 @@ class Actor(nn.Module):
         return x * self.action_scale + self.action_bias
 
 
-def evaluate(actor, env, n_eval_episodes=3, noise_scale=None):
+def evaluate(actor, env, n_eval_episodes=50, noise_scale=None):
     evaluations = np.zeros(n_eval_episodes)
     for i in range(n_eval_episodes):
         obs, done = env.reset(), False
@@ -230,12 +230,13 @@ if __name__ == "__main__":
     start_time = time.time()
 
     # evaluation arrays
-    timesteps = np.zeros(N_EVALS + 1, dtype=int)
-    evaluations = np.zeros(N_EVALS + 1, dtype=float)
+    n_evals = args.total_timesteps // args.eval_freq
+    timesteps = np.zeros(n_evals + 1, dtype=int)
+    evaluations = np.zeros(n_evals + 1, dtype=float)
     evaluations[0] = np.mean(evaluate(actor, eval_envs, args.n_eval_episodes, noise_scale=args.exploration_noise))
 
     # TRY NOT TO MODIFY: start the game
-    n_evals, eval_freq = 0, args.total_timesteps // N_EVALS
+    curr_eval_idx = 0
     obs = envs.reset()
     for global_step in range(args.total_timesteps):
         # ALGO LOGIC: put action logic here
@@ -304,15 +305,15 @@ if __name__ == "__main__":
                 writer.add_scalar("charts/SPS", int(global_step / (time.time() - start_time)), global_step)
 
         # ALGO LOGIC: evaluation
-        if global_step > 0 and global_step % eval_freq == 0:
+        if global_step > 0 and global_step % args.eval_freq == 0:
             evaluation = evaluate(actor, eval_envs, args.n_eval_episodes, noise_scale=args.exploration_noise)
 
             print(f"global_step={global_step}, evaluation={np.mean(evaluation):.3f} +- {np.std(evaluation):.3f}")
             writer.add_scalar("charts/evaluation", np.mean(evaluation), global_step)
 
-            n_evals += 1
-            timesteps[n_evals] = global_step
-            evaluations[n_evals] = np.mean(evaluation)
+            curr_eval_idx += 1
+            timesteps[curr_eval_idx] = global_step
+            evaluations[curr_eval_idx] = np.mean(evaluation)
             np.savez(os.path.join(output_dir_name, "evaluations.npz"), timesteps=timesteps, evaluations=evaluations)
 
     # save the model

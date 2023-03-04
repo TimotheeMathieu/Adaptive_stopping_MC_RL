@@ -13,27 +13,25 @@ import gym
 import torch
 
 
-N_EVALS = 20
-
-
 # Parameters
 parameters = dict(
-    env_id="MountainCarContinuous-v0",
-    layer_sizes=[64, 64],
+    env_id="HalfCheetah-v3",
+    layer_sizes=[256, 256],
     policy_net_fn="rlberry.agents.torch.utils.training.model_factory_from_env",
-    batch_size=256,
-    n_steps=2048,
+    batch_size=64,
+    n_steps=512,
     gamma=0.99,
-    entr_coef=0.005,
-    vf_coef=0.2,
-    learning_rate=1e-4,
+    entr_coef=3e-4,
+    vf_coef=0.5,
+    learning_rate=3e-5,
     eps_clip=0.1,
-    k_epochs=10,
+    k_epochs=20,
     gae_lambda=0.9,
     normalize_advantages=True,
-    fit_budget=50_000,
+    fit_budget=1_000_000,
     eval_horizon=500,
-    n_eval_episodes=3,
+    n_eval_episodes=50,
+    eval_freq=100_000,
     n_fit=1,
     gpu=False, # Say whether you use GPU!
     rlberry_version=rlberry.__version__,
@@ -61,12 +59,15 @@ if __name__ == "__main__":
         help='Environment id (default: {})'.format(env_id))
     parser.add_argument('--n-eval-episodes', '-n', type=int, default=n_eval_episodes,
         help='Number of episodes for evaluation (default: {})'.format(n_eval_episodes))
+    parser.add_argument('--eval-freq', '-f', type=int, default=eval_freq,
+        help='Evaluation frequency (default: {})'.format(eval_freq))
     args = parser.parse_args()
 
     # gather parameters
     parameters['seed'] = args.seed
     parameters['env_id'] = args.env_id
     parameters['n_eval_episodes'] = args.n_eval_episodes
+    parameters['eval_freq'] = args.eval_freq
     locals().update(parameters)  # load all the variables defined in parameters dict
  
     # update directory for this run
@@ -112,20 +113,20 @@ if __name__ == "__main__":
     agent.fit(0)
 
     # evaluation arrays
-    timesteps = np.zeros(N_EVALS + 1, dtype=int)
-    evaluations = np.zeros(N_EVALS + 1, dtype=float)
+    n_evals = fit_budget // eval_freq
+    timesteps = np.zeros(n_evals + 1, dtype=int)
+    evaluations = np.zeros(n_evals + 1, dtype=float)
 
     # train
-    n_evals, eval_freq = 0, int(fit_budget / N_EVALS)
-    used_budget = 0
+    curr_eval_idx, used_budget = 0, 0
     evaluations[0] = np.mean(evaluate_agents([agent], n_simulations=n_eval_episodes, show=False).values)
     while used_budget < fit_budget:
         agent.fit(eval_freq)
         used_budget += eval_freq
 
-        n_evals += 1
-        timesteps[n_evals] = used_budget
-        evaluations[n_evals] =np.mean(evaluate_agents([agent], n_simulations=n_eval_episodes, show=False).values)
+        curr_eval_idx += 1
+        timesteps[curr_eval_idx] = used_budget
+        evaluations[curr_eval_idx] =np.mean(evaluate_agents([agent], n_simulations=n_eval_episodes, show=False).values)
         np.savez(os.path.join(output_dir_name, "evaluations.npz"), timesteps=timesteps, evaluations=evaluations)
 
     # save agent and parameters

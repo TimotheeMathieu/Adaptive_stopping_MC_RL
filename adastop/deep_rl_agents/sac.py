@@ -12,29 +12,23 @@ from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.callbacks import EvalCallback
 
 
-N_EVALS = 20
-
-
 # Parameters
 parameters = dict(
-    budget=50_000,
+    budget=1_000_000,
     policy= "MlpPolicy",
-    env_id="MountainCarContinuous-v0",
+    env_id="HalfCheetah-v3",
     learning_rate=3e-4,
-    buffer_size=50_000,
-    learning_starts=0,
-    batch_size=512,
-    tau=0.01,
-    gamma=0.9999,
-    train_freq=32,
+    buffer_size=1_000_000,
+    learning_starts=10_000,
+    batch_size=256,
+    tau=0.005,
+    gamma=0.99,
+    train_freq=1,
     gradient_steps=1,
-    ent_coef=0.1,
+    ent_coef='auto',
     use_sde=True,
-    policy_kwargs=dict(
-        log_std_init=-3.67,
-        net_arch=[64, 64],
-    ),
-    n_eval_episodes=3,
+    n_eval_episodes=50,
+    eval_freq=100_000,
     gpu=False, # Say whether you use GPU!
     stable_baselines3_version=stable_baselines3.__version__,
     gym_version=gym.__version__,
@@ -65,12 +59,15 @@ if __name__ == "__main__":
         help='Environment id (default: {})'.format(env_id))
     parser.add_argument('--n-eval-episodes', '-n', type=int, default=n_eval_episodes,
         help='Number of episodes for evaluation (default: {})'.format(n_eval_episodes))
+    parser.add_argument('--eval-freq', '-f', type=int, default=eval_freq,
+        help='Evaluation frequency (default: {})'.format(eval_freq))
     args = parser.parse_args()
 
     # gather parameters
     parameters['seed'] = args.seed
     parameters['env_id'] = args.env_id
     parameters['n_eval_episodes'] = args.n_eval_episodes
+    parameters['eval_freq'] = args.eval_freq
     locals().update(parameters)  # load all the variables defined in parameters dict
 
     # create directory for this run
@@ -84,15 +81,16 @@ if __name__ == "__main__":
     print(f"Initial Evaluation: {initial_eval}")
 
     callback = EvalCallback(
-        agent.get_env(), n_eval_episodes=n_eval_episodes, eval_freq=budget // N_EVALS,
+        agent.get_env(), n_eval_episodes=n_eval_episodes, eval_freq=eval_freq,
         log_path=output_dir_name, deterministic=False)
 
     # train
     agent.learn(budget, callback=callback)
 
     # prepare and save evaluation data
-    timesteps = np.zeros(N_EVALS + 1, dtype=int)
-    evaluations = np.zeros(N_EVALS + 1, dtype=float)
+    n_evals = budget // eval_freq
+    timesteps = np.zeros(n_evals + 1, dtype=int)
+    evaluations = np.zeros(n_evals + 1, dtype=float)
     evaluations[0] = initial_eval
 
     callback_output = np.load(os.path.join(output_dir_name, "evaluations.npz"))
