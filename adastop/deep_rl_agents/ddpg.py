@@ -175,7 +175,7 @@ if __name__ == "__main__":
     locals().update(parameters)
 
     # create directory for this run
-    output_dir_name = os.path.join(output_dir_name, str(args.env_id), str(args.seed))
+    output_dir_name = os.path.join(output_dir_name, str(args.seed))
     os.makedirs(output_dir_name, exist_ok=True)
 
     run_name = f"{args.env_id}__{args.exp_name}__{args.seed}__{int(time.time())}"

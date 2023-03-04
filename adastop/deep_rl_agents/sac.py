@@ -70,7 +70,7 @@ if __name__ == "__main__":
     locals().update(parameters)  # load all the variables defined in parameters dict
 
     # create directory for this run
-    output_dir_name = os.path.join(output_dir_name, str(args.env_id), str(args.seed))
+    output_dir_name = os.path.join(output_dir_name, str(args.seed))
     os.makedirs(output_dir_name, exist_ok=True)
 
     # set up agent
