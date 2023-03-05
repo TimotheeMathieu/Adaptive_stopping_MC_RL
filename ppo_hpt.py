@@ -114,7 +114,7 @@ if __name__ == "__main__":
     }
 
     agent = AgentManager(
-        PPOAgent,
+        PPO,
         (env_ctor, env_kwargs),
         init_kwargs=dict(
             batch_size=batch_size,
@@ -140,12 +140,11 @@ if __name__ == "__main__":
         seed=args.seed,
         output_dir=output_dir_name # one folder for each agent
     )
-    agent.fit(1_000_000)
-    plot_writer_data(agent, tag="episode_rewards")
 
     agent.optimize_hyperparams(
         n_trials=100,
         n_fit=3,
+        timeout=60,
     )
     print(agent.best_hyperparams)
     with open(os.path.join(output_dir_name, "best_hyperparams.json"), "w") as f:
