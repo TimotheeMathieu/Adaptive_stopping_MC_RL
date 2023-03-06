@@ -10,24 +10,25 @@ from rlberry.manager import AgentManager, evaluate_agents
 from rlberry.utils.torch import choose_device
 
 import gym
+from gym.wrappers import NormalizeObservation
 import torch
 
 
 # Parameters
 parameters = dict(
     env_id="HalfCheetah-v3",
-    layer_sizes=[256, 256],
+    layer_sizes=[32, 32],
     policy_net_fn="rlberry.agents.torch.utils.training.model_factory_from_env",
-    batch_size=64,
-    n_steps=512,
+    batch_size=32,
+    n_steps=2048,
     gamma=0.99,
-    entr_coef=3e-4,
+    entr_coef=1e-5,
     vf_coef=0.5,
-    learning_rate=2e-5,
+    learning_rate=3e-4,
     eps_clip=0.1,
-    k_epochs=20,
-    gae_lambda=0.9,
-    normalize_advantages=False,
+    k_epochs=10,
+    gae_lambda=0.95,
+    normalize_advantages=True,
     normalize_rewards=True,
     fit_budget=1_000_000,
     eval_horizon=500,
@@ -45,12 +46,19 @@ output_dir_name = "results/ppo/" # experiment folder
 locals().update(parameters)  # load all the variables defined in parameters dict
 
 
-# * Agent and environment definition
+# make env with preprocessing
+def make_env(id=None):
+    env = gym_make(id=id)
+    env = NormalizeObservation(env)
+    return env
+
+
+# agent and environment definition
 env_ctor = gym_make
 env_kwargs = dict(id=env_id)
 
 
-# * Training and saving training data
+# training and saving training data
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
