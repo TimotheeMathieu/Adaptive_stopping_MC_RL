@@ -1,1 +1,1 @@
-{"nb_exps": 3, "nk": [[3, 7]], "B": 100000, "save_path": "code/h2g2/", "numpy_version": "1.22.4"}
+{"nb_exps": 1000, "nk": [[3, 7], [4, 5], [4, 4], [3, 6], [3, 8]], "B": 100000, "save_path": "code/h2g2/", "numpy_version": "1.24.2"}
