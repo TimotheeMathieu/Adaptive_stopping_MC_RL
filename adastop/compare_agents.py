@@ -116,6 +116,9 @@ class MultipleAgentsComparator:
         comparisons = self.current_comparisons
         boundary = self.boundary
         if k == 0:
+
+            # Define set of permutations. Either all permutations or a random sample if all permutations
+            # is too many permutations
             n_permutations = binom(2*self.n, self.n)
             if self.B > n_permutations:
                 permutations = itertools.combinations(np.arange(2*self.n), self.n)
@@ -123,6 +126,8 @@ class MultipleAgentsComparator:
             else:
                 permutations = [ np.random.permutation(2*self.n)[:self.n] for _ in range(self.B)]
                 self.normalization = self.B
+
+            # Compute the summ differences on the evaluations for each comparisions and for each permutation
             for perm in permutations:
                 sum_diff = []
                 for i, comp in enumerate(comparisons):
@@ -139,7 +144,7 @@ class MultipleAgentsComparator:
                 if np.max(zval) <= boundary[-1][1]:
                     sum_diffs.append(np.abs(zval))
                     
-            # add new random permutation
+            # add new permutations. Can be either all the permutations of block k, or using random permutations if this is too many.
             n_permutations = binom(2*self.n, self.n)
             if self.B > n_permutations ** (k+1):
                 permutations_k = itertools.combinations(np.arange(2*self.n), self.n)
@@ -147,8 +152,9 @@ class MultipleAgentsComparator:
             else :
                 n_perm_to_add = len(self.sum_diffs)
                 permutations_k = [np.random.permutation(2*self.n)[:self.n] for _ in range(n_perm_to_add)]
-                self.normalization = self.B # number of permutations
-                
+                began_random_at = np.floor(np.log(self.B)/np.log(n_permutations))
+                self.normalization = n_permutations **began_random_at # number of permutations
+
             Zk = np.zeros(2*self.n)
             new_sum_diffs = []
             for id_p, perm_k in enumerate(permutations_k):
@@ -159,6 +165,7 @@ class MultipleAgentsComparator:
                 for perm_before_k in perms_before_k:
                     perm_sum_diffs = []
                     for i, comp in enumerate(comparisons):
+                        # Compute the sum diffs for given permutation and comparison i
                         Zk[:self.n]=Z[comp[0]][(k * self.n) : ((k + 1) * self.n)]
                         Zk[self.n:(2*self.n)] = Z[comp[1]][(k * self.n) : ((k + 1) * self.n)]
                         mask = np.zeros(2 * self.n)
@@ -240,12 +247,12 @@ class MultipleAgentsComparator:
                     self.level_spent + icumulative_probas <= clevel
                 ][0]
             else:
-                # This case is possible if clevel-self.level_spent <= 1/self.B (smallest proba possible),
+                # This case is possible if clevel-self.level_spent <= 1/ self.normalization (smallest proba possible),
                 # in which case there are not enough points and we don't take any decision for now. Happens in particular if B is None.
                 bk_sup = np.inf
                 level_to_add = 0
 
-            cumulative_probas = np.arange(len(rs_now)) / self.B  # corresponds to P(T < t)
+            cumulative_probas = np.arange(len(rs_now)) / self.normalization  # corresponds to P(T < t)
             admissible_values_inf = values[
                 self.power_spent + cumulative_probas < dlevel
             ]
