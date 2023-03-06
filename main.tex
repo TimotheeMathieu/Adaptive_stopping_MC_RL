@@ -56,14 +56,39 @@
 % To include the section number in the equation numbering:
 \numberwithin{equation}{section}
 
-\title{Adaptive stopping in Monte-Carlo evaluation for Deep RL}
+\title{Adaptive stopping in sequential tests to compare Deep RL Agents and improve reproducibility}
 \date{}
 \begin{document}
 \maketitle
 \section{Introduction}
-In Reinforcement Learning, we often use Monte-Carlo methods to evaluate the performances of an algorithm. In particular, if we denote $e(A)$ some evaluation of algorithm $A$, the global score of an algorithm by
+According to the ACM (Association for Computing Machinery), \textit{reproductibility} of a scientific study dictates that   ``An experimental result is not fully established unless it can be independently reproduced". Recently, the machine learning community witnessed a major crisis of reproductibility (see \cite{pineau2021improving} for Machine Learning in general and \cite{agarwal2021deep,colas2018many,colas2019hitchhiker} for Reinforcement Learning). In Reinforcement Learning (RL), a given experiment may sometimes take several days to run, and given the fact that the runs give random results, one needs to do several repetitions of the experiments and use statistical methods to control the efficiency of the algorithm. If one does not do enough repetitions and if the statistical methodology is not sound, the results of the experiment will not be reproducible and the results of the article are then called into question. In the present paper, we give a \textit{theoretically sound} statistical methodology to choose \textit{adaptively} the number of runs when comparing \textit{multiple RL agents} using the smallest number of runs possible.
+
+\todoT{Continue introduction}
+
+The usual methodology , we often use Monte-Carlo methods to evaluate the performances of an algorithm. In particular, if we denote $e(A)$ some evaluation of algorithm $A$, the global score of an algorithm by
 $$S(A)=\frac{1}{N}\sum_{i=1}^N e_i(A) $$
 where $e_1(A), \dots,e_N(A)$ are the evaluation of the algorithm $A$ on $N$ different seeds (i.e. $e_1(A),\dots,e_N(A)$ are supposed i.i.d).
+
+\subsection{Current methodology in RL}
+\paragraph{Theoretically sound study of Atari environments?}
+
+Atari and Procgen environments are famous environment benchmark in Deep-RL. In these environments, the study is a bit different and often one may use very few seeds for one given game (typically 3 seeds) and compare the agents on a lot of different games. The comparisons are then aggregated by saying that algorithm $A_1$ is better than algorithm $A_2$ on more than $20$ games over the $26$ games considered. The statistic methodology behind this kind of aggregation is complicated because the reward distribution are not the same over each game and hence the comparisons are not identically distributed. Typically  this means that Agent $A_2$ may be better than Agent $A_1$ only on games that are hard, and $A_1$ is better on all the other, does this means that $A_1$ is a better algorithm than $A_2$? To our knowledge, there have not been any proper statistical guarentee for this kind of comparison. Aggregation of comparisons on several games in Atari is still an \textit{open problem} and it is \textit{outside the scope of this article}. In this article we suppose that we compare the agents only on one given task.
+
+\paragraph{Theoretically sound comparison of multiple agents?}
+
+One of the problem often encountered in the statistical method to compare several RL agents is the problem of comparing more than two agents. Indeed, statistical theory dictates that when doing a comparison between a lot of agent (multiple testing), then we need more sample from each agents' than if we compare only two agents. The basic idea is that there are a lot more occasions to make an error than when we compare only two agents, hence we need more data to have a lower probability of error at each comparison.
+
+This informal argument is made precise when using multiple testing, but the theory of multiple testing have never been used to compare RL agents to our knowledge, we remedy this with our algorithm giving a theoretically sound workflow to compare a large number of RL agents.
+
+\paragraph{How many random seeds for Mujoco environments?}
+\todoT{Explain seeds, make reference to agrawal et al. and to sigaud}
+
+\begin{figure}[h]
+  \begin{center}
+    \includegraphics[width=0.8\textwidth]{census_icml2022.eps}
+    \caption{Census of the number of seeds used in RL articles to study environments using Mujoco. From ICML 2022 articles.}
+  \end{center}
+\end{figure}
 
 \subsection{Goal and requirements for the algorithm to solve the problem}
 
@@ -91,11 +116,6 @@ In the sequential testing setting, the data are handled one after the other, the
 A particular class of sequential test often used are the Sequential Probability Ratio test and the Generalized Likelihood Ratio test. Both of these tests could be generalized to a group-sequential context but they both depend strongly on a parametric model for the data. However, the reward distribution of RL algorithms is often heavy-tail and multi-modal and as a consequence it is difficult to use a parametric model to represent all of them efficiently and simultaneously for several agents, each with a different reward distribution. Moreover, because we want to deal with small sample-sizes, the asymptotic of the central limit theorem is not adapted.
 
 \paragraph{Bandits (Best arm identification or Ranking)} Our objective is close to the objective of ranking bandits algorithms. However compared to bandits we want to at the same time \textit{minimize the stopping time} (similar to fixed-confidence setting) of the algorithm and have a \textit{fixed maximum budget} (similar to fixed-budget setting). In our algorithm we allow for a type I error of $\alpha \in (0,1)$, which is very similar to the fixed confidence setting while still having a fixed budget. Then, compared to the fixed budget setting we allow a larger error rate and as a consequence we are more sample efficient than bandits algorithms.
-
-% \subsection{Notations}
-% We denote by $e(A)$ the evaluations of an algorithm $A$, $T$ is the test statistic constructed using 
-
-
 
 \section{Description of the different tools used in the algorithm}
 \subsection{Group sequential testing}
