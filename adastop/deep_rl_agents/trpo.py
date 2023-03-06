@@ -18,6 +18,7 @@ from mushroom_rl.algorithms.actor_critic import TRPO
 
 from mushroom_rl.policy import GaussianTorchPolicy
 from mushroom_rl.utils.dataset import compute_J
+from mushroom_rl.utils.preprocessors import StandardizationPreprocessor
 
 
 # Parameters
@@ -26,24 +27,24 @@ parameters = dict(
     budget=1_000_000,
     n_eval_episodes=50,
     eval_freq=100_000,
-    horizon=200,
+    horizon=1000,
     gamma=0.99,
     n_steps_per_fit=1024,
     ent_coeff=0.0,
-    max_kl=0.01,
+    max_kl=1e-2,
     lam=0.95,
     n_epochs_line_search=10,
-    n_epochs_cg=25,
-    cg_damping=0.1,
+    n_epochs_cg=100,
+    cg_damping=1e-2,
     cg_residual_tol=1e-10,
     policy_params=dict(
-        std_0=1.,
-        n_features=64,
+        std_0=1.0,
+        n_features=32,
         use_cuda=False,
     ),
     critic_params=dict(
-        n_features=64,
-        batch_size=128,
+        n_features=32,
+        batch_size=64,
         learning_rate=1e-3,
     ),
     gpu=False, # Say whether you use GPU!
@@ -115,6 +116,9 @@ if __name__ == '__main__':
     # environment
     mdp = Gym(env_id, horizon, gamma)
 
+    # preprocessor
+    preprocessor = StandardizationPreprocessor(mdp.info)
+
     # agent
     critic_params = dict(
         network=Network,
@@ -143,6 +147,7 @@ if __name__ == '__main__':
         cg_damping=cg_damping, cg_residual_tol=cg_residual_tol
     )
     agent.set_logger(logger)
+    agent.add_preprocessor(preprocessor)
 
     # core
     core = Core(agent, mdp)
