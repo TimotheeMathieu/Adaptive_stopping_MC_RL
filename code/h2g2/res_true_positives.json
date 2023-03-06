@@ -1,0 +1,1 @@
+{"n=3, k=7": {"true_positives": 1.0, "effective_comparisons": 6.0}, "n=7, k=3": {"true_positives": 1.0, "effective_comparisons": 11.666666666666666}}
