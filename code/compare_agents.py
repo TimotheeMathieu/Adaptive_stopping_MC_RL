@@ -111,6 +111,7 @@ class Two_AgentsComparator:
         sum_diffs_k = []
 
         if self.B is None:
+            raise ValueError('B is None not maintained anymore')
             # Enumerate all possibilities using previous enumeration
             # Pruning for conditional proba
             if k > 0:
@@ -196,9 +197,8 @@ class Two_AgentsComparator:
             rs
         )  # for now, don't care about ties. And there are ties, for instance when B is None, there are at least two of every values !
 
-        icumulative_probas = np.arange(len(rs))[::-1] / len(
-            rs
-        )  # This corresponds to 1 - F(t) = P(T > t)
+        icumulative_probas = np.arange(len(rs))[::-1] / self.B
+        # This corresponds to 1 - F(t) = P(T > t)
 
         # Compute admissible values, i.e. values that would not be rejected.
         admissible_values_sup = values[self.level_spent + icumulative_probas <= clevel]
@@ -214,7 +214,7 @@ class Two_AgentsComparator:
             bk_sup = np.inf
             level_to_add = 0
 
-        cumulative_probas = np.arange(len(rs)) / len(rs)  # corresponds to P(T < t)
+        cumulative_probas = np.arange(len(rs)) / self.B # corresponds to P(T < t)
         admissible_values_inf = values[
             self.power_spent + cumulative_probas < dlevel
         ]
@@ -637,9 +637,7 @@ class MultipleAgentsComparator:
                 np.max(rs_now, axis=1)
             )  # for now, don't care about ties. And there are ties, for instance when B is None, there are at least two of every values !
 
-            icumulative_probas = np.arange(len(rs_now))[::-1] / len(
-                rs_now
-            )  # This corresponds to 1 - F(t) = P(T > t)
+            icumulative_probas = np.arange(len(rs_now))[::-1] / self.B  # This corresponds to 1 - F(t) = P(T > t)
 
             # Compute admissible values, i.e. values that would not be rejected nor accepted.
 
@@ -653,14 +651,12 @@ class MultipleAgentsComparator:
                     self.level_spent + icumulative_probas <= clevel
                 ][0]
             else:
-                # This case is possible if clevel-self.level_spent <= 1/len(rs) (smallest proba possible),
+                # This case is possible if clevel-self.level_spent <= 1/self.B (smallest proba possible),
                 # in which case there are not enough points and we don't take any decision for now. Happens in particular if B is None.
                 bk_sup = np.inf
                 level_to_add = 0
 
-            cumulative_probas = np.arange(len(rs_now)) / len(
-                rs_now
-            )  # corresponds to P(T < t)
+            cumulative_probas = np.arange(len(rs_now)) / self.B  # corresponds to P(T < t)
             admissible_values_inf = values[
                 self.power_spent + cumulative_probas < dlevel
             ]
@@ -996,7 +992,7 @@ class MultipleAgentsComparator:
             color = colors(1 - 0.4 * lengths[i] / np.max(lengths))
             profondeur = len(set(lengths)) - lengths[i]
             num_smaller = np.sum(lengths < lengths[i])
-            xs = [1 + c + xshift for c in couple]
+            xs = [1 + id_sort[c] + xshift for c in couple]
             xs = np.sort(xs)
             xs = [xs[0] + 0.03 * profondeur, xs[1] - 0.03 * profondeur]
             ax.vlines(
@@ -1030,12 +1026,12 @@ class MultipleAgentsComparator:
 
         plt.subplots_adjust(left=0.1, top=0.9)
 
-        lengths, idsort = argsort_smallest_first(self.comparisons)
+        lengths, idsort2 = argsort_smallest_first(self.comparisons)
 
         ax1.get_yaxis().set_ticks([])
 
         current_y = 0.02
-        for i, couple in enumerate(np.array(self.comparisons)[idsort]):
+        for i, couple in enumerate(np.array(self.comparisons)[idsort2]):
             current_y = make_link(
                 couple,
                 ax1,
