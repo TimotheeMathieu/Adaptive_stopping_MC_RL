@@ -117,18 +117,19 @@ class MultipleAgentsComparator:
         comparisons = self.current_comparisons
         boundary = self.boundary
         if k == 0:
-            # n_permutations = binom(2*self.n, self.n)
-            # if self.B > n_permutations:
-            #     permutations = itertools.combinations(np.arange(2*self.n), self.n)
-            # else:
-            #     permutations = np.random.permutations(2*self.n)
-            for _ in range(self.B):
+            n_permutations = binom(2*self.n, self.n)
+            if self.B > n_permutations:
+                permutations = itertools.combinations(np.arange(2*self.n), self.n)
+                self.normalization = n_permutations
+            else:
+                permutations = [ np.random.permutation(2*self.n)[:self.n] for _ in range(self.B)]
+                self.normalization = self.B
+            for perm in permutations:
                 sum_diff = []
                 for i, comp in enumerate(comparisons):
                     Zi = np.hstack([Z[comp[0]][: self.n], Z[comp[1]][: self.n]])
-                    id_pos = self.rng.choice(2 * self.n, self.n, replace=False)
                     mask = np.zeros(2 * self.n)
-                    mask[list(id_pos)] = 1
+                    mask[list(perm)] = 1
                     mask = mask == 1
                     sum_diff.append(np.sum(Zi[mask] - Zi[~mask]))
                 self.sum_diffs.append(np.array(sum_diff))
@@ -138,19 +139,35 @@ class MultipleAgentsComparator:
             for zval in self.sum_diffs:
                 if np.max(zval) <= boundary[-1][1]:
                     sum_diffs.append(np.abs(zval))
-
-            # add a new random permutation
+                    
+            # add new random permutation
+            n_permutations = binom(2*self.n, self.n)
+            if self.B > n_permutations ** (k+1):
+                permutations_k = itertools.combinations(np.arange(2*self.n), self.n)
+                self.normalization = n_permutations ** (k+1) # number of permutations
+            else :
+                n_perm_to_add = len(self.sum_diffs)
+                permutations_k = [np.random.permutation(2*self.n)[:self.n] for _ in range(n_perm_to_add)]
+                self.normalization = self.B # number of permutations
+                
             Zk = np.zeros(2*self.n)
-            for j in range(len(self.sum_diffs)):
-                id_pos = self.rng.choice(2 * self.n, self.n, replace=False)
-                for i, comp in enumerate(comparisons):
-                    Zk[:self.n]=Z[comp[0]][(k * self.n) : ((k + 1) * self.n)]
-                    Zk[self.n:(2*self.n)] = Z[comp[1]][(k * self.n) : ((k + 1) * self.n)]
-                    mask = np.zeros(2 * self.n)
-                    mask[list(id_pos)] = 1
-                    mask = mask == 1
-                    self.sum_diffs[j][i] += np.sum(Zk[mask] - Zk[~mask])
-
+            new_sum_diffs = []
+            for id_p, perm_k in enumerate(permutations_k):
+                if self.B > n_permutations ** (k+1):
+                    perms_before_k = np.arange(n_permutations **k).astype(int)
+                else:
+                    perms_before_k = [id_p]
+                for perm_before_k in perms_before_k:
+                    perm_sum_diffs = []
+                    for i, comp in enumerate(comparisons):
+                        Zk[:self.n]=Z[comp[0]][(k * self.n) : ((k + 1) * self.n)]
+                        Zk[self.n:(2*self.n)] = Z[comp[1]][(k * self.n) : ((k + 1) * self.n)]
+                        mask = np.zeros(2 * self.n)
+                        mask[list(perm_k)] = 1
+                        mask = mask == 1
+                        perm_sum_diffs.append(self.sum_diffs[perm_before_k][i]+ np.sum(Zk[mask] - Zk[~mask]))
+                    new_sum_diffs.append(np.array(perm_sum_diffs))
+            self.sum_diffs = new_sum_diffs
         return self.sum_diffs
 
     def partial_compare(self, eval_values, verbose=True):
@@ -210,7 +227,7 @@ class MultipleAgentsComparator:
                 np.max(rs_now, axis=1)
             )  
 
-            icumulative_probas = np.arange(len(rs_now))[::-1] / self.B  # This corresponds to 1 - F(t) = P(T > t)
+            icumulative_probas = np.arange(len(rs_now))[::-1] / self.normalization  # This corresponds to 1 - F(t) = P(T > t)
 
             # Compute admissible values, i.e. values that would not be rejected nor accepted.
 
