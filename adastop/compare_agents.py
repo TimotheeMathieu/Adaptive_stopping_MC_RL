@@ -5,8 +5,9 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from matplotlib.colors import LinearSegmentedColormap
 import matplotlib.patches as mpatches
-    
+from scipy.special import binom
 from joblib import Parallel, delayed
+import itertools
 
 logger = logging.getLogger()
 
@@ -115,6 +116,11 @@ class MultipleAgentsComparator:
         comparisons = self.current_comparisons
         boundary = self.boundary
         if k == 0:
+            # n_permutations = binom(2*self.n, self.n)
+            # if self.B > n_permutations:
+            #     permutations = itertools.combinations(np.arange(2*self.n), self.n)
+            # else:
+            #     permutations = np.random.permutations(2*self.n)
             for _ in range(self.B):
                 sum_diff = []
                 for i, comp in enumerate(comparisons):
@@ -126,9 +132,6 @@ class MultipleAgentsComparator:
                     sum_diff.append(np.sum(Zi[mask] - Zi[~mask]))
                 self.sum_diffs.append(np.array(sum_diff))
         else:
-            # Compute sums on B random permutations of blocks, conditional to not rejected.
-            # Warning : there can be less than B resulting values due to rejection.
-
             # Eliminate for conditional
             sum_diffs = []
             for zval in self.sum_diffs:
@@ -357,7 +360,7 @@ class MultipleAgentsComparator:
 
         for k in range(self.K):
             Z = self._get_z_scalars(scalars, Z, k)
-            self.partial_compare({self.agent_names[i] : Z[i] for i in range(len(managers))}, k)
+            self.partial_compare({self.agent_names[i] : Z[i] for i in range(len(scalars))}, k)
             decisions = np.array(list(self.decisions.values()))
             if np.all([d in ["smaller", "larger", "equal"] for d in decisions]):
                 break
