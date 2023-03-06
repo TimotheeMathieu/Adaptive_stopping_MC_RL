@@ -153,7 +153,7 @@ class MultipleAgentsComparator:
                 n_perm_to_add = len(self.sum_diffs)
                 permutations_k = [np.random.permutation(2*self.n)[:self.n] for _ in range(n_perm_to_add)]
                 began_random_at = np.floor(np.log(self.B)/np.log(n_permutations))
-                self.normalization = n_permutations **began_random_at # number of permutations
+                self.normalization = n_permutations ** began_random_at # number of permutations
 
             Zk = np.zeros(2*self.n)
             new_sum_diffs = []
