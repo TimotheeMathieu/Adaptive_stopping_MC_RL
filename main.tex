@@ -56,7 +56,7 @@
 % To include the section number in the equation numbering:
 \numberwithin{equation}{section}
 
-\title{Adaptive stopping in sequential tests to compare Deep RL Agents and improve reproducibility}
+\title{Adaptive stopping in sequential tests to compare Deep RL Agents and improve reproducibility at low computational cost}
 \date{}
 \begin{document}
 \maketitle
@@ -126,7 +126,6 @@ GST often suppose strong models on the data, in particular it is often supposed 
 
 The presence of several modes in the distributions of the evaluations and the difficulty to make any distributional assumption justify a non-parametric approach of the problem, but to further justify this approach we did a study of the effect of model misspecification on simulated data when using Gaussian GST algorithm.
 
-
 \todoT{Explain early accept also} 
 
 \subsection{Permutation tests}
@@ -144,15 +143,18 @@ Usually, we say that an algorithm has a weak FWE control if the FWE is smaller t
 There are several procedures that can be used to have control on the FWE. The most famous one is Bonferroni procedure, it is a very simple procedure in which we take a threshold for $H_j$ vs $H_j'$ equal to a quantile of order $1-\alpha/J$ of the permutation distribution of $T_n^{(j)}$. It can be very conservative in general and we will prefer a step-down method that performs better in practice.
 
 \paragraph{Step-down procedure:} proposed by \cite{Romano_2003}, the step-down procedure is defined as follows: for some $\textbf{C} \subset \{1,\dots,J\}$, denote
-$$T_{n}^{(\textbf{C})}(\sigma)= \max\left(T_n^{(j)}(\sigma),\quad j \in \textbf{C}\right)$$
+$$T_{n}^{(\textbf{C})}(\sigma)= \max\left(T_n^{(j)}(\sigma),\quad j \in \textbf{C}\right),$$
+and the threshold of the test $\widehat{b}_{n}^{(\textbf{C})}$ is defined as the quantile of order $1-\alpha$ of the permutation law of $T_{n}^{(\textbf{C})}(\sigma)$:
+\begin{equation}\label{eq:threshold_multi} 
+\widehat{b}_{n}^{(\textbf{C})} = \inf\left\{b>0: \frac{1}{(2n)!} \sum_{\sigma \in \S_{2n}} \1\{T_{n}^{(\textbf{C})}(\sigma) \ge b\} \le   \alpha  \right\}.
+\end{equation}
 \begin{algorithm}[h]
 \SetAlgoLined
 \SetKwInput{KwParameter}{Parameters}
 \KwParameter{$\alpha \in (0,1)$}
 Initialize $\textbf{C}=\{1,\dots,J\}$\\
 \While{$\textbf{C} \neq \emptyset$}{
-Compute $\widehat{b}_{n}^{(\textbf{C})}(1-\alpha)$ the quantile of order $1-\alpha$ of the permutation law of $T_{n}^{(\textbf{C})}(\sigma)$:
-$$ \widehat{b}_{n}^{(\textbf{C})} = \inf\left\{b>0: \frac{1}{(2n)!} \sum_{\sigma \in \S_{2n}} \1\{T_{n}^{(\textbf{C})}(\sigma) \ge b\} \le   \alpha  \right\}.$$
+Compute $\widehat{b}_{n}^{(\textbf{C})}(1-\alpha)$  from Equation~\eqref{eq:threshold_multi}.\\
 \uIf{$T_{n}^{(\textbf{C})}(\mathrm{id}) \le \widehat{b}_{n}^{(\textbf{C})}$}{
 Accept all the hypotheses $H_j, j\in \textbf{C}$ and break the loop.}
 \Else{
@@ -164,15 +166,19 @@ Define $\textbf{C}=\textbf{C} \setminus \{j_{max}\}$
 \end{algorithm}
 The Algorithm~\ref{alg:multiple_test_1} is consistent (i.e. $\mathrm{FWE}\le \alpha$) for the equality of distribution hypotheses. It uses the maximum of the statistics as a mean to test an intersection of hypotheses. This procedure is not specific to permutation tests and can be used for other tests provided some properties on the thresholds $\widehat{b}_{n}^{(\textbf{C})}$. 
 
-
 Remark that we could not use Benjamini-Hochberg procedure or similar procedures because the hypotheses are not independent. We adapt this procedure to the case of group sequential testing in Section~\ref{sec:main_algo}
-
 
 \section{Simple case of two agents without early accept}
 We denote by $\S_{2N}$ the set of permutations of $\{1,\dots,2N\}$ and for $\sigma_1,\sigma_2,\dots,\sigma_k \in \S_{2N}^2$, we denote $\sigma_1^k=\sigma_1 \cdot \sigma_2 \cdot \ldots \cdot \sigma_k$ the concatenation of the permutation $\sigma_1$ done in interim $1$ and $\sigma_2$ done on interim $2$,\dots, $\sigma_k$ on interim $k$.
 
 In the case where only two agents are compared, we use the following algorithm (see Section~\ref{sec:multi} for the multi-agent and fully developped version of the algorithm). We denote 
-$$T_{N,i}(\sigma_1^k)= \left|\sum_{i=1}^k\left(\sum_{n=1}^{N} e_{\sigma_i(n),i}(A_1)-\sum_{n=N+1}^{2N} e_{\sigma_i(n),i}(A_2)\right)\right|.$$
+$$T_{N,i}(\sigma_1^k)= \left|\sum_{i=1}^k\left(\sum_{n=1}^{N} e_{\sigma_i(n),i}(A_1)-\sum_{n=N+1}^{2N} e_{\sigma_i(n),i}(A_2)\right)\right|,$$
+and the boundary 
+\begin{equation}\label{eq:bound_2}
+\widehat{b}_{N,k}\in \inf\left\{b >0 : \frac{1}{((2N)!)^k}\sum_{\sigma_1^k \in S_k} \1\{T_{N,k}(\sigma_1^k) \ge  b\} \le  \frac{\alpha}{K}\right\} .
+\end{equation}
+where $S_k$ is the set of permutations $\sigma_1^k\in(\S_{2N})^k$  such that it would not have rejected before
+$$\forall m < k,\quad  T_{N,m}(\sigma_1^k) \le   \widehat{b}_{N,m} $$
 The algorithm is as follows 
 \begin{algorithm}[h]
 \SetAlgoLined
@@ -184,10 +190,7 @@ Define $2NK$ different seeds $s_{1,1},\dots,s_{1,N},s_{2,1},\dots,s_{2,N}$.\\
 Train agent $A_i$ on environment $\mathcal{E}$ with the seeds $s_{i,kN},\dots,s_{i,(k+1)N}$.\\
 Collect evaluations $e_{1,k}(A_i),\dots,e_{N,k}(A_i)$ using this trained agent.\\
 }
-Compute the boundary $\widehat{b}_{N,k}$ as follows:
-$$\widehat{b}_{N,k}\in \inf\left\{b >0 : \frac{1}{((2N)!)^k}\sum_{\sigma_1^k \in S_k} \1\{T_{N,k}(\sigma_1^k) \ge  b\} \le  \frac{\alpha}{K}\right\} .$$
-where $S_k$ is the set of permutations $\sigma_1^k\in(\S_{2N})^k$  such that it would not have rejected before
-$$\forall m < k,\quad  T_{N,m}(\sigma_1^k) \le   \widehat{b}_{N,m} $$
+Compute the boundary $\widehat{b}_{N,k}$ from Equation~\eqref{eq:bound_2}.\\
 \If{$T_{N,k}(\id) \ge \widehat{b}_{N,k}$}{
 Reject the equality of the agents' evaluation, break the loop.
 }
@@ -204,7 +207,7 @@ An illustration of the group sequential test is given in figure~\ref{fig:gst}. T
 \begin{figure}
 \begin{center}
 \input{boundary.tex}
-\caption{Illustration of the boundary.\label{fig:gst}}
+\caption{Illustration of the boundary for two agents.\label{fig:gst}}
 \end{center}
 \end{figure}
 
@@ -227,8 +230,8 @@ If $\textbf{I} \neq \emptyset$, we denote
 $$\mathrm{FWE}(\alpha) = \P\left(\exists j \in \textbf{I}:\quad  \text{reject }H_j \right).$$
 \subsubsection{AdaStop: adaptive stopping algorithm using step-down method and group sequential permutation tests}\label{sec:main_algo}
 
-The algorithm is given in Algorithm~\ref{algo:main}
-\begin{algorithm}[h]
+The algorithm is given in Algorithm~\ref{algo:main}.
+\begin{algorithm}[h!]
 \SetAlgoLined
 \SetKwInput{KwParameter}{Parameters}
 \KwParameter{Agents $A_1,A_2,\dots, A_L$, environment $\mathcal{E}$, comparison pairs $(c_i)_{i \le L}$ where $c_i$ is a couple of two agents that we want to compare. Integers $K,N \in \N^*$, test parameters $\alpha,\beta$.}
@@ -239,16 +242,8 @@ Set $\textbf{C}=\{1, \dots,L\}$ the set of indices for the comparisons we want t
 Train agent $A_l$ on environment $\mathcal{E}$ with the seeds $s_{l,1,k},\dots,s_{l,N,k}$.\\
 Collect the $N$  evaluations of agent $A_l$.\\
 }
-Set $\lambda^+ = f^+ \left(\frac{k}{K}\right)- f^+ \left( \frac{k-1}{K}\right)$ and $\lambda^- = f^- \left(\frac{k}{K}\right)- f^- \left( \frac{k-1}{K}\right)$.\\
-
 \While{True}{
-Compute the boundary $\widehat{b}_{N,k}^{(\textbf{C}^+)}$ and $\widehat{b}_{N,k}^{(\textbf{C}^-)}$ such that
-$$\widehat{b}_{N,k}^{(\textbf{C}^+)} = \inf \left\{b >0 :\frac{1}{((2N)!)^k}\sum_{\sigma \in S_k} \1\{T_{N,k}^{(\textbf{C}^+)}(\sigma_1^k) \ge  b\} \le  \lambda^+\right\} $$
-and
-$$ \widehat{b}_{N,k}^{(\textbf{C}^-)} = \sup\left\{ b>0 : \frac{1}{((2N)!)^k}\sum_{\sigma \in S_k} \1\{T_{N,k}^{(\textbf{C}^-)}(\sigma_1^k) \leq b\} \le  \lambda^- \right\} .$$
-where $S_k$ is the set of permutations $\sigma\in(\S_{2N})^k$  such that it would not have accepted or rejected before
-$$\forall m < k,\quad  T_{N,m}^{(\textbf{C}^+)}(\sigma_1^k) \le   \widehat{b}_{N,m}^{(\textbf{C}^+)} \text{ and }T_{N,m}^{(\textbf{C}^-)}(\sigma_1^k) \ge   \widehat{b}_{N,m}^{(\textbf{C}^-)} $$
-
+Compute the boundaries $\widehat{b}_{N,k}^{(\textbf{C}^+)}$ and $\widehat{b}_{N,k}^{(\textbf{C}^-)}$ from~\eqref{eq:boundary_1} and~\eqref{eq:boundary_2} .\\
 \uIf{$T_{N,k}^{(\textbf{C}^+)}(\mathrm{id}) > \widehat{b}_{N,k}^{(\textbf{C}^+)}$}{
 Reject $H_{j_{\max}}$ where $j_{\max} =  \arg\max\left(T_{N,k}^{(j)}(\id),\quad j \in \textbf{C}\right)$.\\
 Update $\textbf{C}=\textbf{C} \setminus \{j_{\max }\}$
@@ -257,7 +252,8 @@ Update $\textbf{C}=\textbf{C} \setminus \{j_{\max }\}$
 Accept $H_{j_{\min}}$ where $j_{\min} =  \arg\min\left(T_{N,k}^{(j)}(\id ),\quad j \in \textbf{C}\right)$.\\
 Update $\textbf{C}=\textbf{C} \setminus \{j_{\min }\}$
 }
-\Else{ break the while loop
+\Else{
+Break the while loop
 }
 }
 \lIf{$\textbf{C}=\emptyset$}{
@@ -271,7 +267,16 @@ Break the loop and returns the answers
 }
 \caption{Main algorithm\label{algo:main}}
 \end{algorithm}
-\todoT{Remarks on the algorithm. In particular, there will not be conflict rejected that could have been accepted}.
+The boundary values are $\widehat{b}_{N,k}^{(\textbf{C}^+)}$ and $\widehat{b}_{N,k}^{(\textbf{C}^-)}$ such that
+\begin{equation}\label{eq:boundary_1}
+\widehat{b}_{N,k}^{(\textbf{C}^+)} = \inf \left\{b >0 :\frac{1}{((2N)!)^k}\sum_{\sigma \in S_k} \1\{T_{N,k}^{(\textbf{C}^+)}(\sigma_1^k) \ge  b\} \le  \frac{\alpha}{K}\right\} 
+\end{equation}
+and
+\begin{equation}\label{eq:boundary_2}
+\widehat{b}_{N,k}^{(\textbf{C}^-)} = \sup\left\{ b>0 : \frac{1}{((2N)!)^k}\sum_{\sigma \in S_k} \1\{T_{N,k}^{(\textbf{C}^-)}(\sigma_1^k) \leq b\} \le  \frac{\alpha}{K} \right\} .
+\end{equation}
+where $S_k$ is the set of permutations $\sigma\in(\S_{2N})^k$  such that it would not have accepted or rejected before
+$$\forall m < k,\quad  T_{N,m}^{(\textbf{C}^+)}(\sigma_1^k) \le   \widehat{b}_{N,m}^{(\textbf{C}^+)} \text{ and }T_{N,m}^{(\textbf{C}^-)}(\sigma_1^k) \ge   \widehat{b}_{N,m}^{(\textbf{C}^-)} $$
 
 
 \newpage
@@ -288,38 +293,38 @@ One of the basic property of two-sample permutation tests is that when the null 
 
 In what follows we show results with the same flavour but adapted to our multi-testing and sequential testing problem to fit exactly our setting.
 \begin{Lemma}\label{lem:quantile_permu_2}
-Let $X_1,\dots,X_N$ be i.i.d from a distribution $P$ and $Y_1,\dots,Y_N$ be i.i.d. from a distribution $Q$. Denote $Z_1^{2N}=X_1,\dots,X_N,Y_1,\dots,Y_N$ be the concatenation of $X_1^N$ and $Y_1^N$. Let $\alpha \in (0,1)$ and define $\widehat{b}$ such that 
-$$ \frac{1}{(2N)!}\sum_{\sigma\in \S_{2N}} \1\left\{ \frac{1}{N}\sum_{i=1}^n (Z_{\sigma(i)}-Z_{\sigma(N+i)}) > \widehat{b}\right\}\le \alpha.$$
-Then, if $P=Q$, we have 
-$$\P\left(\frac{1}{N}\sum_{i=1}^n (X_i-Y_i) >\widehat{b} \right)\le \alpha $$ 
+  Let $X_1,\dots,X_N$ be i.i.d from a distribution $P$ and $Y_1,\dots,Y_N$ be i.i.d. from a distribution $Q$. Denote $Z_1^{2N}=X_1,\dots,X_N,Y_1,\dots,Y_N$ be the concatenation of $X_1^N$ and $Y_1^N$. Let $\alpha \in (0,1)$ and define $\widehat{b}$ such that 
+  $$ \frac{1}{(2N)!}\sum_{\sigma\in \S_{2N}} \1\left\{ \frac{1}{N}\sum_{i=1}^n (Z_{\sigma(i)}-Z_{\sigma(N+i)}) > \widehat{b}\right\}\le \alpha.$$
+  Then, if $P=Q$, we have 
+  $$\P\left(\frac{1}{N}\sum_{i=1}^n (X_i-Y_i) >\widehat{b} \right)\le \alpha $$ 
 \end{Lemma}
 \begin{proof}
-Denote $T(\sigma)= \frac{1}{N}\sum_{i=1}^n (Z_{\sigma(i)}-Z_{\sigma(n+i)})$. Since $P=Q$, for any $\sigma,\sigma' \in \S_{2N}$ we have $T(\sigma)\dec T(\sigma')$. Then, because $\widehat{b}$ does not depend on the permutation $\sigma$ (but it depends on the values of $Z_1^{2N}$, we have for any $\sigma \in \S_{2N}$
-\begin{align*}
-\P\left(T(\id)> \widehat{b}\right)&=\P\left(T(\sigma)> \widehat{b}\right)
-\end{align*} 
-Now, take the sum on all the permutations, 
-\begin{align*}
-\P\left(T(\id)> \widehat{b}\right)&=\frac{1}{(2N)!}\sum_{\sigma\in \S_{2N}} \E\left[\1\{T(\sigma)> \widehat{b}\}\right]\\
-&=  \E\left[\frac{1}{(2N)!}\sum_{\sigma\in \S_{2N}}\1\{T(\sigma)> \widehat{b}\}\right]\le \alpha
-\end{align*}
-which proves the result.
+  Denote $T(\sigma)= \frac{1}{N}\sum_{i=1}^n (Z_{\sigma(i)}-Z_{\sigma(n+i)})$. Since $P=Q$, for any $\sigma,\sigma' \in \S_{2N}$ we have $T(\sigma)\dec T(\sigma')$. Then, because $\widehat{b}$ does not depend on the permutation $\sigma$ (but it depends on the values of $Z_1^{2N}$, we have for any $\sigma \in \S_{2N}$
+  \begin{align*}
+    \P\left(T(\id)> \widehat{b}\right)&=\P\left(T(\sigma)> \widehat{b}\right)
+  \end{align*} 
+  Now, take the sum on all the permutations, 
+  \begin{align*}
+    \P\left(T(\id)> \widehat{b}\right)&=\frac{1}{(2N)!}\sum_{\sigma\in \S_{2N}} \E\left[\1\{T(\sigma)> \widehat{b}\}\right]\\
+                                      &=  \E\left[\frac{1}{(2N)!}\sum_{\sigma\in \S_{2N}}\1\{T(\sigma)> \widehat{b}\}\right]\le \alpha
+  \end{align*}
+  which proves the result.
 \end{proof}
 
 
 The goal is to prove an equivalent of Lemma~\ref{lem:quantile_permu_2} for the case of multiple group-sequential permutation tests.
 
 % \begin{Lemma}\label{lem:invariance} 
-% for any $j \in \textbf{I}$, then we have the following joint equality in distribution :
-% $$\forall \sigma \in (\S_{2N})^k, \quad (T_N^{(j)}(\id))_{j \in\textbf{I}} =^d (T_N^{(j)}(\sigma))_{j \in \textbf{I}}.$$
-% where $\textbf{I}$ is a subset of $\{1,\dots,J\}$ of true hypotheses.
+%   for any $j \in \textbf{I}$, then we have the following joint equality in distribution :
+%   $$\forall \sigma \in (\S_{2N})^k, \quad (T_N^{(j)}(\id))_{j \in\textbf{I}} =^d (T_N^{(j)}(\sigma))_{j \in \textbf{I}}.$$
+%   where $\textbf{I}$ is a subset of $\{1,\dots,J\}$ of true hypotheses.
 % \end{Lemma}
 % \begin{proof}
-% The comparisons $(c_i)_{i \in \textbf{I}}$ describe the graph with the nodes being the agents denoted $1,\dots,L$ and $(i,j)$ has an edge if $(i,j)\in(c_i)_{i \in \textbf{I}}$ is one of the comparisons that correspond to a true hypothesis. This graph is not necessarily connected, we denote $C(i)$ the connected component to which node $i$ (e.g. agent $i$) belongs, i.e. for any $i,j \in C(i)$ there exists a path going from $i$ to $j$. $C(i)$ can be equal to the singleton $\{i\}$ if all the comparisons with $i$ are in fact false hypotheses.
+%   The comparisons $(c_i)_{i \in \textbf{I}}$ describe the graph with the nodes being the agents denoted $1,\dots,L$ and $(i,j)$ has an edge if $(i,j)\in(c_i)_{i \in \textbf{I}}$ is one of the comparisons that correspond to a true hypothesis. This graph is not necessarily connected, we denote $C(i)$ the connected component to which node $i$ (e.g. agent $i$) belongs, i.e. for any $i,j \in C(i)$ there exists a path going from $i$ to $j$. $C(i)$ can be equal to the singleton $\{i\}$ if all the comparisons with $i$ are in fact false hypotheses.
 
-% Now, let us look at how a concatenation of permutations $\sigma_1\cdot\ldots\cdot\sigma_m$ for $m\le k$ acts on the evaluations $e_{n,i}(j)$ for $i \le m$, $1\le n\le 2N$ and $j \in \mathcal{C}(i)$. We have
-% \begin{align*}
-% T_{N,k}^{(j)}(\sigma_1 \cdot  \sigma_2 \cdot  \ldots  \cdot  \sigma_k)&=  \left|\sum_{i=1}^k\left(\sum_{n=1}^{N} e_{\sigma_i(n),i}(j)-\sum_{n=N+1}^{2N} e_{\sigma_i(n),i}(j)\right)\right|
+%   Now, let us look at how a concatenation of permutations $\sigma_1\cdot\ldots\cdot\sigma_m$ for $m\le k$ acts on the evaluations $e_{n,i}(j)$ for $i \le m$, $1\le n\le 2N$ and $j \in \mathcal{C}(i)$. We have
+%   \begin{align*}
+      %       T_{N,k}^{(j)}(\sigma_1 \cdot  \sigma_2 \cdot  \ldots  \cdot  \sigma_k)&=  \left|\sum_{i=1}^k\left(\sum_{n=1}^{N} e_{\sigma_i(n),i}(j)-\sum_{n=N+1}^{2N} e_{\sigma_i(n),i}(j)\right)\right|
 % \end{align*}
 
 % Hence, $T_{N,k}^{(j)}(\sigma) = T_{N,k}^{(j)}(\sigma')$ where $\sigma'_i(n)=\sigma_i(n+N)$ if $n \le N$ and $\sigma_i(n) = \sigma_i(n-N)$ otherwise. This corresponds to changing the sign $-1$ to $+1$ inside the absolute value. Now, let us consider two different comparisons $j=(i_1,i_2)$ and $j'=(i_2,i_3)$, i.e. the two couples share one agent. We can consider that in both $T_{N,k}^{(j)}(\sigma)$ and $T_{N,k}^{(j')}(\sigma)$ the permutation acts in the same way on agent $i_2$.
@@ -384,7 +389,7 @@ $$\mathrm{E}= \{ \exists j \in \textbf{I}: \quad H_j \text{ is rejected}\}.$$
 Contrary to Lemma~\ref{lem:quantile_permu_2}, we are in a multiple-testing framework and there may be a mix of true hypotheses and false hypotheses and we have to reduce the problem to studying only true hypotheses because we don't have any informations on the distributions when the hypotheses are false.
 \begin{Lemma}\label{lem:multiple_test_FWE}
 We have 
-$$\mathrm{FWE} = \P_{\sigma_1^k}\left(\text{E is true} \right) \le \sum_{k=1}^K\P\left( T_{N,k}^{(\textbf{I}^+)}(\id) > \widehat{b}_{N,k}^{(\textbf{I}^+)}, \mathrm{NR}_k(\id)\right)  $$
+$$\mathrm{FWE} = \P_{\sigma_1^k}\left(\mathrm{E}\text{ is true} \right) \le \sum_{k=1}^K\P\left( T_{N,k}^{(\textbf{I}^+)}(\id) > \widehat{b}_{N,k}^{(\textbf{I}^+)}, \mathrm{NR}_k(\id)\right)  $$
 \end{Lemma}
 Then, similarly as in the proof of Lemma~\ref{lem:quantile_permu_2}, because we managed to reduce the problem to consider only true hypotheses thanks to Lemma~\ref{lem:multiple_test_FWE}, we want to use the invariance by permutation to make the link with the definition of $\widehat{b}_{N,k}^{(\textbf{I}^+)}$. For this purpose, we prove the following Lemma.
 
@@ -456,7 +461,6 @@ where we used the definition of $\widehat{b}_{N,k}^{(\textbf{I}^+)}$ to make the
 % \]
 % Remark that there is no permutation of the columns of $M_\sigma$ and operation of multiplying lines by -1 which would transform $M_\sigma$ in $M$ . Hence, there is not global permutation such that $T(M)$ on the permuted sample is equal to $T(M_\sigma)$.
 
-\paragraph{``proof'' that it is obvious  and I was making things complicated ?}
 
 \subsection{Proof of Lemma~\ref{lem:multiple_test_FWE}}
 
