@@ -120,7 +120,7 @@ if __name__ == "__main__":
         seed=args.seed,
         output_dir=output_dir_name # one folder for each agent
     )
-    agent.fit(0)
+    agent.fit(1)
 
     # evaluation arrays
     n_evals = fit_budget // eval_freq
