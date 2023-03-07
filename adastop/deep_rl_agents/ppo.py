@@ -54,7 +54,7 @@ def make_env(id=None):
 
 
 # agent and environment definition
-env_ctor = gym_make
+env_ctor = make_env
 env_kwargs = dict(id=env_id)
 
 
