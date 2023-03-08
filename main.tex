@@ -56,12 +56,13 @@
 % To include the section number in the equation numbering:
 \numberwithin{equation}{section}
 
-\title{Adaptive stopping in sequential tests to compare Deep RL Agents and improve reproducibility at low computational cost}
+\title{Adaptive stopping in sequential tests to compare Deep RL Agents and improve replicability at low computational cost}
 \date{}
 \begin{document}
 \maketitle
 \section{Introduction}
-According to the ACM (Association for Computing Machinery), \textit{reproductibility} of a scientific study dictates that   ``An experimental result is not fully established unless it can be independently reproduced". Recently, the machine learning community witnessed a major crisis of reproductibility (see \cite{pineau2021improving} for Machine Learning in general and \cite{agarwal2021deep,colas2018many,colas2019hitchhiker} for Reinforcement Learning). In Reinforcement Learning (RL), a given experiment may sometimes take several days to run, and given the fact that the runs give random results, one needs to do several repetitions of the experiments and use statistical methods to control the efficiency of the algorithm. If one does not do enough repetitions and if the statistical methodology is not sound, the results of the experiment will not be reproducible and the results of the article are then called into question. In the present paper, we give a \textit{theoretically sound} statistical methodology to choose \textit{adaptively} the number of runs when comparing \textit{multiple RL agents} using the smallest number of runs possible.
+%According to the ACM (Association for Computing Machinery), \textit{reproductibility} of a scientific study dictates that   ``An experimental result is not fully established unless it can be independently reproduced". Recently, the machine learning community witnessed a major crisis of reproductibility (see \cite{pineau2021improving} for Machine Learning in general and \cite{agarwal2021deep,colas2018many,colas2019hitchhiker} for Reinforcement Learning).
+ In Reinforcement Learning (RL), a given experiment may sometimes take several days to run, and given the fact that the runs give random results, one needs to do several repetitions of the experiments and use statistical methods to control the efficiency of the algorithm. If one does not do enough repetitions and if the statistical methodology is not sound, the results of the experiment will not be reproducible and the results of the article are then called into question. In the present paper, we give a \textit{theoretically sound} statistical methodology to choose \textit{adaptively} the number of runs when comparing \textit{multiple RL agents} using the smallest number of runs possible.
 
 \todoT{Continue introduction}
 
@@ -224,13 +225,24 @@ where
 $$T_{N,k}^{(j)}(\sigma_1^k)= \left|\sum_{i=1}^k\left(\sum_{n=1}^{N} e_{\sigma_i(n),i}(j)-\sum_{n=N+1}^{2N} e_{\sigma_i(n),i}(j)\right)\right|$$ 
 $T_{N,k}^{(j)}$ is the absolute value of the sum of differences of all the blocks until block $i$ after permutation of the concatenation of the two agents's evaluations by $\sigma_1,\dots,\sigma_k\in \S_{2N}$.
  
-$\textbf{I}$ denotes the set of indices of the true hypotheses among $\{1,\dots,J\}$. Let $\alpha, \beta \in [0,1]$, the algorithm depends on a level spending function $f^+:[0,1]\to[0,\alpha]$ and a power spending function $f^-:[0,1]\to [0,\beta]$, both non-decreasing functions verifying $f^+(0)=f^-(0)=0$, $f^+(1)=\alpha$, $f^-(1)=\beta$. 
-
-If $\textbf{I} \neq \emptyset$, we denote 
+$\textbf{I}$ denotes the set of indices of the true hypotheses among $\{1,\dots,J\}$. If $\textbf{I} \neq \emptyset$, we denote 
 $$\mathrm{FWE}(\alpha) = \P\left(\exists j \in \textbf{I}:\quad  \text{reject }H_j \right).$$
 \subsubsection{AdaStop: adaptive stopping algorithm using step-down method and group sequential permutation tests}\label{sec:main_algo}
 
-The algorithm is given in Algorithm~\ref{algo:main}.
+The algorithm is given in Algorithm~\ref{algo:main} and depends on the values of the boundary thresholds. 
+Instead of using all the permutations as it was done previously when comparing two agents, on may also use random permutations $s_1,\dots,s_B$ where each $s_i$ is a concatenation of $k$ permutations, $s_i\in(\S_{2N})^k$. The theoretical guarentees persist as long as the choice of the permutations is made independently of the data. Switching to random permutations allows us to use the algorithm for a larger array of values of $K$ and $N$. Using a small number of permutations will decrease the total power of the test, but with a sufficiently large number of random permutations (typically for the values of $N$ and $K$ considered, 10 000 permutations are sufficient) the loss in power is acceptable.
+
+In the sequels, we will deote $B_k$ the number of concatenated permutations (random or not) considered at interim $k$. Then, with these permutations, we define the alternative boundary values $\widehat{b}_{N,k}^{(\textbf{C}^+)}$ and $\widehat{b}_{N,k}^{(\textbf{C}^-)}$ such that
+\begin{equation}\label{eq:boundary_1}
+\widehat{b}_{N,k}^{(\textbf{C}^+)} = \inf \left\{b >0 :\frac{1}{B_k}\sum_{\sigma \in S_k} \1\{T_{N,k}^{(\textbf{C}^+)}(\sigma_1^k) \ge  b\} \le  q_k\right\} 
+\end{equation}
+and
+\begin{equation}\label{eq:boundary_2}
+\widehat{b}_{N,k}^{(\textbf{C}^-)} = \sup\left\{ b>0 : \frac{1}{B_k}\sum_{\sigma \in S_k} \1\{T_{N,k}^{(\textbf{C}^-)}(\sigma_1^k) \leq b\} \le  q'_k \right\} .
+\end{equation}
+where $\sum_{j=1}^kq_j \le \frac{k\alpha}{K}$ and  $\sum_{j=1}^kq'_j \le \frac{k\beta}{K}$ and where $S_k$ is the subset of $\{s_1,\dots,s_{B_k}\}$ such that it would not have accepted or rejected before: for each $\sigma_1^k \in S_k$, we have the following property
+$$\forall m < k,\quad  T_{N,m}^{(\textbf{C}^+)}(\sigma_1^k) \le   \widehat{b}_{N,m}^{(\textbf{C}^+)} \text{ and }T_{N,m}^{(\textbf{C}^-)}(\sigma_1^k) \ge   \widehat{b}_{N,m}^{(\textbf{C}^-)}.$$
+
 \begin{algorithm}[h!]
 \SetAlgoLined
 \SetKwInput{KwParameter}{Parameters}
@@ -253,30 +265,21 @@ Accept $H_{j_{\min}}$ where $j_{\min} =  \arg\min\left(T_{N,k}^{(j)}(\id ),\quad
 Update $\textbf{C}=\textbf{C} \setminus \{j_{\min }\}$
 }
 \Else{
-Break the while loop
+Break the while loop.
 }
 }
 \lIf{$\textbf{C}=\emptyset$}{
-Break the loop and returns the answers
+Break the loop and returns the answers.
 }
 {
 \lIf{ $k=K$}{
- Then accept all hypotheses remaining in $\textbf{C}$
+ Then accept all hypotheses remaining in $\textbf{C}$.
 }
 }
 }
 \caption{Main algorithm\label{algo:main}}
 \end{algorithm}
-The boundary values are $\widehat{b}_{N,k}^{(\textbf{C}^+)}$ and $\widehat{b}_{N,k}^{(\textbf{C}^-)}$ such that
-\begin{equation}\label{eq:boundary_1}
-\widehat{b}_{N,k}^{(\textbf{C}^+)} = \inf \left\{b >0 :\frac{1}{((2N)!)^k}\sum_{\sigma \in S_k} \1\{T_{N,k}^{(\textbf{C}^+)}(\sigma_1^k) \ge  b\} \le  \frac{\alpha}{K}\right\} 
-\end{equation}
-and
-\begin{equation}\label{eq:boundary_2}
-\widehat{b}_{N,k}^{(\textbf{C}^-)} = \sup\left\{ b>0 : \frac{1}{((2N)!)^k}\sum_{\sigma \in S_k} \1\{T_{N,k}^{(\textbf{C}^-)}(\sigma_1^k) \leq b\} \le  \frac{\alpha}{K} \right\} .
-\end{equation}
-where $S_k$ is the set of permutations $\sigma\in(\S_{2N})^k$  such that it would not have accepted or rejected before
-$$\forall m < k,\quad  T_{N,m}^{(\textbf{C}^+)}(\sigma_1^k) \le   \widehat{b}_{N,m}^{(\textbf{C}^+)} \text{ and }T_{N,m}^{(\textbf{C}^-)}(\sigma_1^k) \ge   \widehat{b}_{N,m}^{(\textbf{C}^-)} $$
+
 
 
 \newpage
@@ -289,9 +292,18 @@ $$\forall m < k,\quad  T_{N,m}^{(\textbf{C}^+)}(\sigma_1^k) \le   \widehat{b}_{N
 % - Do the asymptotic for early accept and multiple testing (this would also allow estimate of power)
 % } 
 \subsubsection{Basic results following from the use of permutation tests}
-One of the basic property of two-sample permutation tests is that when the null hypothesis is true, then all the permutation are as likely to give a certain value and hence the law given the data is the uniform distributions on all the permutations. The precise theorem for this result is a bit technical due to the fact that the probability for the data to have any given value is $0$ and we must be a bit careful with the formulation (see \cite[Theorem 17.2.2]{lehmann2005testing} for a precise formulation). 
+One of the basic property of two-sample permutation tests is that when the null hypothesis is true, then all the permutation are as likely to give a certain value and hence the law given the data is the uniform distributions on all the permutations. Then, as a consequence of our choice of $\widehat{b}_k$ as a quantile of the law given the data, the algorithm has a probability to reject wrongly of $\alpha$. This informal statement is the result presented in the following theorem.
 
-In what follows we show results with the same flavour but adapted to our multi-testing and sequential testing problem to fit exactly our setting.
+
+\begin{Theorem}\label{th:multi_FWE}
+Suppose that $\alpha,\beta \in  (0,1)$, and consider the multiple testing problem $H_j: P_j = P_k$ against $H_j': P_j \neq P_k$ for all the couples $j \neq k$. 
+Then, the test resulting from Algorithm~\ref{algo:main} has a strong control on the Family-wise error for the multiple test, i.e. if we suppose that all the hypotheses $H_i, i\in \bf I$ are true and the remainder are false, then 
+$$ \P\left(\exists j \in \bf{I}:\quad  \text{reject }H_j\right)\le\alpha.$$
+\end{Theorem}
+
+
+
+ The proof for theorem for this result is a bit technical. In what follows we begin by showing the result in a very simplified case with $L=2$ agents, and $K=1$.
 \begin{Lemma}\label{lem:quantile_permu_2}
   Let $X_1,\dots,X_N$ be i.i.d from a distribution $P$ and $Y_1,\dots,Y_N$ be i.i.d. from a distribution $Q$. Denote $Z_1^{2N}=X_1,\dots,X_N,Y_1,\dots,Y_N$ be the concatenation of $X_1^N$ and $Y_1^N$. Let $\alpha \in (0,1)$ and define $\widehat{b}$ such that 
   $$ \frac{1}{(2N)!}\sum_{\sigma\in \S_{2N}} \1\left\{ \frac{1}{N}\sum_{i=1}^n (Z_{\sigma(i)}-Z_{\sigma(N+i)}) > \widehat{b}\right\}\le \alpha.$$
@@ -311,107 +323,35 @@ In what follows we show results with the same flavour but adapted to our multi-t
   which proves the result.
 \end{proof}
 
-
-The goal is to prove an equivalent of Lemma~\ref{lem:quantile_permu_2} for the case of multiple group-sequential permutation tests.
-
-% \begin{Lemma}\label{lem:invariance} 
-%   for any $j \in \textbf{I}$, then we have the following joint equality in distribution :
-%   $$\forall \sigma \in (\S_{2N})^k, \quad (T_N^{(j)}(\id))_{j \in\textbf{I}} =^d (T_N^{(j)}(\sigma))_{j \in \textbf{I}}.$$
-%   where $\textbf{I}$ is a subset of $\{1,\dots,J\}$ of true hypotheses.
-% \end{Lemma}
-% \begin{proof}
-%   The comparisons $(c_i)_{i \in \textbf{I}}$ describe the graph with the nodes being the agents denoted $1,\dots,L$ and $(i,j)$ has an edge if $(i,j)\in(c_i)_{i \in \textbf{I}}$ is one of the comparisons that correspond to a true hypothesis. This graph is not necessarily connected, we denote $C(i)$ the connected component to which node $i$ (e.g. agent $i$) belongs, i.e. for any $i,j \in C(i)$ there exists a path going from $i$ to $j$. $C(i)$ can be equal to the singleton $\{i\}$ if all the comparisons with $i$ are in fact false hypotheses.
-
-%   Now, let us look at how a concatenation of permutations $\sigma_1\cdot\ldots\cdot\sigma_m$ for $m\le k$ acts on the evaluations $e_{n,i}(j)$ for $i \le m$, $1\le n\le 2N$ and $j \in \mathcal{C}(i)$. We have
-%   \begin{align*}
-      %       T_{N,k}^{(j)}(\sigma_1 \cdot  \sigma_2 \cdot  \ldots  \cdot  \sigma_k)&=  \left|\sum_{i=1}^k\left(\sum_{n=1}^{N} e_{\sigma_i(n),i}(j)-\sum_{n=N+1}^{2N} e_{\sigma_i(n),i}(j)\right)\right|
-% \end{align*}
-
-% Hence, $T_{N,k}^{(j)}(\sigma) = T_{N,k}^{(j)}(\sigma')$ where $\sigma'_i(n)=\sigma_i(n+N)$ if $n \le N$ and $\sigma_i(n) = \sigma_i(n-N)$ otherwise. This corresponds to changing the sign $-1$ to $+1$ inside the absolute value. Now, let us consider two different comparisons $j=(i_1,i_2)$ and $j'=(i_2,i_3)$, i.e. the two couples share one agent. We can consider that in both $T_{N,k}^{(j)}(\sigma)$ and $T_{N,k}^{(j')}(\sigma)$ the permutation acts in the same way on agent $i_2$.
-
-% As a consequence transformation by $\sigma$ can be seen as a global transformation of the concatenation of all the points (with repetition removed) $(e_{n,i}(j), e_{n,i}(j))_{n\le N, i\le k,j\in \textbf{I}}$. Moreover, we have that for any connected composant $\mathcal{C}$ in the graph, the random variables $(e_{n,i}(j), e_{n,i}(j))_{n\le N, i\le k,j\in \mathcal{C}}$ are i.i.d because all comparisons of $\mathcal{C}$ correspond true hypotheses $P_i = P_j$ and by transitivity of the equality, all the laws are equal in the whole connected component.
-
-% Let $\mathcal{C}$ be one connected composant in the graph. Let us consider the function $\textbf{T}_k : \R^{N}\times\R^k\times\R^{\textbf{I}}\to \R^{Bk|\mathcal{C}|}$ defined by $$\textbf{T}_k\left((e_{n,i}(j))_{n\le N, i\le k,j\in \mathcal{C}}\right) =(T_{N,i}^{(j)}(\id))_{i\le k, j \in \mathcal{C}}$$
-% $\textbf{T}_k$ is a function of the sample $(e_{n,i}(j))_{n\le N, i\le k,j\in \mathcal{C}}$ and this sample is independent and with the same law, hence the law of $(e_{n,i}(j))_{n\le N, i\le k,j\in \mathcal{C}}$ is invariant by permutation and this implies that for any $\sigma$, we have $\textbf{T}_k\left((e_{n,i}(j))_{n\le N, i\le k,j\in \mathcal{C}}\right) =^d \textbf{T}_k\left((e_{\sigma_i(n),i}(j))_{n\le N, i\le k,j\in \mathcal{C}}\right)$ which implies that $(T_{N,i}^{(j)}(\id))_{i\le k, j \in \mathcal{C}}=(T_{N,i}^{(j)}(\sigma))_{i\le k, j \in \mathcal{C}}$ for any $\sigma$ concatenation of $k$ permutations.
-
-% Now, having that by construction the connected components are each independent of each other in the sense that the hypotheses corresponding to the nodes are independent of each other. Hence, having that $(T_{N,i}^{(j)}(\id))_{i\le k, j \in \mathcal{C}}=(T_{N,i}^{(j)}(\sigma))_{i\le k, j \in \mathcal{C}}$ for each connected component $\mathcal{C}$ implies that this is also true for the union of the connected component. Hence the result.
-
-% \end{proof}
-% Define $\tilde{e}_{n,k}(j; \sigma_1^{k-1})$ conditionally on $\mathcal{F}_{k-1}$ as follows. 
-% $$\tilde{e}_{n,k}(j; \sigma_1^{k-1}) = \begin{cases} 
-% e_{n,k}(j) & \text{ if } \tilde{T}_{N,k-1}^{(j)}(\sigma_1^{k-1})  \ge \widehat{b}_{N,k-1}^{(\textbf{C}_{k-1}^-)}\\
-% 0 & \text{ if } \tilde{T}_{N,k-1}^{(j)}(\sigma_1^{k-1}) < \widehat{b}_{N,k-1}^{(\textbf{C}_{k-1}^-)}
-% \end{cases}
-% $$
-
-% % Conditional invariance, Lemma 8.8 in https://link.springer.com/book/10.1007/978-3-030-61871-1
-
-% where we define recursively $\tilde{T}_{N,1}^{(j)}(\sigma) =\left|\left(\sum_{n=1}^{N} e_{\sigma_1(n),1}(j)-\sum_{n=N+1}^{2N} e_{\sigma_1(n),1}(j)\right)\right| $ and $$\tilde{T}_{N,k}^{(j)}(\sigma) = \left|\sum_{i=1}^k\left(\sum_{n=1}^{N} \tilde{e}_{\sigma_k(n),k}(j; \sigma_1^{k-1})-\sum_{n=N+1}^{2N}  \tilde{e}_{\sigma_k(n),k}(j; \sigma_1^{k-1})\right)\right|.$$
-% Remark that $\tilde{T}_{N,k}^{(j)}(\sigma)$ verifies then $\tilde{T}_{N,k}^{((\textbf{I}\cup \textbf{C}_k)^+)}(\sigma) = T_{N,k}^{(\textbf{C}_k^+)}(\sigma)$ and hence 
-% $$\frac{1}{((2N)!)^k}\sum_{\sigma \in S_k} \1\{\tilde{T}_{N,k}^{((\textbf{I}\cup \textbf{C}_k)^+)}(\sigma) \ge  \widehat{b}_{N,k}^{(\textbf{C}_k^+)}\} = \frac{1}{((2N)!)^k}\sum_{\sigma \in S_k} \1\{T_{N,k}^{(\textbf{C}_k^+)}(\sigma) \ge  \widehat{b}_{N,k}^{(\textbf{C}_k^+)}\} \le   f^+\left(\frac{k}{K}\right) -f^+\left(\frac{k-1}{K}\right)   .$$
-% \begin{Lemma}
-% On the event that no true hypothesis has been rejected yet, $\tilde{T}_{N,k}^{(I^+)}(\sigma) =^d\tilde{T}_{N,k}^{(I^+)}(\id) $
-% \end{Lemma}
-% \begin{proof}
-% We have for any $t_k,t_{k-1}>0$
-% \begin{align*}
-% \P &\left(\tilde{T}_{N,k}^{(I^+)}(\sigma _1^k) > \widehat{b}_{n,k}^{(I^+)}, \mathrm{NR}_{k-1}(\sigma_1^{k-1})\right)\\
-% &= \E\left[ \P \left(\tilde{T}_{N,k}^{(I^+)}(\sigma _1^k) > \widehat{b}_{n,k}^{(I^+)}, \mathrm{NR}_{k-1}(\sigma_1^{k-1}) \Big| \tilde{T}_{N,k-1}^{(I^+)}(\sigma _1^{k-1})\right)\right] \\
-% &=  \E\left[ \P \left(\tilde{T}_{N,k}^{(I^+)}(\sigma _1^k) > \widehat{b}_{n,k}^{(I^+)} \Big| \tilde{T}_{N,k-1}^{(I^+)}(\sigma _1^{k-1})\right) \1\{\mathrm{NR}_{k-1}(\sigma_1^{k-1})\}\right]
-% \end{align*}
-% Then, we have that $(\tilde e_{n,k}^{(j)}(\sigma_k))_{n\le 2N, j \in \mathcal{I}}$ is invariant by permutation conditionally on the value of $\tilde{T}_{N,k-1}^{(I^+)}(\sigma _1^{k-1})$. Indeed, either $(\tilde e_{n,k}^{(j)}(\sigma_k))_{n\le 2N}$ are all $0$ in which case permutation don't change anything, either they are not $0$ in which case they are equal to $(e_{n,k}^{(j)}(\sigma_k))$ which, because they are i.i.d, have a law that does not change by permutation. Then, we have
-% $$\P \left(\tilde{T}_{N,k}^{(I^+)}(\sigma _1^k) > \widehat{b}_{n,k}^{(I^+)} \Big| \tilde{T}_{N,k-1}^{(I^+)}(\sigma _1^{k-1})\right)=\P \left(\tilde{T}_{N,k}^{(I^+)}(\sigma _1^{k-1}\cdot \id) > \widehat{b}_{n,k}^{(I^+)} \Big| \tilde{T}_{N,k-1}^{(I^+)}(\sigma _1^{k-1})\right) $$
-% and
-% \begin{align*}
-% \P &\left(\tilde{T}_{N,k}^{(I^+)}(\sigma _1^k) > \widehat{b}_{n,k}^{(I^+)}, \mathrm{NR}_{k-1}(\sigma_1^{k-1})\right)\\
-% &= \E\left[ \P \left(\tilde{T}_{N,k}^{(I^+)}(\sigma _1^{k-1}\cdot \id ) > \widehat{b}_{n,k}^{(I^+)} \Big| \tilde{T}_{N,k-1}^{(I^+)}(\sigma _1^{k-1})\right) \1\{\mathrm{NR}_{k-1}(\sigma_1^{k-1})\}\right]\\
-% &= \P \left(\tilde{T}_{N,k}^{(I^+)}(\sigma _1^{k-1}\cdot \id) > \widehat{b}_{n,k}^{(I^+)}, \mathrm{NR}_{k-1}(\sigma_1^{k-1})\right)\\
-% &= \P \left(\tilde{T}_{N,k}^{(I^+)}(\sigma _1^{k-1}\cdot \id) > \widehat{b}_{n,k}^{(I^+)}, \tilde{T}_{N,k-1}^{(I^+)}(\sigma _1^{k-1}) \le  \widehat{b}_{n,k-1}^{(I^+)},\mathrm{NR}_{k-2}(\sigma_1^{k-2})\right)\\
-% &= \E\left[ \P \left(\tilde{T}_{N,k}^{(I^+)}(\sigma _1^{k-1}\cdot \id ) > \widehat{b}_{n,k}^{(I^+)},  \tilde{T}_{N,k-1}^{(I^+)}(\sigma _1^{k-1}) \le  \widehat{b}_{n,k-1}^{(I^+)} \Big| \tilde{T}_{N,k-2}^{(I^+)}(\sigma _1^{k-2})\right) \1\{\mathrm{NR}_{k-2}(\sigma_1^{k-2})\}\right]\\
-% \end{align*}
-% \end{proof}
-
-\subsubsection{Multiple group sequential testing}
-First we prove that the multiple testing scheme is correct for testing $ P_j = P_k$ against $ P_j \neq P_k$ for all the couples $j \neq k$. 
-
-
-\begin{Theorem}\label{th:multi_FWE}
-Suppose that $\beta = 0$, for any $\alpha \in (0,1)$ and any non-decreasing level spending function $f^+$, the test resulting from Algorithm~\ref{algo:main} has a strong control on the FWE: we have $\mathrm{FWE}(\alpha)\le\alpha$.
-\end{Theorem}
-\begin{proof}
 Denote 
 $$\mathrm{NR}_k(\sigma_1^k) = \left\{\forall m < k,\quad  T_{N,m}^{(\textbf{I}^+)}(\sigma_1\cdot\ldots\cdot\sigma_m) \le   \widehat{b}_{N,m}^{(\textbf{I}^+)}\right\}$$
 $\mathrm{NR}_k(\sigma_1^k)$ is the event on which the statistics corresponding to true hypotheses, computed after permutation by $\sigma_1^k=\sigma_1\cdot \ldots \cdot \sigma_k$, are not rejected.
 
-
 Let $\textbf{I}$ be the set of true hypotheses. Let E be the following event
 $$\mathrm{E}= \{ \exists j \in \textbf{I}: \quad H_j \text{ is rejected}\}.$$
-Contrary to Lemma~\ref{lem:quantile_permu_2}, we are in a multiple-testing framework and there may be a mix of true hypotheses and false hypotheses and we have to reduce the problem to studying only true hypotheses because we don't have any informations on the distributions when the hypotheses are false.
+Contrary to Lemma~\ref{lem:quantile_permu_2}, we are in a multiple-testing framework and there may be a mix of true hypotheses and false hypotheses and we have to reduce the problem to studying only true hypotheses because we don't have any informations on the distributions when the hypotheses are false. We also have to take into account the possibility to accept a true hypothesis early. We dennote by $\widehat{\bf I}_k \subset \bf I$ the set of true hypotheses not yet accepted at interim $k$.
 \begin{Lemma}\label{lem:multiple_test_FWE}
 We have 
-$$\mathrm{FWE} = \P_{\sigma_1^k}\left(\mathrm{E}\text{ is true} \right) \le \sum_{k=1}^K\P\left( T_{N,k}^{(\textbf{I}^+)}(\id) > \widehat{b}_{N,k}^{(\textbf{I}^+)}, \mathrm{NR}_k(\id)\right)  $$
+$$\mathrm{FWE} = \P_{\sigma_1^k}\left(\mathrm{E}\text{ is true} \right) \le \sum_{k=1}^K\P\left( T_{N,k}^{(\widehat{\textbf{I}}_k^+)}(\id) > \widehat{b}_{N,k}^{(\widehat{\textbf{I}}_k^+)}, \mathrm{NR}_k(\id)\right)  $$
 \end{Lemma}
 Then, similarly as in the proof of Lemma~\ref{lem:quantile_permu_2}, because we managed to reduce the problem to consider only true hypotheses thanks to Lemma~\ref{lem:multiple_test_FWE}, we want to use the invariance by permutation to make the link with the definition of $\widehat{b}_{N,k}^{(\textbf{I}^+)}$. For this purpose, we prove the following Lemma.
 
 
 \begin{Lemma}\label{lem:invariance}
 We have that for $k \le K$, for any ${\sigma_1^k}$ concatenation of $k$ permutations, 
-$$(T_{N,l}^{(\textbf{I}^+)}(\id),\widehat{b}_{N,i}^{(\textbf{I}^+)})_{l\le k}=(T_{N,i}^{(\textbf{I}^+)}(\sigma_1^l), \widehat{b}_{N,l}^{(\textbf{I}^+)})_{l\le k}$$
+$$(T_{N,l}^{(\widehat{\bf{I}}_l^+)}(\id),\widehat{b}_{N,l}^{(\widehat{\bf{I}}_l^+)})_{l\le k}=(T_{N,i}^{(\widehat{\bf{I}}_l^+)}(\sigma_1^l), \widehat{b}_{N,l}^{(\widehat{\bf{I}}_l^+)})_{l\le k}$$
 \end{Lemma}
 Using Lemma~\ref{lem:invariance}, we have for any ${\sigma_1^k}$
-$$\P\left(T_{N,k}^{(\textbf{I}^+)}(\id) > \widehat{b}_{N,k}^{(\textbf{I}^+)}, \mathrm{NR}_k(\id ) \right) = \P\left(T_{N,k}^{(\textbf{I}^+)}({\sigma_1^k}) > \widehat{b}_{N,k}^{(\textbf{I}^+)}, \mathrm{NR}_k({\sigma_1^k}) \right)$$
+$$\P\left(T_{N,k}^{(\widehat{\textbf{I}}_k^+)}(\id) > \widehat{b}_{N,k}^{(\widehat{\textbf{I}}_k^+)}, \mathrm{NR}_k(\id ) \right) = \P\left(T_{N,k}^{(\widehat{\textbf{I}}_k^+)}({\sigma_1^k}) > \widehat{b}_{N,k}^{(\widehat{\textbf{I}}_k^+)}, \mathrm{NR}_k({\sigma_1^k}) \right)$$
 
 Hence, from Lemma~\ref{lem:multiple_test_FWE}, and Lemma~\ref{lem:invariance},
-
 \begin{align*}
-\mathrm{FWE} &\le \sum_{k=1}^K\frac{1}{((2N)!)^k}\sum_{\sigma_1,\dots,\sigma_k \in \S_{2N}}\P\left(T_{N,k}^{(\textbf{I}^+)}({\sigma_1^k}) > \widehat{b}_{N,k}^{(\textbf{I}^+)}, \mathrm{NR}_k({\sigma_1^k}) \right)\\
-&= \sum_{k=1}^K\E\left[\frac{1}{((2N)!)^k}\sum_{{\sigma_1^k}\in (\S_{2N})^k}\1\left\{ T_{N,k}^{(\textbf{I}^+)}({\sigma_1^k}) > \widehat{b}_{N,k}^{(\textbf{I}^+)}, \mathrm{NR}_k({\sigma_1^k})\right\} \right]\\
-&= \sum_{k=1}^K \E\left[\frac{1}{((2N)!)^k}\sum_{{\sigma_1^k} \in S_k}\1\left\{ T_{N,k}^{(\textbf{I}^+)}({\sigma_1^k}) > \widehat{b}_{N,k}^{(\textbf{I}^+)}\right\} \right]\\
-&\le \sum_{k=1}^K\left(f^+\left(\frac{k}{K}\right)-f^+\left(\frac{k-1}{K}\right)\right)\\
-&= \alpha
+\mathrm{FWE} &\le \sum_{k=1}^K\frac{1}{B_k}\sum_{i=1}^{B_k}\P\left(T_{N,k}^{(\widehat{\textbf{I}}_k^+)}(s_i) > \widehat{b}_{N,k}^{(\widehat{\textbf{I}}_k^+)}, \mathrm{NR}_k(s_i) \right)\\
+&= \sum_{k=1}^K\E\left[\frac{1}{B_k}\sum_{i=1}^{B_k}\1\left\{ T_{N,k}^{(\widehat{\textbf{I}}_k^+)}(s_i) > \widehat{b}_{N,k}^{(\widehat{\textbf{I}}_k^+)}, \mathrm{NR}_k(s_i)\right\} \right]\\
+&= \sum_{k=1}^K \E\left[\frac{1}{B_k}\sum_{{\sigma_1^k} \in S_k}\1\left\{ T_{N,k}^{(\widehat{\textbf{I}}_k^+)}({\sigma_1^k}) > \widehat{b}_{N,k}^{(\widehat{\textbf{I}}_k^+)}\right\} \right]\\
+&\le \sum_{k=1}^K q_k \le \alpha
 \end{align*}
-where we used the definition of $\widehat{b}_{N,k}^{(\textbf{I}^+)}$ to make the link with the increments of the level-spending function $f^+\left(\frac{k}{K}\right)-f^+\left(\frac{k-1}{K}\right)$.
-\end{proof}
+where we used the definition of $\widehat{b}_{N,k}^{(\widehat{\textbf{I}}_k^+)}$ to make the link with $\alpha$
 
 
 % \newpage
@@ -464,27 +404,26 @@ where we used the definition of $\widehat{b}_{N,k}^{(\textbf{I}^+)}$ to make the
 
 \subsection{Proof of Lemma~\ref{lem:multiple_test_FWE}}
 
-Denote by $\textbf{C}_k$ the (random) value of $\textbf{C}$ at the beginning of interim $k$. 
-We have 
+Denote by $\textbf{C}_k$ the (random) value of $\textbf{C}$ at the beginning of interim $k$ and remark that $\widehat{\textbf{I}}_k = \textbf{C}_k \cap \textbf{I}$. We have
 \begin{multline*}\label{eq:multi1}
-\P_{\sigma_1^k}\left(\text{E is true} \right)= \sum_{k=1}^K \P_{\sigma_1^k}\left( \exists j \in \textbf{I}: \quad H_j\text{ is rejected at interim $k$ },\forall j \in \textbf{I}: \quad H_j\text{was not rejected before interim $k$}\right)\\
-\le   \sum_{k=1}^K  \P_{\sigma_1^k}\left(T_{N,k}^{(\textbf{J}^+)}(\id) > \widehat{b}_{N,k}^{(\textbf{J}^+)}, \mathrm{NR}_k(\id),\arg\max_{j \in \textbf{J}}T_{N,k}^{(j)}(\id) \in \textbf{I}, \forall \textbf{C}_k \supset \textbf{J}'\supsetneq\textbf{J} \quad  \arg\max_{j \in \textbf{J}'}T_{N,k}^{(j)}(\id) \notin \textbf{I} \right)
+\P_{\sigma_1^k}\left(\text{E is true} \right)= \sum_{k=1}^K \P_{\sigma_1^k}\left( \exists j \in \widehat{\textbf{I}}_k: \quad H_j\text{ is rejected at interim $k$ },\forall j \in \textbf{I}: \quad H_j\text{was not rejected before interim $k$}\right)\\
+\le   \sum_{k=1}^K  \P_{\sigma_1^k}\left(T_{N,k}^{(\textbf{J}^+)}(\id) > \widehat{b}_{N,k}^{(\textbf{J}^+)}, \mathrm{NR}_k(\id),\arg\max_{j \in \textbf{J}}T_{N,k}^{(j)}(\id) \in \widehat{\textbf{I}}_k, \forall \textbf{C}_k \supset \textbf{J}'\supsetneq\textbf{J} \quad  \arg\max_{j \in \textbf{J}'}T_{N,k}^{(j)}(\id) \notin \textbf{I} \right)
 \end{multline*}
-$\mathrm{NR}_k(\id)$ means that we look at the first interim that rejects, $\arg\max_{j \in \textbf{J}}T_{N,k}^{(j)}(\id) \in \textbf{I}$ means that we reject a true hypothesis, and $\forall \textbf{C}_k \supset \textbf{J}'\supsetneq \textbf{J} \quad  \arg\max_{j \in \textbf{J}'}T_{N,k}^{(j)}(\id) \notin \textbf{I} $ means that $\textbf{J}$ corresponds to the set for the first rejection of a true hypothesis (there can be several rejection of false hypotheses or acceptation of hypotheses before but not rejection of a true hypothesis). 
+$\mathrm{NR}_k(\id)$ means that we look at the first interim that rejects, $\arg\max_{j \in \textbf{J}}T_{N,k}^{(j)}(\id) \in \widehat{\textbf{I}}_k$ means that we reject a true hypothesis, and $\forall \textbf{C}_k \supset \textbf{J}'\supsetneq \textbf{J} \quad  \arg\max_{j \in \textbf{J}'}T_{N,k}^{(j)}(\id) \notin \textbf{I} $ means that $\textbf{J}$ corresponds to the set for the first rejection of a true hypothesis (there can be several rejection of false hypotheses or acceptation of hypotheses before but not rejection of a true hypothesis). 
 We denote 
-$$\mathrm{FWE}_k =  \P\left(\exists \textbf{J}:\quad  T_{N,k}^{(\textbf{J}^+)}(\id) > \widehat{b}_{N,k}^{(\textbf{J}^+)}, \mathrm{NR}_k(\id), \arg\max_{j \in \textbf{J}}T_{N,k}^{(j)}(\id) \in \textbf{I}, \forall \textbf{C}_k \supset \textbf{J}'\supsetneq\textbf{J} \quad  \arg\max_{j \in \textbf{J}'}T_{N,k}^{(j)}(\id) \notin \textbf{I} \right),$$ 
-the error of interim $k$ and by convention we take $f^+(-1/K)=0$.
+$$\mathrm{FWE}_k =  \P\left(\exists \textbf{J}:\quad  T_{N,k}^{(\textbf{J}^+)}(\id) > \widehat{b}_{N,k}^{(\textbf{J}^+)}, \mathrm{NR}_k(\id), \arg\max_{j \in \textbf{J}}T_{N,k}^{(j)}(\id) \in \widehat{\textbf{I}}_k, \forall \textbf{C}_k \supset \textbf{J}'\supsetneq\textbf{J} \quad  \arg\max_{j \in \textbf{J}'}T_{N,k}^{(j)}(\id) \notin \textbf{I} \right),$$ 
+the error of interim $k$.
 
-Remark that on $$\mathrm{NR}_k(\id) \cap \{\arg\max_{j \in \textbf{J}}T_{N,k}^{(j)}(\id) \in \textbf{I}\}\cap\{ \forall \textbf{C}_k \supset \textbf{J}'\supsetneq\textbf{J} \quad  \arg\max_{j \in \textbf{J}'}T_{N,k}^{(j)}(\id) \notin \textbf{I}\}  $$
-$\textbf{J}$ corresponds to the first rejection to occur. Hence, having that the argmax is attaind in $\textbf{I}$,
-$$T_{N,k}^{(\textbf{J}^+)}(\id)= \max\{T_{N,k}^{(j)}(\id), j \in \textbf{J}\} = \max\{T_{N,1}^{(j)}(\id), j \in \textbf{I}\} = T_{N,k}^{(\textbf{I}^+)}(\id)$$
-Moreover, having $\textbf{J} \supset \textbf{I}$, we have $\widehat{b}_{N,k}^{(\textbf{J}^+)} \ge \widehat{b}_{N,k}^{(\textbf{I}^+)}$. And finally, we have 
+Remark that on $$\mathrm{NR}_k(\id) \cap \{\arg\max_{j \in \textbf{J}}T_{N,k}^{(j)}(\id) \in \widehat{\textbf{I}}_k\}\cap\{ \forall \textbf{C}_k \supset \textbf{J}'\supsetneq\textbf{J} \quad  \arg\max_{j \in \textbf{J}'}T_{N,k}^{(j)}(\id) \notin \textbf{I}\}  $$
+$\textbf{J}$ corresponds to the first rejection to occur. Hence, having that the argmax is attaind in $\widehat{\textbf{I}}_k$,
+$$T_{N,k}^{(\textbf{J}^+)}(\id)= \max\{T_{N,k}^{(j)}(\id), j \in \textbf{J}\} = \max\{T_{N,1}^{(j)}(\id), j \in \widehat{\textbf{I}}_k\} = T_{N,k}^{(\widehat{\textbf{I}}_k^+)}(\id)$$
+Moreover, having $\textbf{J} \supset \widehat{\textbf{I}}_k$, we have $\widehat{b}_{N,k}^{(\textbf{J}^+)} \ge \widehat{b}_{N,k}^{(\widehat{\textbf{I}}_k^+)}$. And finally, we have 
 \begin{align*}
-\mathrm{FWE}_k\le \P\left( T_{N,k}^{(\textbf{I}^+)}(\id) > \widehat{b}_{N,k}^{(\textbf{I}^+)}, \mathrm{NR}_k(\id)\right)
+\mathrm{FWE}_k\le \P\left( T_{N,k}^{(\widehat{\textbf{I}}_k^+)}(\id) > \widehat{b}_{N,k}^{(\widehat{\textbf{I}}_k^+)}, \mathrm{NR}_k(\id)\right)
 \end{align*}
 which proves the lemma.
 \subsection{Proof of Lemma~\ref{lem:invariance}}
-We denote the comparisons we do as $(c_i)_{i \in \textbf{I}}$, they describe a graph with the nodes being the agents denoted $1,\dots,L$ and $(j_1,j_2)$ has an edge if $(j_1,j_2)\in(c_i)_{i \in \textbf{I}}$ is one of the comparisons that correspond to a true hypothesis. This graph is not necessarily connected, we denote $C(i)$ the connected component to which node $a$ (e.g. agent $a$) belongs, i.e. for any $a_1,a_2 \in C(a)$ there exists a path going from $a_1$ to $a_2$. Remark that $C(a)$ cannot be equal to the singleton $\{a\}$, because it would mean that all the comparisons with $a$ are in fact false hypotheses, and then $a$ would not belong to a couple in $\textbf{I}$.
+We denote the comparisons by $(c_i)_{i \in \textbf{I}}$, they describe a graph with the nodes being the agents denoted $1,\dots,L$ and $(j_1,j_2)$ has an edge if $(j_1,j_2)\in(c_i)_{i \in \textbf{I}}$ is one of the comparisons that corresponds to a true hypothesis. This graph is not necessarily connected, we denote $C(i)$ the connected component to which node $a$ (e.g. agent $a$) belongs, i.e. for any $a_1,a_2 \in C(a)$ there exists a path going from $a_1$ to $a_2$. Remark that $C(a)$ cannot be equal to the singleton $\{a\}$, because it would mean that all the comparisons with $a$ are in fact false hypotheses, and then $a$ would not belong to a couple in $\textbf{I}$.
 
 Then, it follows from the construction of permutation test that jointly on $k\le K$ and $a_1,a_2 \in C(i)$, we have $T_{N,k}^{(a_1,a_2)}(\id)=^d T_{N,1}^{(a_1,a_2)}(\sigma_1^k)$ for any $\sigma_1,\dots,\sigma_k \in  \S_{2N}$.
 
@@ -541,28 +480,24 @@ $$(T_{N,k}^{(a_1,a_2)}(\id))_{ k\le K, a_1 \in C(i), a_2 \in C(i)}=^d(T_{N,k}^{(
 Then, use that by construction, the different connected component $C(i)$ are independent from one another and hence, 
 
 $$(T_{N,k}^{(c_i)}(\id))_{ k\le K, c_i \in \textbf{I}}=^d(T_{N,k}^{(c_i)}(\sigma_1^k))_{ k\le K,  c_i \in \textbf{I}}.$$
-The results follows from taking the maximum on all the comparisons.
 
+Then, observe that $(\widehat{\textbf{I}}_l)_{l\le k}$ is a measurable function of $(T_{N,k}^{(c_i)}(\id))_{ k< K, c_i \in \textbf{I}}$, hence the map $(T_{N,k}^{(c_i)}(\id))_{ k\le K, c_i \in \textbf{I}} \mapsto (T_{N,k}^{(c_i)}(\id))_{ k\le K, c_i \in \widehat{\textbf{I}}_k}$ is measurable and it follows that 
+$$((T_{N,l}^{(c_i)}(\id))_{ c_i \in \widehat{\textbf{I}}_l})_{l \le k}=^d((T_{N,l}^{(c_i)}(\sigma_1^l))_{ c_i \in \widehat{\textbf{I}}_l})_{l \le k}.$$
+The results follows from taking the maximum on all the comparisons and because the boundaries do not depend on the permutation.
 \section{Asymptotic results}
-\todoT{Change notations}
-
-Foor a sample $Z_1^n=(Z_1,\dots,Z_n)$, denote $\sigma Z_1^n$ the permuted sample using the permutation $\sigma$: $\sigma Z_1^n=(Z_{\sigma(1)},\dots,Z_{\sigma(n)})$.\\
-For $T_n$ the difference of empirical mean, we have the following property.
-
+\todoT{TODO: Change notations}
+We have the following convergence of the randomization law of $T_n(\sigma)$.
 \begin{Proposition}\label{prop:asym_perm_test}
-Let $T_n(Z_1,\dots,Z_{2n})=\frac{1}{\sqrt{n}}\sum_{i=1}^n Z_i -\frac{1}{n}\sum_{i=n+1}^{2n} Z_i$.
 
-Suppose $X_1,\dots,X_n$ are i.i.d from $P$ and $Y_1,\dots,Y_n$ are i.i.d from $Q$ and both $P$ and $Q$ has finite variance. Denote $Z_1,\dots,Z_{2n}=X_1,\dots,X_n, Y_1,\dots,Y_n$ the concatenation of the two samples. Then, we have
+Suppose $X_1,\dots,X_n$ are i.i.d from $P$ and $Y_1,\dots,Y_n$ are i.i.d from $Q$ and both $P$ and $Q$ has finite variance. Denote $Z_1,\dots,Z_{2n}=X_1,\dots,X_n, Y_1,\dots,Y_n$ the concatenation of the two samples. Let $T_n(\sigma)=\frac{1}{\sqrt{n}}\sum_{i=1}^n Z_{\sigma(i)} -\frac{1}{n}\sum_{i=n+1}^{2n} Z_{\sigma(i)}$.
+Then, we have
 $$\sup_{t}\left|\frac{1}{n!}\sum_{\sigma \in \S_{2n}} \1\{T_n(\sigma Z_{1}^{2n}) \le t\}- \Phi\left(t/\tau(P,Q) \right)\right|\xrightarrow[n \to \infty]{P} 0$$
 where $\tau(P,Q)^2=\sigma_P^2+\sigma_Q^2+\frac{(\mu_P- \mu_Q)^2}{2} $.
 \end{Proposition}
-Remark: this proposition can be extended to other $T_n$ statistics using Theorem 2.1 in \cite{Chung_2013} or Theorem 15.2.5 of \cite{lehmann2005testing}.
-%\todoT{Maybe I could do an edgeworth expansion to show that the convergence is with speed $1/n$ (under $H_0$ ?) because of the symmetry of $T$. Using \cite{Romano_1990} and \cite[Theorem 7]{Petrov_1975}. The expansion could be used to derive an approximation of the power that could be used to set K beforehand.}
-%\todoT{Another possible interesting result would be to show how many random permutations we need to estimate the true permutation distribution. Concentration inequalities could be used here.}
 
 Using Proposition~\ref{prop:asym_perm_test}, we have that the empirical quantile defined by
 $$Q_{1-\alpha}(T_n) = \inf\left\{t \in \R:\quad \frac{1}{n!}\sum_{\sigma \in \S_{2n}} \1\{T_n(\sigma Z_{1}^{2n}) \le t\} \ge 1-\alpha\right\} $$
-converges to the quantiles of a Gaussian with variance $\tau^2$
+converges to the quantiles of a Gaussian with variance $\tau^2$:
 $$Q_{1-\alpha}(T_n)\xrightarrow[n \to \infty]{P} \tau(P,Q)\Phi^{-1}(1-\alpha) $$
 
  Hence, if $\mu_P = \mu_Q$ is true, in which case $T_n$ converges in distribution to $T_\infty\sim \mathcal{N}(0,\sigma_P^2+\sigma_Q^2 )$ and then
@@ -574,9 +509,7 @@ On the other hand, if $\mu_P > \mu_Q$, then $T_n \simeq \mathcal{N}(\sqrt{n}(\mu
 \P\left( T_n \ge Q_{1-\alpha}(T_n)\right)&\simeq  1-\Phi\left(\tau(P,Q)\frac{\Phi^{-1}(1-\alpha)}{\sigma_P^2+\sigma_Q^2 }-  \sqrt{n}\frac{\mu_P-\mu_Q}{\sqrt{\sigma_P^2+\sigma_Q^2}} \right)  \\
 &\simeq  1-\Phi\left(\Phi^{-1}(1-\alpha)\left(1+\frac{(\mu_P-\mu_Q)^2}{\sigma_P^2+\sigma_Q^2 }\right)-  \sqrt{n}\frac{\mu_P-\mu_Q}{\sqrt{\sigma_P^2+\sigma_Q^2}} \right)
 \end{align*}
-For a given drift $\mu_P-\mu_Q$, we can solve for $n$ to get a sample size required in order to converge to a given power.
 
-Example: suppose we want to detect a drift $\mu_P-\mu_Q=\sqrt{\sigma_P^2+\sigma_Q^2}$ in with probability $0.9$. Then we solve $1-\Phi\left(\Phi^{-1}(1-\alpha)\left(1+\frac{(\mu_P-\mu_Q)^2}{\sigma_P^2+\sigma_Q^2 }\right)-  \sqrt{n}\frac{\mu_P-\mu_Q}{\sqrt{\sigma_P^2+\sigma_Q^2}} \right) = 0.9$ and get that $n$ must be larger than $21$.
 \section{Proof of Theorem~\ref{th:conv_boundary}}
 \paragraph{Convergence of $B_1$}
 $$B_1 = \min \left\{ b>0 : \P_\sigma(|T_{n,1}(\sigma_1)|\ge b) \le \alpha\left(\frac{1}{K}\right)\right\} $$
