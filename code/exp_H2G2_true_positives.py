@@ -11,11 +11,11 @@ pool_var = np.sqrt((np.std(scalar_list1)**2+np.std(scalar_list2)**2)/2)
 print("relative effect size = ", dist_means/pool_var)
 parameters = {}
 parameters["nb_exps"] = int(1e3)
-combs = [[3, 7], [4, 5], [4, 4], [3, 6], [3,8]]
+combs = [[3, 7], [4, 5], [4, 4], [3, 6], [3,8], [5, 5]]
 # combs = [[3, 7]]
 
 parameters["nk"] = combs
-parameters["B"] = 100_000
+parameters["B"] = 10_000
 save_path = "code/h2g2/"
 parameters["save_path"] = save_path
 parameters["numpy_version"] = np.__version__
@@ -31,7 +31,7 @@ for comb in parameters["nk"]:
         effective_comparisons, true_positives = 0 , 0
         for exps in range(parameters["nb_exps"]):
             # filename = "h2g2/n-{}-k-{}-rep-{}.pkl".format(n,k,exps)
-            comparator = MultipleAgentsComparator(B = 100_000, K = k,n = n)
+            comparator = MultipleAgentsComparator(B = 10_000, K = k,n = n)
             scal1 = np.random.choice(scalar_list1, size = len(scalar_list1), replace = True)
             scal2 = np.random.choice(scalar_list2, size = len(scalar_list1), replace = True)
             comparator.compare_scalars([scal1, scal2])
