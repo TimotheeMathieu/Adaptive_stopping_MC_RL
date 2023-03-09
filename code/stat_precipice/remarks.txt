@@ -1,0 +1,3 @@
+-non iid
+-some games are harder
+-CI of rewards so error sum for multiple agents. 
