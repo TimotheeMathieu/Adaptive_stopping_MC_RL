@@ -9,6 +9,13 @@ from scipy.special import binom
 from joblib import Parallel, delayed
 import itertools
 
+_RLBERRY_INSTALLED = True
+try:
+    from rlberry.manager import AgentManager
+    from rlberry.seeding import Seeder
+except Exception:
+    _RLBERRY_INSTALLED = False
+
 logger = logging.getLogger()
 
 
@@ -344,12 +351,6 @@ class MultipleAgentsComparator:
         clean_after: boolean
         verbose: boolean
         """
-        _RLBERRY_INSTALLED = True
-        try:
-            from rlberry.manager import AgentManager
-            from rlberry.seeding import Seeder
-        except Exception:
-            _RLBERRY_INSTALLED = False
         
         if not _RLBERRY_INSTALLED :
             raise ValueError("Automatic comparison via `compare` needs the library `rlberry` which is not installed.") 
@@ -499,7 +500,7 @@ class MultipleAgentsComparator:
             spine.set_visible(True)
             spine.set_linewidth(1)
 
-        ax2.boxplot(Z, labels=np.array(agent_names)[id_sort])
+        ax2.boxplot(Z, labels=np.array(agent_names)[id_sort], showmeans=True)
         ax2.xaxis.set_label([])
         ax2.xaxis.tick_top()
         # Creating legend with color box
