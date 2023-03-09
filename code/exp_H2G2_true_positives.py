@@ -39,13 +39,12 @@ for comb in parameters["nk"]:
         scal2 = np.random.choice(scalar_list2, size = len(scalar_list1), replace = True)
         comparator.compare_scalars([scal1, scal2])
         rejects = ["reject" == deci for deci in comparator.decisions]
-        true_positives += len(rejects) == 1 and rejects[0]
         effective_comparisons.append(comparator.n_iters[0])
         true_positives.append(rejects)
         # print(comparator.n_iters[0])
     effective_comparisons_array = np.array(effective_comparisons)
     true_positives_array = np.array(true_positives)
-    
+
     np.save("comparison_n{}_k{}.npy".format(n,k), effective_comparisons_array)
     np.save("decision_n{}_k{}.npy".format(n,k), true_positives_array)
 
