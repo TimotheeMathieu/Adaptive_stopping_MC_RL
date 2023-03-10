@@ -1,7 +1,7 @@
 import sys
 import os
 home_folder = os.environ["HOME"]
-workdir = os.path.join(home_folder,"Adaptive_stopping_MC_RL","code")
+workdir = os.path.join(home_folder,"Adaptive_stopping_MC_RL","adastop")
 sys.path.insert(0, workdir)
 # print(sys.path)
 from rlberry.agents import Agent
@@ -117,7 +117,7 @@ def create_agents(agent_name, agent_label, **kwargs):
 
     return manager
 
-labels = ["a1", "a2", "a3", "a4", "a5", "a6", "a7", "a8", "a9", "a10"]
+labels = ["N", "*N", "*MG1", "MG1", "MG2", "tS1", "MG3", "*MG3", "MtS", "tS2"]
 
 def exp4():
     managers = [create_agents("single", labels[0], type = "normal", drift =0),
@@ -180,7 +180,7 @@ if __name__ == "__main__":
     def decision_par(i):
         return decision(seed = seed_iter[i], n = n_iter[i], K = K_iter[i], B = B_iter[i], exp_name = EXP)
 
-    res = Parallel(n_jobs=1, backend="multiprocessing")(delayed(decision_par)(i) for i in tqdm(range(M))) # n_jobs=1 for debugging
+    res = Parallel(n_jobs=-1, backend="multiprocessing")(delayed(decision_par)(i) for i in tqdm(range(M))) # n_jobs=1 for debugging
 
     # estimate of the Family-Wise Error Rate (FWER)
     # idxs = ['reject' in a for a in res]
