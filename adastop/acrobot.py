@@ -8,21 +8,18 @@ from rlberry.agents.torch.utils.training import model_factory_from_env
 from rlberry.wrappers import RescaleRewardWrapper
 from rlberry.envs import gym_make
 
-# if subprocess.call(("git", "diff-index",
-#                     "--quiet", "HEAD")):
-#     print("Repository is dirty, please commit")
-#     sys.exit(1)
-
 # get the git hash at run time
 hash_cmd = ("git", "rev-parse", "HEAD")
 revision = subprocess.check_output(hash_cmd)
 
 # parameters definitions
 n_fit = 30
-params = dict(mlp_size = (256, 256),
+params = dict(mlp_size = (64, 64),
               learning_rate = 3e-4,
               gamma = 0.99,
               n_steps = 256,
+              entr_coef = 0.001,
+              normalize_rewards=True,
               seed = 42)
 
 # network architecture
@@ -56,8 +53,10 @@ if __name__ == "__main__":
             learning_rate=params["learning_rate"],
             gamma=params["gamma"],
             n_steps=params["n_steps"],
+            entr_coef=params["entr_coef"],
+            normalize_rewards=params["normalize_rewards"]
         ),
-        fit_budget=1e3,
+        fit_budget=5e5,
         eval_kwargs=dict(eval_horizon=500),
         n_fit=n_fit,
         parallelization="process",

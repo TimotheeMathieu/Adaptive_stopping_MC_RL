@@ -66,7 +66,7 @@ if __name__ == "__main__":
     p_vals = []
 
     def decision(seed):
-        comparator = MultipleAgentsComparator(n, K,B,  alpha, seed=seed, beta = 0.5, joblib_backend = "multiprocessing")
+        comparator = MultipleAgentsComparator(n, K,B,  alpha=alpha, seed=seed, beta = 0.01, joblib_backend = "multiprocessing")
         comparator.compare(managers)
         print(comparator.n_iters)
         return comparator.decisions
