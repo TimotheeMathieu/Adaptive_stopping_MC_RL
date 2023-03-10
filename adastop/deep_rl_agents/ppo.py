@@ -1,4 +1,3 @@
-import numpy as np
 import json
 import os
 import sys
@@ -6,32 +5,36 @@ import sys
 import rlberry
 from rlberry.agents.torch import PPOAgent
 from rlberry.envs import gym_make
-from rlberry.manager import AgentManager, evaluate_agents
+from rlberry.manager import AgentManager, evaluate_agents, read_writer_data
 from rlberry.utils.torch import choose_device
 
 import gym
-from gym.wrappers import NormalizeObservation
+from gym import wrappers
+import numpy as np
+import pandas as pd
 import torch
 
 
 # Parameters
 parameters = dict(
     env_id="HalfCheetah-v3",
-    layer_sizes=[32, 32],
+    layer_sizes=[64, 64],
     policy_net_fn="rlberry.agents.torch.utils.training.model_factory_from_env",
-    batch_size=32,
+    batch_size=64,
     n_steps=2048,
     gamma=0.99,
-    entr_coef=1e-5,
+    target_kl=None,
+    lr_schedule='linear',
+    value_loss='avec',
+    entr_coef=0.0,
     vf_coef=0.5,
     learning_rate=3e-4,
-    eps_clip=0.1,
+    clip_eps=0.2,
     k_epochs=10,
     gae_lambda=0.95,
     normalize_advantages=True,
-    normalize_rewards=True,
     fit_budget=1_000_000,
-    eval_horizon=500,
+    eval_horizon=1_000,
     n_eval_episodes=50,
     eval_freq=100_000,
     n_fit=1,
@@ -47,14 +50,24 @@ locals().update(parameters)  # load all the variables defined in parameters dict
 
 
 # make env with preprocessing
-def make_env(id=None):
-    env = gym_make(id=id)
-    env = NormalizeObservation(env)
-    return env
+def get_make_env(eval=False):
+    def make(id=None):
+        env = gym_make(id=id)
+        env = wrappers.FlattenObservation(env)
+        env = wrappers.RecordEpisodeStatistics(env)
+        env = wrappers.ClipAction(env)
+        env = wrappers.NormalizeObservation(env)
+        env = wrappers.TransformObservation(env, lambda obs: np.clip(obs, -10, 10))
+        if not eval:
+            env = wrappers.NormalizeReward(env, gamma=gamma)
+            env = wrappers.TransformReward(env, lambda reward: np.clip(reward, -10, 10))
+        return env
+    return make
 
 
 # agent and environment definition
-env_ctor = make_env
+env_ctor = get_make_env()
+eval_env_ctor = get_make_env(eval=True)
 env_kwargs = dict(id=env_id)
 
 
@@ -102,16 +115,21 @@ if __name__ == "__main__":
             gamma=gamma,
             entr_coef=entr_coef,
             vf_coef=vf_coef,
+            value_loss=value_loss,
             learning_rate=learning_rate,
-            eps_clip=eps_clip,
+            lr_schedule=lr_schedule,
+            clip_eps=clip_eps,
             k_epochs=k_epochs,
             gae_lambda=gae_lambda,
-            normalize_rewards=normalize_rewards,
             normalize_advantages=normalize_advantages, 
             policy_net_fn=policy_net_fn,
             policy_net_kwargs=policy_net_kwargs,
+            n_eval_episodes=n_eval_episodes,
+            eval_freq=eval_freq,
+            eval_horizon=eval_horizon,
             device=choose_device("cuda:best" if gpu else "cpu"),
         ),
+        eval_env=(eval_env_ctor, env_kwargs),
         fit_budget=fit_budget,
         eval_kwargs=dict(eval_horizon=eval_horizon),
         n_fit=n_fit,
@@ -120,24 +138,18 @@ if __name__ == "__main__":
         seed=args.seed,
         output_dir=output_dir_name # one folder for each agent
     )
-    agent.fit(1)
-
-    # evaluation arrays
-    n_evals = fit_budget // eval_freq
-    timesteps = np.zeros(n_evals + 1, dtype=int)
-    evaluations = np.zeros(n_evals + 1, dtype=float)
-
+    
     # train
-    curr_eval_idx, used_budget = 0, 0
-    evaluations[0] = np.mean(evaluate_agents([agent], n_simulations=n_eval_episodes, show=False).values)
-    while used_budget < fit_budget:
-        agent.fit(eval_freq)
-        used_budget += eval_freq
+    agent.fit(fit_budget)
 
-        curr_eval_idx += 1
-        timesteps[curr_eval_idx] = used_budget
-        evaluations[curr_eval_idx] =np.mean(evaluate_agents([agent], n_simulations=n_eval_episodes, show=False).values)
-        np.savez(os.path.join(output_dir_name, "evaluations.npz"), timesteps=timesteps, evaluations=evaluations)
+    # get logged data
+    data = read_writer_data(output_dir_name, tag='evaluation')
+    data.to_csv(os.path.join(output_dir_name, "data.csv"))
+
+    evals = data[data['tag'] == 'evaluation']
+    timesteps = evals['global_step'].to_numpy()
+    evaluations = evals['value'].to_numpy()
+    np.savez(os.path.join(output_dir_name, "evaluations.npz"), timesteps=timesteps, evaluations=evaluations)
 
     # save agent and parameters
     save_path = str(agent.save())
