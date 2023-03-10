@@ -463,45 +463,62 @@ class MultipleAgentsComparator:
             agent_names = self.agent_names
 
         links = np.zeros([len(agent_names),len(agent_names)])
+
         for i in range(len(self.comparisons)):
             c = self.comparisons[i]
             decision = self.decisions[str(c)]
             if decision == "equal":
                 links[c[0],c[1]] = 0
+
             elif decision == "larger":
                 links[c[0],c[1]] = 1
+
             else:
                 links[c[0],c[1]] = -1
-            
+
+
         links = links - links.T
         links = links[id_sort,:][:, id_sort]
-
+        annot = []
+        for i in range(len(links)):
+            annot_i = []
+            for j in range(len(links)):
+                if links[i,j] == 0:
+                    annot_i.append("${\\rightarrow  =}\downarrow$")
+                elif links[i,j] == 1:
+                    annot_i.append("${\\rightarrow \geq}\downarrow$")
+                else:
+                    annot_i.append("${\\rightarrow  \leq}\downarrow$")
+            annot+= [annot_i]
         if axes is None:
             fig, (ax1, ax2) = plt.subplots(
                 2, 1, gridspec_kw={"height_ratios": [1, 2]}, figsize=(6,5)
             )
         else:
             (ax1, ax2) = axes
-            
+
         n_iterations = [self.n_iters[self.agent_names[i]] for i in id_sort]
         the_table = ax1.table(
             cellText=[n_iterations], rowLabels=["n_iter"], loc="top", cellLoc="center"
         )
 
         # Generate a custom colormap
-        colors = np.array([(255, 153, 0), (51, 204, 51), (255, 51, 51)])/256
+        colors = np.array([(103,169,207), (153,153,153), (239,138,98)])/256
         cmap = LinearSegmentedColormap.from_list("my_cmap", colors, N=3)
 
         # Draw the heatmap with the mask and correct aspect ratio
-        res = sns.heatmap(links,cmap=cmap, vmax=1, center=0,linewidths=.5, ax =ax1, 
-                          cbar=False, yticklabels=np.array(agent_names)[id_sort],  xticklabels=[])
+        res = sns.heatmap(links, annot = annot, cmap=cmap, vmax=1, center=0,linewidths=.5, ax =ax1, 
+                          cbar=False, yticklabels=np.array(agent_names)[id_sort],  xticklabels=['']*len(agent_names),fmt='')
 
         # Drawing the frame
         for _, spine in res.spines.items():
             spine.set_visible(True)
             spine.set_linewidth(1)
 
-        ax2.boxplot(Z, labels=np.array(agent_names)[id_sort], showmeans=True)
+        box_plot = ax2.boxplot(Z, labels=np.array(agent_names)[id_sort], showmeans=True)
+        for mean in box_plot['means']:
+            mean.set_alpha(0.6)
+
         ax2.xaxis.set_label([])
         ax2.xaxis.tick_top()
         # Creating legend with color box
@@ -510,7 +527,6 @@ class MultipleAgentsComparator:
         red_patch = mpatches.Patch(color=colors[2], label='larger')
 
         plt.legend(handles=[orange_patch, green_patch, red_patch],loc='center left', bbox_to_anchor=(1, 0.5))
-
 
 def _fit_agent(manager):
     manager.fit()
