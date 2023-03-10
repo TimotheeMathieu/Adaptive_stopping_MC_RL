@@ -484,11 +484,11 @@ class MultipleAgentsComparator:
             annot_i = []
             for j in range(len(links)):
                 if links[i,j] == 0:
-                    annot_i.append("${\\rightarrow  =}_{\downarrow}$")
+                    annot_i.append("${\\rightarrow  =}\downarrow$")
                 elif links[i,j] == 1:
-                    annot_i.append("${\\rightarrow \geq}_{\downarrow}$")
+                    annot_i.append("${\\rightarrow \geq}\downarrow$")
                 else:
-                    annot_i.append("${\\rightarrow  \leq}_{\downarrow}$")
+                    annot_i.append("${\\rightarrow  \leq}\downarrow$")
             annot+= [annot_i]
         if axes is None:
             fig, (ax1, ax2) = plt.subplots(
