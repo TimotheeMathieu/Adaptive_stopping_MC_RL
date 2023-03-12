@@ -167,7 +167,7 @@ if __name__ == "__main__":
         exp_name = kwargs["exp_name"]
         os.makedirs(os.path.join(workdir, "example_simulatedR", "multc_sd_res", exp_name), exist_ok=True)
         filename = os.path.join(workdir, "example_simulatedR", "multc_sd_res", exp_name, "result_K={}-n={}-B={}-seed={}.pickle".format(kwargs["K"], kwargs["n"], kwargs["B"], kwargs["seed"]))
-        comparator = MultipleAgentsComparator(n = kwargs["n"], K = kwargs["K"], B = kwargs["B"], alpha = alpha, seed=kwargs["seed"], beta=0.01)
+        comparator = MultipleAgentsComparator(n = kwargs["n"], K = kwargs["K"], B = kwargs["B"], alpha = alpha, seed=kwargs["seed"], beta=0.01, n_evaluations=1)
         if exp_name == "exp4":
             managers = exp4()
         else:
@@ -180,7 +180,7 @@ if __name__ == "__main__":
     def decision_par(i):
         return decision(seed = seed_iter[i], n = n_iter[i], K = K_iter[i], B = B_iter[i], exp_name = EXP)
 
-    res = Parallel(n_jobs=-1, backend="multiprocessing")(delayed(decision_par)(i) for i in tqdm(range(M))) # n_jobs=1 for debugging
+    res = Parallel(n_jobs=1, backend="multiprocessing")(delayed(decision_par)(i) for i in tqdm(range(M))) # n_jobs=1 for debugging
 
     # estimate of the Family-Wise Error Rate (FWER)
     # idxs = ['reject' in a for a in res]
@@ -188,7 +188,9 @@ if __name__ == "__main__":
     # print("proba to reject", np.mean(idxs))
 
     res[0].plot_results(labels)
-    plt.savefig(os.path.join(workdir, "multiagent_test.png"))
+    plt.savefig(os.path.join(workdir, "example_simulatedR", "multiagent_test.png"))
+    plt.savefig(os.path.join(workdir, "example_simulatedR", "multiagent_test.pdf"))
+
 
 
 
