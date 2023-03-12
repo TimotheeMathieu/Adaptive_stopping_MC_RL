@@ -478,11 +478,15 @@ class MultipleAgentsComparator:
 
         links = links - links.T
         links = links[id_sort,:][:, id_sort]
+        links = links + 2*np.eye(len(links))
+        print(links)
         annot = []
         for i in range(len(links)):
             annot_i = []
             for j in range(len(links)):
-                if links[i,j] == 0:
+                if i == j:
+                    annot_i.append(" ")                    
+                elif links[i,j] == 0:
                     annot_i.append("${\\rightarrow  =}\downarrow$")
                 elif links[i,j] == 1:
                     annot_i.append("${\\rightarrow \geq}\downarrow$")
@@ -501,13 +505,14 @@ class MultipleAgentsComparator:
             cellText=[n_iterations], rowLabels=["n_iter"], loc="top", cellLoc="center"
         )
 
-        # Generate a custom colormap
-        colors = np.array([(103,169,207), (153,153,153), (239,138,98)])/256
-        cmap = LinearSegmentedColormap.from_list("my_cmap", colors, N=3)
+        # # Generate a custom colormap
+        # colors = np.array([(103,169,207), (153,153,153), (239,138,98), (255,255,255)])/256
+        # cmap = LinearSegmentedColormap.from_list("my_cmap", colors, N=4)
 
         # Draw the heatmap with the mask and correct aspect ratio
-        res = sns.heatmap(links, annot = annot, cmap=cmap, vmax=1, center=0,linewidths=.5, ax =ax1, 
-                          cbar=False, yticklabels=np.array(agent_names)[id_sort],  xticklabels=['']*len(agent_names),fmt='')
+        res = sns.heatmap(links, annot = annot, cmap="Set2", vmax=2, center=0,linewidths=.5, ax =ax1, 
+                          cbar=False, yticklabels=np.array(agent_names)[id_sort],  
+                          xticklabels=['']*len(agent_names),fmt='')
 
         # Drawing the frame
         for _, spine in res.spines.items():
@@ -521,11 +526,12 @@ class MultipleAgentsComparator:
         ax2.xaxis.set_label([])
         ax2.xaxis.tick_top()
         # Creating legend with color box
-        orange_patch = mpatches.Patch(color=colors[0], label='smaller')
-        green_patch = mpatches.Patch(color=colors[1], label='equal')
-        red_patch = mpatches.Patch(color=colors[2], label='larger')
+        # orange_patch = mpatches.Patch(color=colors[0], label='smaller')
+        # green_patch = mpatches.Patch(color=colors[1], label='equal')
+        # red_patch = mpatches.Patch(color=colors[2], label='larger')
+        # white_patch = mpatches.Patch(color=colors[3], label='Na')
 
-        plt.legend(handles=[orange_patch, green_patch, red_patch],loc='center left', bbox_to_anchor=(1, 0.5))
+        # plt.legend(handles=[orange_patch, green_patch, red_patch, white_patch],loc='center left', bbox_to_anchor=(1, 0.5))
 
 def _fit_agent(manager):
     manager.fit()
