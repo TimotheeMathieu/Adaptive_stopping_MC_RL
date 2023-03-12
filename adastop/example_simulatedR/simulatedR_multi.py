@@ -126,10 +126,10 @@ def exp4():
                 create_agents("mixture", labels[3], mus = [1.,-1.], probas=[0.5,0.5]),
                 create_agents("mixture", labels[4], mus = [0.2,-0.2], probas=[0.5,0.5]),
                 create_agents("single", labels[5], type = "student", df = 3, drift = 0.),#
-                create_agents("mixture", labels[6], mus = [0.,5.], probas=[0.5,0.5]),
-                create_agents("mixture", labels[7], mus = [0.,5.], probas=[0.5,0.5]),
-                create_agents("mixture", labels[8], type = "student", mus = [0. ,5.], probas = [0.5,0.5], df = 3),#
-                create_agents("single", labels[9], type = "student", drift = 5., df=3),
+                create_agents("mixture", labels[6], mus = [0.,8.], probas=[0.5,0.5]),
+                create_agents("mixture", labels[7], mus = [0.,8.], probas=[0.5,0.5]),
+                create_agents("mixture", labels[8], type = "student", mus = [0. ,8.], probas = [0.5,0.5], df = 3),#
+                create_agents("single", labels[9], type = "student", drift = 8., df=3),
                 ]
     
     return managers
@@ -146,8 +146,8 @@ if __name__ == "__main__":
     M = 1
 
     seeds = np.arange(M)
-    K_list = np.array([10])
-    n_list = np.array([10])
+    K_list = np.array([5])
+    n_list = np.array([5])
     B_list = np.array([10**4])# 10**4, 5*10**4, 10**5])
     # dmu_list = np.linspace(0, 1, 10)
     # dist_params_list = np.array([2., 4., 8., 64., 1024.])
@@ -180,7 +180,7 @@ if __name__ == "__main__":
     def decision_par(i):
         return decision(seed = seed_iter[i], n = n_iter[i], K = K_iter[i], B = B_iter[i], exp_name = EXP)
 
-    res = Parallel(n_jobs=1, backend="multiprocessing")(delayed(decision_par)(i) for i in tqdm(range(M))) # n_jobs=1 for debugging
+    res = Parallel(n_jobs=-1, backend="multiprocessing")(delayed(decision_par)(i**2) for i in tqdm(range(M))) # n_jobs=1 for debugging
 
     # estimate of the Family-Wise Error Rate (FWER)
     # idxs = ['reject' in a for a in res]
