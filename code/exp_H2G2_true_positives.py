@@ -14,8 +14,8 @@ print("relative effect size = ", dist_means/pool_var)
 parameters = {}
 parameters["nb_exps"] = int(1e3)
 combs = []
-for n in range(2, 6):
-    for k in range(1, 10):
+for n in range(2, 7):
+    for k in range(1, 16):
         combs.append([n,k])
 
 parameters["nk"] = combs
