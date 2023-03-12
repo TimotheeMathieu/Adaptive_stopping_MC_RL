@@ -188,8 +188,8 @@ if __name__ == "__main__":
     # print("proba to reject", np.mean(idxs))
 
     res[0].plot_results(labels)
-    plt.savefig(os.path.join(workdir, "multiagent_test.png"))
-    plt.savefig(os.path.join(workdir, "multiagent_test.pdf"))
+    plt.savefig(os.path.join(workdir, "example_simulatedR", "multiagent_test.png"))
+    plt.savefig(os.path.join(workdir, "example_simulatedR", "multiagent_test.pdf"))
 
 
 
