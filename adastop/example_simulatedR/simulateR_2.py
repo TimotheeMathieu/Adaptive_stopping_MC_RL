@@ -1,13 +1,8 @@
 import sys
 import os
 sys.path.insert(0, "/home/rdellave/Adaptive_stopping_MC_RL/code")
-print(sys.path)
-
-
-# import sys
-# sys.path.insert(0, "/home/ashilova/Adaptive_stopping_MC_RL/code")
-
-
+sys.path.insert(0, "/home/ashilova/Adaptive_stopping_MC_RL/code")
+# print(sys.path)
 from rlberry.agents import Agent
 from rlberry.envs import Model
 import rlberry.spaces as spaces
@@ -16,22 +11,30 @@ import time
 import numpy as np
 from tqdm import tqdm
 from joblib import Parallel, delayed
-
 import pickle
 
-
-
 # GST definition
-
 K = 16  # at most 4 groups
 alpha = 0.05
 n = 1  # size of a group
-
 B = 10000
+
+
+class DummyEnv(Model):
+    def __init__(self, **kwargs):
+        Model.__init__(self, **kwargs)
+        self.n_arms = 2
+        self.action_space = spaces.Discrete(1)
+
+    def step(self, action):
+        pass
+
+    def reset(self):
+        return 0
 
 class RandomAgent(Agent):
     def __init__(self, env, drift=0, std = 1, **kwargs):
-        Agent.__init__(self, env, **kwargs)
+        Agent.__init__(self, env)
         self.drift = drift
         self.std = std
         if "type" in kwargs.keys():
@@ -55,18 +58,6 @@ class RandomAgent(Agent):
         return self.drift + noise
 
 
-# class RandomStudentAgent(Agent):
-#     def __init__(self, env, drift=0, df= 1, **kwargs):
-#         Agent.__init__(self, env, **kwargs)
-#         self.drift = drift
-#         self.df = df
-    
-#     def fit(self, budget: int, **kwargs):
-#         pass
-    
-#     def eval(self, n_simulations=1, **kwargs):
-#         return self.drift + self.rng.standard_t(self.df, size=n_simulations)
-
 #TODO check that comparator is using n_simulations
 class MixtureGaussianAgent(Agent):
     def __init__(self, env, means=[0], stds=[1], prob_mixture = [1], **kwargs):
@@ -81,28 +72,10 @@ class MixtureGaussianAgent(Agent):
     def eval(self, n_simulations=1, **kwargs):
         idxs = self.rng.choice(np.arange(len(self.means)), size=n_simulations, p=self.prob_mixture)
         ret = self.means[idxs] + self.rng.normal(size=n_simulations)*self.stds[idxs]
-
-        # print("Gaussians", idxs)
-        # print("sampled_proba", sum(idxs)/ len(idxs))
         return ret
 
 
-
-class DummyEnv(Model):
-    def __init__(self, **kwargs):
-        Model.__init__(self, **kwargs)
-        self.n_arms = 2
-        self.action_space = spaces.Discrete(1)
-
-    def step(self, action):
-        pass
-
-    def reset(self):
-        return 0
-
-
 def make_same_agents(diff_means, probas = [0.5, 0.5]):
-
     manager1 = (
         MixtureGaussianAgent,
         dict(
@@ -112,12 +85,33 @@ def make_same_agents(diff_means, probas = [0.5, 0.5]):
             agent_name="Agent1",
         ),
     )
-
     manager2 = (
         MixtureGaussianAgent,
         dict(
             train_env=(DummyEnv, {}),
             init_kwargs={"means": [0, 0 + diff_means], "stds": [0.1, 0.1], "prob_mixture": probas},
+            fit_budget=1,
+            agent_name="Agent2",
+        ),
+    )
+    return manager1, manager2
+
+
+def make_different_agents(mus, probas = [0.5, 0.5]):
+    manager1 = (
+        MixtureGaussianAgent,
+        dict(
+            train_env=(DummyEnv, {}),
+            init_kwargs={"means": mus, "stds": [0.1, 0.1], "prob_mixture": probas},
+            fit_budget=1,
+            agent_name="Agent1",
+        ),
+    )
+    manager2 = (
+        RandomAgent,
+        dict(
+            train_env=(DummyEnv, {}),
+            init_kwargs={"drift": 0, "std": 0.1},
             fit_budget=1,
             agent_name="Agent2",
         ),
@@ -132,34 +126,7 @@ def exp2(diff_means):
     mus = [0, diff_means]
     return make_different_agents(mus = mus)
 
-def make_different_agents(mus, probas = [0.5, 0.5]):
-
-    manager1 = (
-        MixtureGaussianAgent,
-        dict(
-            train_env=(DummyEnv, {}),
-            init_kwargs={"means": mus, "stds": [0.1, 0.1], "prob_mixture": probas},
-            fit_budget=1,
-            agent_name="Agent1",
-        ),
-    )
-
-    manager2 = (
-        RandomAgent,
-        dict(
-            train_env=(DummyEnv, {}),
-            init_kwargs={"drift": 0, "std": 0.1},
-            fit_budget=1,
-            agent_name="Agent2",
-        ),
-    )
-
-    
-    return manager1, manager2
-
-
 def exp3(df):
-
     manager1 = (
         RandomAgent,
         dict(
@@ -169,7 +136,6 @@ def exp3(df):
             agent_name="Agent1",
         ),
     )
-
     manager2 = (
         RandomAgent,
         dict(
@@ -179,14 +145,18 @@ def exp3(df):
             agent_name="Agent2",
         ),
     )
-
-    
     return manager1, manager2
 
 
 if __name__ == "__main__":
 
-    M=10000
+
+
+    res = []
+    restime = []
+    p_vals = []
+
+    M=1
     EXP = "exp3"
     # max_num_seeds = 
 
@@ -223,27 +193,18 @@ if __name__ == "__main__":
     #TODO
 
 
-
-
-
-
-    res = []
-    restime = []
-    p_vals = []
-
-
     def decision(**kwargs):
         exp_name = kwargs["exp_name"]
-        os.makedirs(os.path.join("mgres/", exp_name), exist_ok=True)
-        filename = os.path.join("mgres/", exp_name, "/result_K={}-n={}-B={}-dist_params={}-seed={}.pickle".format(kwargs["K"], kwargs["n"], kwargs["B"], kwargs["dist_params"], kwargs["seed"]))
+        os.makedirs(os.path.join("mgres", exp_name), exist_ok=True)
+        filename = os.path.join("mgres", exp_name, "result_K={}-n={}-B={}-dist_params={}-seed={}.pickle".format(kwargs["K"], kwargs["n"], kwargs["B"], kwargs["dist_params"], kwargs["seed"]))
         comparator = Two_AgentsComparator(kwargs["n"], kwargs["K"], kwargs["B"],  alpha, seed=kwargs["seed"])
         # manager1, manager2 = make_same_agents(kwargs["diff_means"])
         if exp_name == "exp1":
             manager1, manager2 = exp1(kwargs["dist_params"])
         elif exp_name == "exp2":
             manager1, manager2 = exp2(kwargs["dist_params"])
-        elif exp_name == "exp2":
-            manager1, manager2 = exp2(kwargs["dist_params"])
+        elif exp_name == "exp3":
+            manager1, manager2 = exp3(kwargs["dist_params"])
         else:
             raise ValueError
         comparator.compare(manager2, manager1)
@@ -273,7 +234,7 @@ if __name__ == "__main__":
     #     return non_adaptive_decision(seed=seed_iter2[i], nk=nk_iter[i], B=B_iter2[i], diff_means= dmu_iter2[i])
     #TODO
 
-    res = Parallel(n_jobs=24, backend="multiprocessing")(delayed(decision_par)(i) for i in tqdm(range(num_comb)))
+    res = Parallel(n_jobs=1, backend="multiprocessing")(delayed(decision_par)(i) for i in tqdm(range(num_comb)))
     print("Done!")
     # res2 = Parallel(n_jobs=6, backend="multiprocessing")(delayed(non_adaptive_decision_par)(i) for i in tqdm(range(num_comb2)))
     # decision(0)
