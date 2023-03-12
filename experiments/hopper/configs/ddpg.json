@@ -1,0 +1,6 @@
+{
+    "name": "DDPG",
+    "pre_cmd": "source activate as_crl",
+    "train_cmd": "python /home/mmedeiro/Adaptive_stopping_MC_RL/adastop/deep_rl_agents/ddpg.py -e Hopper-v3",
+    "eval": "train_stdout"
+}
