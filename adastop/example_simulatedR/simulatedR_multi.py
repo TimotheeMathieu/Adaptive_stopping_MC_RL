@@ -189,6 +189,7 @@ if __name__ == "__main__":
 
     res[0].plot_results(labels)
     plt.savefig(os.path.join(workdir, "example_simulatedR", "multiagent_test.png"))
+    print("Saved plot in {}".format(os.path.join(workdir, "example_simulatedR", "multiagent_test.png")))
     plt.savefig(os.path.join(workdir, "example_simulatedR", "multiagent_test.pdf"))
 
 

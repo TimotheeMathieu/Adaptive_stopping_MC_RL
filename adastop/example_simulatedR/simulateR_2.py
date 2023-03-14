@@ -1,12 +1,12 @@
 import sys
 import os
-sys.path.insert(0, "/home/rdellave/Adaptive_stopping_MC_RL/code")
-sys.path.insert(0, "/home/ashilova/Adaptive_stopping_MC_RL/code")
+sys.path.insert(0, "/home/rdellave/Adaptive_stopping_MC_RL/adastop")
+sys.path.insert(0, "/home/ashilova/Adaptive_stopping_MC_RL/adastop")
 # print(sys.path)
 from rlberry.agents import Agent
 from rlberry.envs import Model
 import rlberry.spaces as spaces
-from compare_agents import Two_AgentsComparator
+from compare_agents import MultipleAgentsComparator
 import time
 import numpy as np
 from tqdm import tqdm
@@ -156,8 +156,8 @@ if __name__ == "__main__":
     restime = []
     p_vals = []
 
-    M=1
-    EXP = "exp3"
+    M=5000
+    EXP = "exp1"
     # max_num_seeds = 
 
     seeds = np.arange(M)
@@ -165,8 +165,8 @@ if __name__ == "__main__":
     K_list = np.array([5])
     n_list = np.array([5])
     B_list = np.array([10**4])# 10**4, 5*10**4, 10**5])
-    # dmu_list = np.linspace(0, 1, 10)
-    dist_params_list = np.array([2., 4., 8., 64., 1024.])
+    dist_params_list = np.linspace(0, 1, 10)
+    # dist_params_list = np.array([2., 4., 8., 64., 1024.])
 
     mesh = np.meshgrid(seeds, K_list, n_list, B_list, dist_params_list)
 
@@ -197,7 +197,7 @@ if __name__ == "__main__":
         exp_name = kwargs["exp_name"]
         os.makedirs(os.path.join("mgres", exp_name), exist_ok=True)
         filename = os.path.join("mgres", exp_name, "result_K={}-n={}-B={}-dist_params={}-seed={}.pickle".format(kwargs["K"], kwargs["n"], kwargs["B"], kwargs["dist_params"], kwargs["seed"]))
-        comparator = Two_AgentsComparator(kwargs["n"], kwargs["K"], kwargs["B"],  alpha, seed=kwargs["seed"])
+        comparator = MultipleAgentsComparator(n = kwargs["n"], K= kwargs["K"],B= kwargs["B"], alpha= alpha, beta=0, seed=kwargs["seed"])
         # manager1, manager2 = make_same_agents(kwargs["diff_means"])
         if exp_name == "exp1":
             manager1, manager2 = exp1(kwargs["dist_params"])
@@ -207,11 +207,11 @@ if __name__ == "__main__":
             manager1, manager2 = exp3(kwargs["dist_params"])
         else:
             raise ValueError
-        comparator.compare(manager2, manager1)
+        comparator.compare([manager2, manager1])
         with open(filename, "wb") as f:
-            pickle.dump([kwargs, comparator.__dict__], f)
+            pickle.dump([kwargs, comparator], f)
         
-        return comparator.decision, comparator.n_iter / 2
+        return comparator
 
     def decision_par(i):
         return decision(seed=seed_iter[i], n=n_iter[i],K= K_iter[i], B=B_iter[i],dist_params= dist_params_iter[i], exp_name = EXP)
@@ -235,6 +235,7 @@ if __name__ == "__main__":
     #TODO
 
     res = Parallel(n_jobs=1, backend="multiprocessing")(delayed(decision_par)(i) for i in tqdm(range(num_comb)))
+    # decision_par(0)
     print("Done!")
     # res2 = Parallel(n_jobs=6, backend="multiprocessing")(delayed(non_adaptive_decision_par)(i) for i in tqdm(range(num_comb2)))
     # decision(0)
