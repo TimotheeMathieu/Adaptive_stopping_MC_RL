@@ -79,7 +79,7 @@ if __name__ == "__main__":
         help='Random seed for the experiment.')
     parser.add_argument('--env-id', '-e', type=str, default=env_id,
         help='Environment id (default: {})'.format(env_id))
-    parser.add_argument("--budget", '-b', type=int, default=budget,
+    parser.add_argument("--budget", '-b', type=int, default=fit_budget,
         help="total timesteps of the experiments")
     parser.add_argument('--n-eval-episodes', '-n', type=int, default=n_eval_episodes,
         help='Number of episodes for evaluation (default: {})'.format(n_eval_episodes))
