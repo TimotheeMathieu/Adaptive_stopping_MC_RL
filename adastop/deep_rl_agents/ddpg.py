@@ -67,7 +67,7 @@ def parse_args():
     # Algorithm specific arguments
     parser.add_argument("--env-id", "-e", type=str, default=env_id,
         help="the id of the environment")
-    parser.add_argument("--total-timesteps", type=int, default=budget,
+    parser.add_argument("--budget", '-b', type=int, default=budget,
         help="total timesteps of the experiments")
     parser.add_argument("--learning-rate", type=float, default=learning_rate,
         help="the learning rate of the optimizer")
@@ -230,7 +230,7 @@ if __name__ == "__main__":
     start_time = time.time()
 
     # evaluation arrays
-    n_evals = args.total_timesteps // args.eval_freq
+    n_evals = args.budget // args.eval_freq
     timesteps = np.zeros(n_evals + 1, dtype=int)
     evaluations = np.zeros(n_evals + 1, dtype=float)
     evaluations[0] = np.mean(evaluate(actor, eval_envs, args.n_eval_episodes, noise_scale=args.exploration_noise))
@@ -238,7 +238,7 @@ if __name__ == "__main__":
     # TRY NOT TO MODIFY: start the game
     curr_eval_idx = 0
     obs = envs.reset()
-    for global_step in range(args.total_timesteps):
+    for global_step in range(args.budget):
         # ALGO LOGIC: put action logic here
         if global_step < args.learning_starts:
             actions = np.array([envs.single_action_space.sample() for _ in range(envs.num_envs)])
@@ -328,7 +328,7 @@ if __name__ == "__main__":
         file.write(json.dumps(parameters))
 
     # evaluate the agent last time
-    timesteps[-1] = args.total_timesteps
+    timesteps[-1] = args.budget
     evaluations[-1] = np.mean(evaluate(actor, eval_envs, args.n_eval_episodes, noise_scale=args.exploration_noise))
     np.savez(os.path.join(output_dir_name, "evaluations.npz"), timesteps=timesteps, evaluations=evaluations)
     print(f"AdaStop Evaluation: {evaluations[-1]}")

@@ -91,6 +91,8 @@ if __name__ == '__main__':
         help='Seed for the experiment')
     parser.add_argument('--env-id', '-e', type=str, default=env_id,
         help='Environment id (default: {})'.format(env_id))
+    parser.add_argument("--budget", '-b', type=int, default=budget,
+        help="total timesteps of the experiments")
     parser.add_argument('--n-eval-episodes', '-n', type=int, default=n_eval_episodes,
         help='Number of episodes for evaluation (default: {})'.format(n_eval_episodes))
     parser.add_argument('--eval-freq', '-f', type=int, default=eval_freq,
@@ -99,6 +101,7 @@ if __name__ == '__main__':
 
     # gather parameters
     parameters['seed'] = args.seed
+    parameters['budget'] = args.budget
     parameters['env_id'] = args.env_id
     parameters['n_eval_episodes'] = args.n_eval_episodes
     parameters['eval_freq'] = args.eval_freq
