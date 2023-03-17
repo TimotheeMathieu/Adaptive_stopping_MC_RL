@@ -97,7 +97,7 @@ This informal argument is made precise when using multiple testing, but the theo
 The goal of this article is, given two agents $A_1$ and $A_2$, to evaluate how high $N$ must be to be certain that either $\E[e_1(A_1)]=\E[e_2(A_2)]$ or $\E[e_1(A_1)]\neq \E[e_2(A_2)]$, i.e. do the two algorithms perform similarly or is one better than the other ? This is a trade-off between computational time and the need to assess correctly the scores of $A_1$ and $A_2$. The main properties that we want for our algorithm are as follows:
 
 \begin{description}
-\item[Multiprocessing] The algorithm should be able to treat batch of datas.
+\item[Multiprocessing] The algorithm should be able to manage batch of datas.
 \item[Non-Parametric] The algorithm should be non-parametric.
 \item[Fixed Budget] The algorithm should have a fixed maximum number of iterations used.
 \item[Sample efficient] The algorithm should stop as soon as possible in practice.
@@ -252,7 +252,7 @@ With these permutations, we $\overline{B}_{N,k}^{(\textbf{C})}$ and $\underline{
 \end{equation}
 and
 \begin{equation}\label{eq:boundary_2}
-\overline{B}_{N,k}^{(\textbf{C})} = \sup\left\{ b>0 : \frac{1}{m_k}\sum_{\sigma \in \widehat{S}_k} \1\{\underline{T}_{N,k}^{(\textbf{C})}(\sigma_1^k) \leq b\} \le  \underline{q}_k \right\} .
+\underline{B}_{N,k}^{(\textbf{C})} = \sup\left\{ b>0 : \frac{1}{m_k}\sum_{\sigma \in \widehat{S}_k} \1\{\underline{T}_{N,k}^{(\textbf{C})}(\sigma_1^k) \leq b\} \le  \underline{q}_k \right\} .
 \end{equation}
 where $\sum_{j=1}^k\underline{q}_j \le \frac{k\alpha}{K}$ and  $\sum_{j=1}^k\overline{q}_j \le \frac{k\beta}{K}$ and where $\widehat{S}_k$ is the subset of $\mathcal{S}_k$ such that it would not have accepted or rejected before: for each $\sigma_1^k \in \widehat{S}_k$, we have the following property
 $$\forall m < k,\quad  \overline{T}_{N,m}^{(\textbf{C})}(\sigma_1^k) \le   \overline{B}_{N,m}^{(\textbf{C})} \text{ and }\underline{T}_{N,m}^{(\textbf{C})}(\sigma_1^k) \ge   \underline{B}_{N,m}^{(\textbf{C})}.$$
@@ -321,33 +321,36 @@ $$ \P\left(\exists j \in \bf{I}:\quad  \text{reject }H_j\right)\le\alpha.$$
 The proof for theorem for this result is a bit technical. We begin by showing the result in a very simplified case with $L=2$ agents, and $K=1$.
 \begin{Lemma}\label{lem:quantile_permu_2}
   Let $X_1,\dots,X_N$ be i.i.d from a distribution $P$ and $Y_1,\dots,Y_N$ be i.i.d. from a distribution $Q$. Denote $Z_1^{2N}=X_1,\dots,X_N,Y_1,\dots,Y_N$ be the concatenation of $X_1^N$ and $Y_1^N$. Let $\alpha \in (0,1)$ and define $B_N$ such that 
-  $$ \frac{1}{(2N)!}\sum_{\sigma\in \S_{2N}} \1\left\{ \frac{1}{N}\sum_{i=1}^n (Z_{\sigma(i)}-Z_{\sigma(N+i)}) > \widehat{b}\right\}\le \alpha.$$
+  $$ B_N = \inf \left\{b>0:\quad \frac{1}{(2N)!}\sum_{\sigma\in \S_{2N}} \1\left\{ \frac{1}{N}\sum_{i=1}^N (Z_{\sigma(i)}-Z_{\sigma(N+i)}) > b\right\}\le \alpha\right\}.$$
   Then, if $P=Q$, we have 
   $$\P\left(\frac{1}{N}\sum_{i=1}^n (X_i-Y_i) > B_N \right)\le \alpha $$ 
 \end{Lemma}
 \begin{proof}
   Denote $T(\sigma)= \frac{1}{N}\sum_{i=1}^n (Z_{\sigma(i)}-Z_{\sigma(n+i)})$. Since $P=Q$, for any $\sigma,\sigma' \in \S_{2N}$ we have $T(\sigma)\dec T(\sigma')$. Then, because $B_N$ does not depend on the permutation $\sigma$ (but it depends on the values of $Z_1^{2N}$, we have for any $\sigma \in \S_{2N}$
   \begin{align*}
-    \P\left(T(\id)> \widehat{b}\right)&=\P\left(T(\sigma)> B_N\right)
+    \P\left(T(\id)> B_N\right)&=\P\left(T(\sigma)> B_N\right)
   \end{align*} 
   Now, take the sum on all the permutations, 
   \begin{align*}
-    \P\left(T(\id)> \widehat{b}\right)&=\frac{1}{(2N)!}\sum_{\sigma\in \S_{2N}} \E\left[\1\{T(\sigma)> B_N\}\right]\\
+    \P\left(T(\id)> B_N\right)&=\frac{1}{(2N)!}\sum_{\sigma\in \S_{2N}} \E\left[\1\{T(\sigma)> B_N\}\right]\\
                                       &=  \E\left[\frac{1}{(2N)!}\sum_{\sigma\in \S_{2N}}\1\{T(\sigma)> B_N\}\right]\le \alpha
   \end{align*}
   which proves the result.
 \end{proof}
 
 Denote 
-$$\mathrm{NR}_k(\sigma_1^k) = \left\{\forall m < k,\quad  \overline{T}_{N,m}^{(\textbf{I})}(\sigma_1\cdot\ldots\cdot\sigma_m) \le   \overline{b}_{N,m}^{(\textbf{I})}\right\}$$
-$\mathrm{NR}_k(\sigma_1^k)$ is the event on which the statistics corresponding to true hypotheses, computed after permutation by $\sigma_1^k=\sigma_1\cdot \ldots \cdot \sigma_k$, are not rejected.
+%$$\mathrm{NR}_k(\sigma_1^k) = \left\{\forall m < k,\quad  \overline{T}_{N,m}^{(\textbf{I})}(\sigma_1^m) \le   \overline{B}_{N,m}^{(\textbf{I})}\right\}.$$
+$$\mathrm{NR}_k(\sigma_1^k, {\bf C}) = \left\{\forall m < k,\quad  \overline{T}_{N,m}^{({\bf C})}(\sigma_1^m) \le   \overline{B}_{N,m}^{({\bf C})}\right\}.$$
+$\mathrm{NR}_k(\sigma_1^k)$ is the event on which the test for the comparisons from ${\bf C}$, computed after permutation by $\sigma_1^k=\sigma_1\cdot \ldots \cdot \sigma_k$, are not rejected. Similarly, we define the non-accepted event by
+$$\mathrm{NA}_k(\sigma_1^k, {\bf C}) = \left\{\forall m < k,\quad  \underline{T}_{N,m}^{({\bf C})}(\sigma_1^m) \ge   \underline{B}_{N,m}^{({\bf C})}\right\}.$$
+
 
 Let $\I$ be the set of true hypotheses. Let E be the following event
 $$\mathrm{E}= \{ \exists j \in \textbf{I}: \quad H_j \text{ is rejected}\}.$$
-Contrary to Lemma~\ref{lem:quantile_permu_2}, we are in a multiple-testing framework and there may be a mix of true hypotheses and false hypotheses and we have to reduce the problem to studying only true hypotheses because we don't have any informations on the distributions when the hypotheses are false. We also have to take into account the possibility to accept a true hypothesis early. We dennote by $\widehat{\I}_k \subset \I$ the set of true hypotheses not yet accepted at interim $k$.
+Contrary to Lemma~\ref{lem:quantile_permu_2}, we are in a multiple-testing framework and there may be a mix of true hypotheses and false hypotheses and we have to reduce the problem to studying only true hypotheses because we don't have any informations on the distributions when the hypotheses are false. We also have to take into account the possibility to accept a true hypothesis early. We denote by $\widehat{\I}_k \subset \I$ the set of true hypotheses not yet accepted at interim $k$.
 \begin{Lemma}\label{lem:multiple_test_FWE}
 We have 
-$$\mathrm{FWE} = \P_{\sigma_1^k}\left(\mathrm{E}\text{ is true} \right) \le \sum_{k=1}^K\P\left( \overline{T}_{N,k}^{(\widehat{\I}_k)}(\id) > \overline{B}_{N,k}^{(\widehat{\textbf{I}}_k)}, \mathrm{NR}_k(\id)\right)  $$
+$$\mathrm{FWE} = \P_{\sigma_1^k}\left(\mathrm{E}\text{ is true} \right) \le \sum_{k=1}^K\P\left( \overline{T}_{N,k}^{(\widehat{\I}_k)}(\id) > \overline{B}_{N,k}^{(\widehat{\textbf{I}}_k)}, \mathrm{NR}_k(\id,{{\bf C}_k}), \mathrm{NA}_k(\id,{{\bf C}_k})\right)  $$
 \end{Lemma}
 Then, similarly as in the proof of Lemma~\ref{lem:quantile_permu_2}, because we managed to reduce the problem to consider only true hypotheses thanks to Lemma~\ref{lem:multiple_test_FWE}, we want to use the invariance by permutation to make the link with the definition of $\overline{B}_{N,k}^{(\textbf{I})}$. For this purpose, we prove the following Lemma.
 
@@ -363,9 +366,10 @@ Hence, from Lemma~\ref{lem:multiple_test_FWE}, and Lemma~\ref{lem:invariance},
 \begin{align*}
 \mathrm{FWE} &\le \sum_{k=1}^K\frac{1}{m_k}\sum_{\sigma_1^k \in \mathcal{S}_k} \P\left(\overline{T}_{N,k}^{(\widehat{\textbf{I}}_k)}(\sigma_1^k) > \overline{B}_{N,k}^{(\widehat{\textbf{I}}_k)}, \mathrm{NR}_k(\sigma_1^k) \right)\\
 &= \sum_{k=1}^K\E\left[\frac{1}{m_k}\sum_{\sigma_1^k \in \mathcal{S}_k} \1\left\{\overline{T}_{N,k}^{(\widehat{\textbf{I}}_k)}(\sigma_1^k) > \overline{B}_{N,k}^{(\widehat{\textbf{I}}_k)}, \mathrm{NR}_k(\sigma_1^k)\right\} \right]\\
-&= \sum_{k=1}^K \E\left[\frac{1}{m_k}\sum_{{\sigma_1^k} \in S_k}\1\left\{ \overline{T}_{N,k}^{(\widehat{\textbf{I}}_k)}({\sigma_1^k}) > \overline{B}_{N,k}^{(\widehat{\textbf{I}}_k)}\right\} \right]\\
+&= \sum_{k=1}^K \E\left[\frac{1}{m_k}\sum_{{\sigma_1^k} \in \widehat{S}_k}\1\left\{ \overline{T}_{N,k}^{(\widehat{\textbf{I}}_k)}({\sigma_1^k}) > \overline{B}_{N,k}^{(\widehat{\textbf{I}}_k)}\right\} \right]\\
 &\le \sum_{k=1}^K \overline{q}_k \le \alpha
 \end{align*}
+\todoT{Check the above. In particular, the equality with $\widehat{S}_k$. Maybe define $NR$ for the $T^{(C_k)}\le B_{N,l}$ for every $l \le k$}
 where we used the definition of $\overline{B}_{N,k}^{(\widehat{\textbf{I}}_k)}$ to make the link with $\alpha$
 
 \section{Proof of Lemmas}
@@ -413,19 +417,19 @@ where we used the definition of $\overline{B}_{N,k}^{(\widehat{\textbf{I}}_k)}$ 
 Denote by $\textbf{C}_k$ the (random) value of $\textbf{C}$ at the beginning of interim $k$ and remark that $\widehat{\textbf{I}}_k = \textbf{C}_k \cap \textbf{I}$. We have
 \begin{multline*}\label{eq:multi1}
 \P_{\sigma_1^k}\left(\text{E is true} \right)= \sum_{k=1}^K \P_{\sigma_1^k}\left( \exists j \in \widehat{\textbf{I}}_k: \quad H_j\text{ is rejected at interim $k$ },\forall j \in \textbf{I}: \quad H_j\text{was not rejected before interim $k$}\right)\\
-\le   \sum_{k=1}^K  \P_{\sigma_1^k}\left(\overline{T}_{N,k}^{(\textbf{J})}(\id) > \overline{B}_{N,k}^{(\textbf{J})}, \mathrm{NR}_k(\id),\arg\max_{j \in \textbf{J}}T_{N,k}^{(j)}(\id) \in \widehat{\textbf{I}}_k, \forall \textbf{C}_k \supset \textbf{J}'\supsetneq\textbf{J} \quad  \arg\max_{j \in \textbf{J}'}T_{N,k}^{(j)}(\id) \notin \textbf{I} \right)
+\le   \sum_{k=1}^K  \P_{\sigma_1^k}\left(\overline{T}_{N,k}^{(\textbf{J})}(\id) > \overline{B}_{N,k}^{(\textbf{J})}, \mathrm{NR}_k(\id,\textbf{C}_k), \mathrm{NA}_k(\id, \textbf{C}_k),\arg\max_{j \in \textbf{J}}T_{N,k}^{(j)}(\id) \in \widehat{\textbf{I}}_k, \forall \textbf{C}_k \supset \textbf{J}'\supsetneq\textbf{J} \quad  \arg\max_{j \in \textbf{J}'}T_{N,k}^{(j)}(\id) \notin \textbf{I} \right)
 \end{multline*}
-$\mathrm{NR}_k(\id)$ means that we look at the first interim that rejects, $\arg\max_{j \in \textbf{J}}T_{N,k}^{(j)}(\id) \in \widehat{\textbf{I}}_k$ means that we reject a true hypothesis, and $\forall \textbf{C}_k \supset \textbf{J}'\supsetneq \textbf{J} \quad  \arg\max_{j \in \textbf{J}'}T_{N,k}^{(j)}(\id) \notin \textbf{I} $ means that $\textbf{J}$ corresponds to the set for the first rejection of a true hypothesis (there can be several rejection of false hypotheses or acceptation of hypotheses before but not rejection of a true hypothesis). 
+$\mathrm{NR}_k(\id)$ means that we look at the first interim that rejects, and $\mathrm{NA}_k(\id, \textbf{C}_k)$ means that we consider only sample that would ot have accepted any comparison from $\textbf{C}_k$.  $\arg\max_{j \in \textbf{J}}T_{N,k}^{(j)}(\id) \in \widehat{\textbf{I}}_k$ means that we reject a true hypothesis, and $\forall \textbf{C}_k \supset \textbf{J}'\supsetneq \textbf{J} \quad  \arg\max_{j \in \textbf{J}'}T_{N,k}^{(j)}(\id) \notin \textbf{I} $ means that $\textbf{J}$ corresponds to the set for the first rejection of a true hypothesis (there can be several rejection of false hypotheses or acceptation of hypotheses before but not rejection of a true hypothesis). 
 We denote 
-$$\mathrm{FWE}_k =  \P\left(\exists \textbf{J}:\quad  T_{N,k}^{(\textbf{J}^+)}(\id) > \widehat{b}_{N,k}^{(\textbf{J}^+)}, \mathrm{NR}_k(\id), \arg\max_{j \in \textbf{J}}T_{N,k}^{(j)}(\id) \in \widehat{\textbf{I}}_k, \forall \textbf{C}_k \supset \textbf{J}'\supsetneq\textbf{J} \quad  \arg\max_{j \in \textbf{J}'}T_{N,k}^{(j)}(\id) \notin \textbf{I} \right),$$ 
+$$\mathrm{FWE}_k =  \P\left(\exists \textbf{J}:\quad  T_{N,k}^{(\textbf{J}^+)}(\id) > \widehat{b}_{N,k}^{(\textbf{J}^+)}, \mathrm{NR}_k(\id),\mathrm{NA}_k(\id, \textbf{C}_k), \arg\max_{j \in \textbf{J}}T_{N,k}^{(j)}(\id) \in \widehat{\textbf{I}}_k, \forall \textbf{C}_k \supset \textbf{J}'\supsetneq\textbf{J} \quad  \arg\max_{j \in \textbf{J}'}T_{N,k}^{(j)}(\id) \notin \textbf{I} \right),$$ 
 the error of interim $k$.
 
-Remark that on $$\mathrm{NR}_k(\id) \cap \{\arg\max_{j \in \textbf{J}}T_{N,k}^{(j)}(\id) \in \widehat{\textbf{I}}_k\}\cap\{ \forall \textbf{C}_k \supset \textbf{J}'\supsetneq\textbf{J} \quad  \arg\max_{j \in \textbf{J}'}T_{N,k}^{(j)}(\id) \notin \textbf{I}\}  $$
+Remark that on $$\mathrm{NR}_k(\id,\textbf{C}_k) \cap \{\arg\max_{j \in \textbf{J}}T_{N,k}^{(j)}(\id) \in \widehat{\textbf{I}}_k\}\cap\{ \forall \textbf{C}_k \supset \textbf{J}'\supsetneq\textbf{J} \quad  \arg\max_{j \in \textbf{J}'}T_{N,k}^{(j)}(\id) \notin \textbf{I}\}  $$
 $\textbf{J}$ corresponds to the first rejection to occur. Hence, having that the argmax is attaind in $\widehat{\textbf{I}}_k$,
 $$T_{N,k}^{(\textbf{J}^+)}(\id)= \max\{T_{N,k}^{(j)}(\id), j \in \textbf{J}\} = \max\{T_{N,1}^{(j)}(\id), j \in \widehat{\textbf{I}}_k\} = T_{N,k}^{(\widehat{\textbf{I}}_k^+)}(\id)$$
 Moreover, having $\textbf{J} \supset \widehat{\textbf{I}}_k$, we have $\widehat{b}_{N,k}^{(\textbf{J}^+)} \ge \widehat{b}_{N,k}^{(\widehat{\textbf{I}}_k^+)}$. And finally, we have 
 \begin{align*}
-\mathrm{FWE}_k\le \P\left( T_{N,k}^{(\widehat{\textbf{I}}_k^+)}(\id) > \widehat{b}_{N,k}^{(\widehat{\textbf{I}}_k^+)}, \mathrm{NR}_k(\id)\right)
+\mathrm{FWE}_k\le \P\left( T_{N,k}^{(\widehat{\textbf{I}}_k^+)}(\id) > \widehat{b}_{N,k}^{(\widehat{\textbf{I}}_k^+)}, \mathrm{NR}_k(\id,\textbf{C}_k),\mathrm{NA}_k(\id, \textbf{C}_k), \right)
 \end{align*}
 which proves the lemma.
 \subsection{Proof of Lemma~\ref{lem:invariance}}
