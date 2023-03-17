@@ -305,8 +305,8 @@ One of the basic property of two-sample permutation tests is that when the null 
 
 \begin{Theorem}\label{th:multi_FWE}
 Suppose that $\alpha,\beta \in  (0,1)$, and consider the multiple testing problem $H_j: P_j = P_k$ against $H_j': P_j \neq P_k$ for all the couples $j \neq k$. 
-Then, the test resulting from Algorithm~\ref{algo:main} has a strong control on the Family-wise error for the multiple test, i.e. if we suppose that all the hypotheses $H_i, i\in \bf I$ are true and the remainder are false, then 
-$$ \P\left(\exists j \in \bf{I}:\quad  \text{reject }H_j\right)\le\alpha.$$
+Then, the test resulting from Algorithm~\ref{algo:main} has a weak control on the Family-wise error for the multiple test, i.e. if we suppose that all the hypotheses $H_i, i\in \{1,\dots,J\}$ are true, then 
+$$ \P\left(\exists 1\le j\le J:\quad  \text{reject }H_j\right)\le\alpha.$$
 \end{Theorem}
 
 \todoT{Explain $P_j=P_k$, how this is limiting and we would prefer to use $\mu_j=\mu_k$. Also show where this stands in the litterature.}
@@ -338,34 +338,34 @@ The proof for theorem for this result is a bit technical. We begin by showing th
   which proves the result.
 \end{proof}
 
-Denote 
-%$$\mathrm{NR}_k(\sigma_1^k) = \left\{\forall m < k,\quad  \overline{T}_{N,m}^{(\textbf{I})}(\sigma_1^m) \le   \overline{B}_{N,m}^{(\textbf{I})}\right\}.$$
-$$\mathrm{NR}_k(\sigma_1^k, {\bf C}) = \left\{\forall m < k,\quad  \overline{T}_{N,m}^{({\bf C})}(\sigma_1^m) \le   \overline{B}_{N,m}^{({\bf C})}\right\}.$$
-$\mathrm{NR}_k(\sigma_1^k)$ is the event on which the test for the comparisons from ${\bf C}$, computed after permutation by $\sigma_1^k=\sigma_1\cdot \ldots \cdot \sigma_k$, are not rejected. Similarly, we define the non-accepted event by
-$$\mathrm{NA}_k(\sigma_1^k, {\bf C}) = \left\{\forall m < k,\quad  \underline{T}_{N,m}^{({\bf C})}(\sigma_1^m) \ge   \underline{B}_{N,m}^{({\bf C})}\right\}.$$
+% Denote 
+% %$$\mathrm{NR}_k(\sigma_1^k) = \left\{\forall m < k,\quad  \overline{T}_{N,m}^{(\textbf{I})}(\sigma_1^m) \le   \overline{B}_{N,m}^{(\textbf{I})}\right\}.$$
+% $$\mathrm{NR}_k(\sigma_1^k, {\bf C}) = \left\{\forall m < k,\quad  \overline{T}_{N,m}^{({\bf C})}(\sigma_1^m) \le   \overline{B}_{N,m}^{({\bf C})}\right\}.$$
+% $\mathrm{NR}_k(\sigma_1^k)$ is the event on which the test for the comparisons from ${\bf C}$, computed after permutation by $\sigma_1^k=\sigma_1\cdot \ldots \cdot \sigma_k$, are not rejected. Similarly, we define the non-accepted event by
+% $$\mathrm{NA}_k(\sigma_1^k, {\bf C}) = \left\{\forall m < k,\quad  \underline{T}_{N,m}^{({\bf C})}(\sigma_1^m) \ge   \underline{B}_{N,m}^{({\bf C})}\right\}.$$
 
 
-Let $\I$ be the set of true hypotheses. Let E be the following event
+Let $\I = \{1,\dots,J\}$ be the set of hypotheses. Let E be the following event
 $$\mathrm{E}= \{ \exists j \in \textbf{I}: \quad H_j \text{ is rejected}\}.$$
-Contrary to Lemma~\ref{lem:quantile_permu_2}, we are in a multiple-testing framework and there may be a mix of true hypotheses and false hypotheses and we have to reduce the problem to studying only true hypotheses because we don't have any informations on the distributions when the hypotheses are false. We also have to take into account the possibility to accept a true hypothesis early. We denote by $\widehat{\I}_k \subset \I$ the set of true hypotheses not yet accepted at interim $k$.
+Contrary to Lemma~\ref{lem:quantile_permu_2}, we are in a multiple-testing framework and there may be a mix of true hypotheses and false hypotheses and we have to reduce the problem to studying only true hypotheses because we don't have any informations on the distributions when the hypotheses are false. We also have to take into account the possibility to accept a true hypothesis early. 
 \begin{Lemma}\label{lem:multiple_test_FWE}
 We have 
-$$\mathrm{FWE} = \P_{\sigma_1^k}\left(\mathrm{E}\text{ is true} \right) \le \sum_{k=1}^K\P\left( \overline{T}_{N,k}^{(\widehat{\I}_k)}(\id) > \overline{B}_{N,k}^{(\widehat{\textbf{I}}_k)}, \mathrm{NR}_k(\id,{{\bf C}_k}), \mathrm{NA}_k(\id,{{\bf C}_k})\right)  $$
+$$\mathrm{FWE} = \P_{\sigma_1^k}\left(\mathrm{E}\text{ is true} \right) \le \sum_{k=1}^K\sum_{C \subset \I}\P\left( \overline{T}_{N,k}^{(C)}(\id) > \overline{B}_{N,k}^{(C)}, C_k(\id) = C\right)  $$
 \end{Lemma}
 Then, similarly as in the proof of Lemma~\ref{lem:quantile_permu_2}, because we managed to reduce the problem to consider only true hypotheses thanks to Lemma~\ref{lem:multiple_test_FWE}, we want to use the invariance by permutation to make the link with the definition of $\overline{B}_{N,k}^{(\textbf{I})}$. For this purpose, we prove the following Lemma.
 
 
 \begin{Lemma}\label{lem:invariance}
-We have that for $k \le K$, for any ${\sigma_1^k}$ concatenation of $k$ permutations, 
-$$(\overline{T}_{N,l}^{(\widehat{\bf{I}}_l)}(\id),\overline{B}_{N,l}^{(\widehat{\bf{I}}_l)})_{l\le k}=(\overline{T}_{N,l}^{(\widehat{\bf{I}}_l)}(\sigma_1^l), \overline{B}_{N,l}^{(\widehat{\bf{I}}_l)})_{l\le k}$$
+We have that for $k \le K$, for any ${\sigma_1^k}$ concatenation of $k$ permutations, for any $C\subset \I$,
+$$(\overline{T}_{N,l}^{(C)}(\id),\overline{B}_{N,l}^{(C)})_{l\le k}=(\overline{T}_{N,l}^{(C)}(\sigma_1^l), \overline{B}_{N,l}^{(C)})_{l\le k}$$
 \end{Lemma}
-Using Lemma~\ref{lem:invariance}, we have for any ${\sigma_1^k}$
-$$\P\left(\overline{T}_{N,k}^{(\widehat{\textbf{I}}_k)}(\id) > \overline{B}_{N,k}^{(\widehat{\textbf{I}}_k)}, \mathrm{NR}_k(\id ) \right) = \P\left(\overline{T}_{N,k}^{(\widehat{\textbf{I}}_k)}({\sigma_1^k}) > \overline{B}_{N,k}^{(\widehat{\textbf{I}}_k)}, \mathrm{NR}_k({\sigma_1^k}) \right)$$
+Using Lemma~\ref{lem:invariance}, because $C_k(\id)$ depends only on $(\overline{T}_{N,l}^{(C)}(\id),\overline{B}_{N,l}^{(C)})_{l\le k}$, we have for any ${\sigma_1^k}$
+$$\P\left(\overline{T}_{N,k}^{(C)}(\id) > \overline{B}_{N,k}^{(C)}, C_k(\id) = C\right) = \P\left(\overline{T}_{N,k}^{(C)}(\sigma_1^k) > \overline{B}_{N,k}^{(C)}, C_k(\sigma_1^k) = C\right)$$
 
 Hence, from Lemma~\ref{lem:multiple_test_FWE}, and Lemma~\ref{lem:invariance},
 \begin{align*}
-\mathrm{FWE} &\le \sum_{k=1}^K\frac{1}{m_k}\sum_{\sigma_1^k \in \mathcal{S}_k} \P\left(\overline{T}_{N,k}^{(\widehat{\textbf{I}}_k)}(\sigma_1^k) > \overline{B}_{N,k}^{(\widehat{\textbf{I}}_k)}, \mathrm{NR}_k(\sigma_1^k) \right)\\
-&= \sum_{k=1}^K\E\left[\frac{1}{m_k}\sum_{\sigma_1^k \in \mathcal{S}_k} \1\left\{\overline{T}_{N,k}^{(\widehat{\textbf{I}}_k)}(\sigma_1^k) > \overline{B}_{N,k}^{(\widehat{\textbf{I}}_k)}, \mathrm{NR}_k(\sigma_1^k)\right\} \right]\\
+\mathrm{FWE} &\le \sum_{k=1}^K\sum_{C \subset \I}\frac{1}{m_k}\sum_{\sigma_1^k \in \mathcal{S}_k} \P\left(\overline{T}_{N,k}^{(C)}(\sigma_1^k) > \overline{B}_{N,k}^{(C)}, C_k(\sigma_1^k)=C\right)\\
+&=\sum_{k=1}^K\sum_{C \subset \I}\E\left[\frac{1}{m_k}\sum_{\sigma_1^k \in \mathcal{S}_k} \1\left\{\overline{T}_{N,k}^{(C)}(\sigma_1^k) > \overline{B}_{N,k}^{(C)}, C_k(\sigma_1^k)=C\right\}\right]\\
 &= \sum_{k=1}^K \E\left[\frac{1}{m_k}\sum_{{\sigma_1^k} \in \widehat{S}_k}\1\left\{ \overline{T}_{N,k}^{(\widehat{\textbf{I}}_k)}({\sigma_1^k}) > \overline{B}_{N,k}^{(\widehat{\textbf{I}}_k)}\right\} \right]\\
 &\le \sum_{k=1}^K \overline{q}_k \le \alpha
 \end{align*}
