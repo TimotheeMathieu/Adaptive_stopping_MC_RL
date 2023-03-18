@@ -1,0 +1,7 @@
+{
+    "name": "SAC",
+    "n_jobs": 2,
+    "pre_cmd": "source activate as_sb",
+    "train_cmd": "python /home/mmedeiro/Adaptive_stopping_MC_RL/adastop/deep_rl_agents/sac.py -e Humanoid-v3 -b 2000000",
+    "eval": "train_stdout"
+}
