@@ -1,0 +1,33 @@
+\begin{thebibliography}{1}
+
+\bibitem{Sigaud}
+C{\'e}dric Colas, Olivier Sigaud, and Pierre-Yves Oudeyer.
+\newblock A hitchhiker's guide to statistical comparisons of reinforcement
+  learning algorithms.
+\newblock {\em arXiv preprint arXiv:1904.06979}, 2019.
+
+\bibitem{TD3}
+Scott Fujimoto, Herke Hoof, and David Meger.
+\newblock Addressing function approximation error in actor-critic methods.
+\newblock In {\em International conference on machine learning}, pages
+  1587--1596. PMLR, 2018.
+
+\bibitem{SAC}
+Tuomas Haarnoja, Aurick Zhou, Pieter Abbeel, and Sergey Levine.
+\newblock Soft actor-critic: Off-policy maximum entropy deep reinforcement
+  learning with a stochastic actor.
+\newblock In {\em International conference on machine learning}, pages
+  1861--1870. PMLR, 2018.
+
+\bibitem{lehmann2005testing}
+Erich~Leo Lehmann, Joseph~P Romano, and George Casella.
+\newblock {\em Testing statistical hypotheses}, volume~3.
+\newblock Springer, 2005.
+
+\bibitem{Romano_2003}
+Joseph~P. Romano and Michael Wolf.
+\newblock Exact and approximate stepdown methods for multiple hypothesis
+  testing.
+\newblock {\em SSRN Journal Electronic Journal}, 2003.
+
+\end{thebibliography}

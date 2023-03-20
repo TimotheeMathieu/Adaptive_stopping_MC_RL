@@ -440,6 +440,42 @@ The familywise-error rate is smaller when we use early-accept ($\beta>0$) than w
 
 \section{Comparison with non-adaptive approaches}
 \todoT{Comparison with edge of statistical precipice and Flower's team article}
+\cite{Sigaud}'s work share the same reproducible science objective as our's. \cite{Sigaud}'s uses non-adaptive tests to compare RL algortihms (\cite{Sigaud}-Sec. 3.2) whearas AdaStop (\ref{sec:main_algo}) is adaptive and designed specifically for rl aglorithms comparisons. We follow \cite{Sigaud}'s experimental protocole and compare AdaStop and non-adaptive approaches empirically in terms of false positive rate and statistical
+power as a function of the sample size (number of seeds). In particular, we use \cite{Sigaud}'s \href{https://github.com/flowersteam/rl_stats/tree/master/data}{data} of SAC \cite{SAC} and TD3 \cite{TD3} evaluations on HalfCheetah to obtain two multimodal distributions (fig. \ref{fig:sactd3}). In the fashion of \cite{Sigaud}-table 15, we compute the empirical statistical power of AdaStop as a function of the number of seeds of the RL algortihms (table. \ref{tab:stat_power_sactd3}). To compute the empirical statistical power for a given number of seeds, we assume that the evaluations distributions of SAC and TD3 are different and we count how many times AdaStop decides that one agent is better than the other (number of true positives). And because the test is adaptive, we also report the effective number of seeds necessary to make a decision with $0.95$ confidence level. For each number of seeds, we launched AdaStop $1000$ times and average statistical power and effective number of seeds used. For example, when comparing SAC and TD3 performances on HalfCheetah using AdaStop with $n=4$ and $k=5$, the maximumun number of seeds that could be used is $n \times k = 20$ in the case of no early stopping. However we observe on table. \ref{tab:stat_power_sactd3} that when $n=4$ and $k=5$, AdaStop can make a decision with a power of 0.82 using only 12 seeds. In \cite{Sigaud}-table 15, the minimum number of seeds required to obtain a statistical power of 0.8 when comparing SAC and TD3 is 15 when using a t-test, a Welch test, or a bootstrapping test.
+\begin{figure}
+	\begin{centering}
+		\includegraphics[scale=0.5]{sac_vs_td3_hc.png}
+		\caption{Evalutions distributions of SAC and TD3 on HalfCheetah obtained from 192 independent seeds of 2 million steps. \label{fig:sactd3}}
+	\end{centering}
+\end{figure}
+
+\begin{table}
+	\centering
+	\begin{tabular}{rlllll}
+		\hline
+		n$\setminus$k
+		& 2              & 3              & 4              & 5             & 6              \\
+		\hline
+		1 & 0.0 (2.0)      & 0.0 (3.0)      & 0.277 (4.0)    & 0.465 (5.0)   & 0.56 (6.0)     \\
+		2 & 0.005 (4.0)    & 0.33 (6.0)     & 0.531 (6.96)   & 0.602 (8.345) & 0.704 (9.198)  \\
+		3 & 0.213 (5.984)  & 0.506 (8.085)  & 0.627 (10.212) & 0.689 (11.02) & 0.785 (11.52)  \\
+		4 & 0.371 (7.616)  & 0.611 (9.648)  & 0.744 (11.7)   & 0.82 (12.08)  & 0.845 (13.89)  \\
+		5 & 0.465 (9.044)  & 0.691 (11.031) & 0.78 (13.28)   & 0.853 (14.27) & 0.884 (14.532) \\
+		6 & 0.534 (10.4)   & 0.73 (12.306)  & 0.837 (14.124) & 0.89 (14.94)  & 0.911 (15.978) \\
+		7 & 0.599 (11.358) & 0.779 (13.404) & 0.879 (14.916) & 0.92 (15.495) & 0.939 (16.404) \\
+		8 & 0.635 (12.322) & 0.818 (13.95)  & 0.885 (15.824) & 0.942 (16.03) & 0.961 (17.268) \\
+		9 & 0.68 (13.196)  & 0.849 (14.544) & 0.904 (16.516) & 0.949 (16.57) & 0.982 (17.91)  \\
+		10 & 0.734 (13.92)  & 0.877 (15.108) & 0.924 (17.096) & 0.971 (17.71) & 0.984 (17.874) \\
+		11 & 0.764 (14.642) & 0.885 (16.386) & 0.931 (17.832) & 0.966 (19.13) & 0.986 (18.924) \\
+		12 & 0.773 (15.138) & 0.897 (16.686) & 0.956 (17.596) & 0.979 (18.88) & 0.991 (18.666) \\
+		13 & 0.82 (15.44)   & 0.929 (16.779) & 0.959 (18.376) & 0.988 (19.97) & 0.994 (19.65)  \\
+		14 & 0.813 (16.456) & 0.913 (17.745) & 0.966 (18.52)  & 0.98 (20.405) & 0.998 (20.148) \\
+		15 & 0.863 (16.406) & 0.943 (17.241) & 0.98 (18.124)  & 0.993 (20.34) & 0.997 (20.238) \\
+		\hline
+	\end{tabular}
+\caption{Empirical statistical power of AdaStop as a function of number of seeds when comparing SAC and TD3 on HalfCheetah.\label{tab:stat_power_sactd3}}
+\end{table}
+
 
 \appendix
 
