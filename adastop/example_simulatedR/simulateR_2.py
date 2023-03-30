@@ -195,8 +195,8 @@ if __name__ == "__main__":
 
     def decision(**kwargs):
         exp_name = kwargs["exp_name"]
-        os.makedirs(os.path.join("mgres", exp_name), exist_ok=True)
-        filename = os.path.join("mgres", exp_name, "result_K={}-n={}-B={}-dist_params={}-seed={}.pickle".format(kwargs["K"], kwargs["n"], kwargs["B"], kwargs["dist_params"], kwargs["seed"]))
+        os.makedirs(os.path.join("mgres_alt", exp_name), exist_ok=True)
+        filename = os.path.join("mgres_alt", exp_name, "result_K={}-n={}-B={}-dist_params={}-seed={}.pickle".format(kwargs["K"], kwargs["n"], kwargs["B"], kwargs["dist_params"], kwargs["seed"]))
         comparator = MultipleAgentsComparator(n = kwargs["n"], K= kwargs["K"],B= kwargs["B"], alpha= alpha, beta=0, seed=kwargs["seed"])
         # manager1, manager2 = make_same_agents(kwargs["diff_means"])
         if exp_name == "exp1":
@@ -234,7 +234,7 @@ if __name__ == "__main__":
     #     return non_adaptive_decision(seed=seed_iter2[i], nk=nk_iter[i], B=B_iter2[i], diff_means= dmu_iter2[i])
     #TODO
 
-    res = Parallel(n_jobs=1, backend="multiprocessing")(delayed(decision_par)(i) for i in tqdm(range(num_comb)))
+    res = Parallel(n_jobs=-5, backend="multiprocessing")(delayed(decision_par)(i) for i in tqdm(range(num_comb)))
     # decision_par(0)
     print("Done!")
     # res2 = Parallel(n_jobs=6, backend="multiprocessing")(delayed(non_adaptive_decision_par)(i) for i in tqdm(range(num_comb2)))
