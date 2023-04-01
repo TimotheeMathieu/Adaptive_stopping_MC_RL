@@ -1,10 +1,10 @@
-import json
 import os
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 import numpy as np
+import pandas as pd
 import seaborn as sns
 
 sns.set_style("white")
@@ -29,6 +29,8 @@ DECISIONS = {
     "na": 4,
 }
 
+ALGORITHMS = ["DDPG", "TRPO", "PPO", "SAC"]
+
 ENV_NAMES = {
     "ant": "Ant-v3",
     "halfcheetah": "HalfCheetah-v3",
@@ -42,9 +44,9 @@ CONFIG = dict(
 )  # Used in all environments
 
 
-def get_comparator(results_path):
-    # Load evaluations from numpy file
-    evals = np.load(results_path, allow_pickle=True).item()
+def get_comparator(results_dir):
+    n, K = CONFIG["n"], CONFIG["K"]
+    env = os.path.basename(results_dir)
 
     # Seed
     np.random.seed(CONFIG["seed"])
@@ -52,23 +54,27 @@ def get_comparator(results_path):
     # Instantiate comparator
     comparator = MultipleAgentsComparator(**CONFIG)
 
-    # Create partial evaluations
-    n, K = CONFIG["n"], CONFIG["K"]
-    partial_evals = []
-    for k in range(K):
-        aux = dict()
-        for algo, v in evals.items():
-            end = min((k + 1) * n, len(v))
-            aux[algo] = v[:end]
-        partial_evals.append(aux)
-
     # Compute partial comparisons
+    evals = dict()
     for k in range(K):
-        if max([len(v) for v in partial_evals[k].values()]) < (k + 1) * n:
+        # load data
+        path = os.path.join(results_dir, f"{env}{k+1}.csv")
+        if not os.path.exists(path):
             break
+        df_k = pd.read_csv(path)
+        aux = {a: list(df_k[a]) for a in df_k.columns if a in ALGORITHMS}
+
+        # update partial evaluations
+        for a in aux:
+            if a not in evals:
+                evals[a] = np.array(aux[a])
+            else:
+                evals[a] = np.concatenate([evals[a], aux[a]])
+
+        # compute partial comparisons
         if k > 1 and "continue" not in comparator.decisions.values():
             break
-        comparator.partial_compare(partial_evals[k])
+        comparator.partial_compare(evals)
 
     return comparator
 
@@ -140,7 +146,6 @@ def plot_comparison(
         the_table.set_fontsize(12)
 
     # generate a custom colormap
-
     colors = mpl.colormaps["Pastel1"].colors
     colors = [colors[0], "lightgray", colors[1], "white"]
     cmap = ListedColormap(colors, name="my_cmap")
@@ -197,7 +202,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     envs = ["ant", "halfcheetah", "hopper", "humanoid", "walker"]
-    algos = ["DDPG", "TRPO", "PPO", "SAC"]
+    
 
     n_rows = 4 if args.draw_boxplot else 2
     n_cols = 3
@@ -216,15 +221,15 @@ if __name__ == "__main__":
         else:
             ax = axs[row][col]
 
-        results_path = os.path.join(args.path, f"{env}.npy")
-        comparator = get_comparator(results_path)
+        results_dir = os.path.join(args.path, f"{env}")
+        comparator = get_comparator(results_dir)
 
         n_iters = plot_comparison(
             ax,
             comparator,
             draw_table=args.draw_table,
             draw_boxplot=args.draw_boxplot,
-            agent_names=algos,
+            agent_names=ALGORITHMS,
             draw_yticks=(col == 0),
             title=ENV_NAMES[env],
         )
@@ -240,8 +245,8 @@ if __name__ == "__main__":
     else:
         budget_ax = axs[-1][-1]
 
-    budgets = np.zeros((len(algos), len(envs)))
-    for i, algo in enumerate(algos):
+    budgets = np.zeros((len(ALGORITHMS), len(envs)))
+    for i, algo in enumerate(ALGORITHMS):
         for j, env in enumerate(envs):
             budgets[i, j] = used_budget[env][algo]
 
@@ -254,7 +259,7 @@ if __name__ == "__main__":
         cmap=cmap,
         cbar=False,
         xticklabels=envs,
-        yticklabels=[""] * len(algos),
+        yticklabels=[""] * len(ALGORITHMS),
         vmin=0,
         vmax=30,
     )
