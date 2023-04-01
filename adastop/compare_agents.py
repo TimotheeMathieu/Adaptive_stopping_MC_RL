@@ -446,7 +446,6 @@ class MultipleAgentsComparator:
     def plot_results(self, agent_names=None, axes = None):
         """
         visual representation of results.
-
         Parameters
         ----------
         agent_names : list of str or None
