@@ -60,7 +60,6 @@ class MultipleAgentsComparator:
         list of the agents' names.
     decision: dict
         decision of the tests for each comparison, keys are the comparisons and values are in {"equal", "larger", "smaller"}.
-
     n_iters: dict
         number of iterations (i.e. number of fits) used for each agent. Keys are the agents' names and values are ints.
     
@@ -449,7 +448,6 @@ class MultipleAgentsComparator:
     def plot_results(self, agent_names=None, axes = None):
         """
         visual representation of results.
-
         Parameters
         ----------
         agent_names : list of str or None

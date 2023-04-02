@@ -44,7 +44,7 @@ def compare(ctx, input_file, n_groups, n_permutations, alpha, beta, seed, compar
         comparisons = None
 
     # if this is not first group, load data for comparator.
-    if os.path.isfile(path_lf):
+    if os.path.isfile(path_lf) and (not reset):
         with open(path_lf, 'rb') as fp:
             comparator = pickle.load(fp)
 
@@ -75,6 +75,9 @@ def compare(ctx, input_file, n_groups, n_permutations, alpha, beta, seed, compar
         click.echo("Decision between "+ comparator.agent_names[c[0]] +" and "+comparator.agent_names[c[1]]+ " is: " +comparator.decisions[str(c)])
 
     click.echo('')
+
+    if not("continue" in list(comparator.decisions.values())) and plot:
+        comparator.plot_results()
     
     with open(path_lf, 'wb') as fp:
         pickle.dump(comparator, fp)
