@@ -143,7 +143,8 @@ if __name__ == "__main__":
     )
 
     # initial evaluation
-    intial_evaluation = agent.eval(
+
+    intial_evaluation = agent.agent_handlers[0].eval(
         eval_horizon=eval_horizon,
         n_simulations=n_eval_episodes,
         gamma=1.0,
