@@ -15,7 +15,7 @@ parent_dir
   - ...
 ...
 ```
-The directory `evaluations` in this repository contains all the information necessary to reproduce the AdaStop decision plots.
+The directory `experiments` in this repository contains all the information necessary to reproduce the AdaStop decision plots.
 
 Additionally, there are more options to control the elements of the plot:
 

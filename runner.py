@@ -75,7 +75,7 @@ def save_evals(dirpath, k, evals_k):
 
 def run_batch(agent, seeds, script_path):
     cmds = [
-        f'bash -c "{copy.copy(script_path)} {seed}"'
+        f'bash -c "{script_path} {seed}"'
         for seed in seeds
     ]
 
@@ -141,6 +141,13 @@ if __name__ == "__main__":
             path = os.path.join(dirpath, filename)
             if os.path.exists(path):
                 os.remove(path)
+        name = os.path.basename(os.path.normpath(dirpath))
+        for k in range(args.K):
+            path = os.path.join(dirpath, f"{name}{k+1}.csv")
+            if os.path.exists(path):
+                os.remove(path)
+            else:
+                break
 
     # Setup logger
     setup_logger(dirpath)
