@@ -1,19 +1,16 @@
-import sys
 import os
 home_folder = os.environ["HOME"]
 workdir = os.path.join(home_folder,"Adaptive_stopping_MC_RL","adastop")
-sys.path.insert(0, workdir)
-# print(sys.path)
-from rlberry.agents import Agent
-from rlberry.envs import Model
-import rlberry.spaces as spaces
-from compare_agents import MultipleAgentsComparator
-import time
+
+from utils import *
+from adastop import MultipleAgentsComparator
 import numpy as np
 from tqdm import tqdm
 from joblib import Parallel, delayed
 import pickle
 
+import pandas as pd
+import matplotlib
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -21,101 +18,106 @@ from rlberry.utils.logging import set_level
 set_level('ERROR')
 
 
-class DummyEnv(Model):
-    def __init__(self, **kwargs):
-        Model.__init__(self, **kwargs)
-        self.n_arms = 2
-        self.action_space = spaces.Discrete(1)
+def plot_results(comp, fname, agent_names = None, axes= None):
 
-    def step(self, action):
-        pass
+    plt.rcParams.update({'font.size': 15})
 
-    def reset(self):
-        return 0
+    fig, (ax2, ax3) = plt.subplots(1, 2, figsize=(17, 6), gridspec_kw={'width_ratios':  [6,7]})
+    fig.tight_layout()
 
-class RandomAgent(Agent):
-    def __init__(self, env, drift=0, std = 0.1, **kwargs):
-        Agent.__init__(self, env)
-        self.drift = drift
-        self.std = std
-        if "type" in kwargs.keys():
-            self.type = kwargs["type"]
+
+    id_sort = np.argsort(comp.mean_eval_values)
+
+    if agent_names is None:
+        agent_names = comp.agent_names
+
+    links = np.zeros([len(agent_names),len(agent_names)])
+
+
+    decisions = {
+            'smaller': 0,
+            'equal': 1,
+            'larger': 2,
+            'na': 4,
+        }
+
+
+    for i in range(len(comp.comparisons)):
+        c = comp.comparisons[i]
+        decision = comp.decisions[str(c)]
+        if decision == "equal":
+            links[c[0],c[1]] = decisions['equal']
+            links[c[1],c[0]] = decisions['equal']
+        elif decision == "larger":
+            links[c[0],c[1]] = decisions['larger']
+            links[c[1],c[0]] = decisions['smaller']
         else:
-            self.type = "normal"
-        self.kwargs = kwargs
+            links[c[0],c[1]] = decisions['smaller']
+            links[c[1],c[0]] = decisions['larger']
 
-    def fit(self, budget: int, **kwargs):
-        pass
 
-    def eval(self, n_simulations = 1, **kwargs):
-        if self.type == "normal":
-            noise = self.rng.normal(scale =self.std, size=n_simulations)
-        elif self.type == "student":
-            if "df" in self.kwargs.keys():
-                df = self.kwargs["df"]
+    links = links[id_sort,:][:, id_sort]
+    links = links + decisions['na'] * np.eye(len(links))
+    print(links)
+    annot = []
+    for i in range(len(links)):
+        annot_i = []
+        for j in range(len(links)):
+            if i == j:
+                annot_i.append(" ")                    
+            elif links[i,j] == 0:
+                annot_i.append("${\\rightarrow  =}\downarrow$")
+            elif links[i,j] == 1:
+                annot_i.append("${\\rightarrow \geq}\downarrow$")
             else:
-                df = 2.
-            noise = self.rng.standard_t(df, size=n_simulations)
-        return self.drift + noise
+                annot_i.append("${\\rightarrow  \leq}\downarrow$")
+        annot+= [annot_i]
 
 
-class MixtureAgent(Agent): 
-    def __init__(self, env, means=[0], stds=[1], prob_mixture = [1], **kwargs):
-        Agent.__init__(self, env, **kwargs)
-        self.means = np.array(means)
-        self.prob_mixture = np.array(prob_mixture)
-        self.stds = np.array(stds)
-        if "type" in kwargs.keys():
-            self.type = kwargs["type"]
-        else:
-            self.type = "normal"
 
-    def fit(self, budget: int, **kwargs):
-        pass
-
-    def eval(self, n_simulations=1, **kwargs):
-
-        if self.type == "normal":
-            noise = self.rng.normal(size=n_simulations)
-        elif self.type == "student":
-            if "df" in self.kwargs.keys():
-                df = self.kwargs["df"]
-            else:
-                df = 2.
-            noise = self.rng.standard_t(df, size=n_simulations)
-
-        idxs = self.rng.choice(np.arange(len(self.means)), size=n_simulations, p=self.prob_mixture)
-        ret = self.means[idxs] + noise*self.stds[idxs]
-        return ret
+    n_iterations = [comp.n_iters[comp.agent_names[i]] for i in id_sort]
+    the_table = ax2.table(
+        cellText=[n_iterations], rowLabels=["n_iter"], loc="top", cellLoc="center", edges="open"
+    )
 
 
-def create_agents(agent_name, agent_label, **kwargs):
-    if agent_name == "mixture":
-        assert "mus" in kwargs.keys() and "probas" in kwargs.keys()
-        manager =  (
-                        MixtureAgent,
-                        dict(
-                            train_env=(DummyEnv, {}),
-                            init_kwargs={"means": kwargs["mus"], "stds": [0.1, 0.1], "prob_mixture": kwargs["probas"]},
-                            fit_budget=1,
-                            agent_name=agent_label,
-                        ),
-                    )
-    elif agent_name == "single":
-        init_kwargs = dict(type = kwargs["type"], drift = kwargs["drift"])
-        if kwargs["type"] == "student":
-            init_kwargs["df"] = kwargs["df"]
-        manager =  (
-                        RandomAgent,
-                        dict(
-                            train_env=(DummyEnv, {}),
-                            init_kwargs=init_kwargs,
-                            fit_budget=1,
-                            agent_name=agent_label,
-                        ),
-                    )   
+    from matplotlib.colors import ListedColormap
 
-    return manager
+    colors = matplotlib.colormaps['Pastel1'].colors
+    colors = [colors[0], 'lightgray', colors[1], 'white']
+    print(colors)
+    cmap = ListedColormap(colors, name="my_cmap")
+
+    res = sns.heatmap(links, annot = annot, cmap=cmap, #vmax=2, center=0,
+                    linewidths=.5, ax =ax2, 
+                        cbar=False, yticklabels=np.array(agent_names)[id_sort],  
+                        xticklabels=np.array(agent_names)[id_sort],fmt='')
+
+
+    # Drawing the frame
+    for _, spine in res.spines.items():
+        spine.set_visible(True)
+        spine.set_linewidth(1)
+
+
+    Z = [comp.eval_values[comp.agent_names[i]] for i  in id_sort]
+    # Set up the matplotlib figure
+
+
+    pos = np.arange(len(Z))
+
+
+
+    sns.set_style("whitegrid")
+    sns.violinplot(data=Z, palette="Pastel1", bw = .2, linewidth=1.5, scale="width", ax = ax3)
+
+    ax3.xaxis.set_label([])
+    ax3.set_xticks(pos)
+    ax3.set_xticklabels(np.array(agent_names)[id_sort])
+
+    plt.savefig(fname, bbox_inches='tight')
+
+
 
 labels = ["N", "*N", "*MG1", "MG1", "MG2", "tS1", "MG3", "*MG3", "MtS", "tS2"]
 
@@ -143,14 +145,12 @@ if __name__ == "__main__":
 
     EXP = "exp4"
     alpha = 0.05
-    M = 5000
+    M = 1
 
     seeds = np.arange(M)
     K_list = np.array([5])
     n_list = np.array([5])
-    B_list = np.array([10**4])# 10**4, 5*10**4, 10**5])
-    # dmu_list = np.linspace(0, 1, 10)
-    # dist_params_list = np.array([2., 4., 8., 64., 1024.])
+    B_list = np.array([10**4])
 
     mesh = np.meshgrid(seeds, K_list, n_list, B_list)
 
@@ -158,8 +158,6 @@ if __name__ == "__main__":
     K_iter = mesh[1].reshape(-1)
     n_iter = mesh[2].reshape(-1)
     B_iter = mesh[3].reshape(-1)
-    # dmu_iter = mesh[4].reshape(-1)
-    # dist_params_iter = mesh[4].reshape(-1)
 
     num_comb = len(mesh[0].reshape(-1))
 
@@ -182,15 +180,15 @@ if __name__ == "__main__":
 
     res = Parallel(n_jobs=-5, backend="multiprocessing")(delayed(decision_par)(i) for i in tqdm(range(num_comb))) # n_jobs=1 for debugging
 
-    # estimate of the Family-Wise Error Rate (FWER)
-    # idxs = ['reject' in a for a in res]
-    # print(res)
-    # print("proba to reject", np.mean(idxs))
 
-    res[0].plot_results(labels)
-    plt.savefig(os.path.join(workdir, "example_simulatedR", "multiagent_test.png"))
-    print("Saved plot in {}".format(os.path.join(workdir, "example_simulatedR", "multiagent_test.png")))
-    plt.savefig(os.path.join(workdir, "example_simulatedR", "multiagent_test.pdf"))
+    path = os.path.join(workdir, "example_simulatedR", "multiagent_test_plot.pdf")
+
+
+
+    plot_results(res[0], path, labels)
+
+
+
 
 
 

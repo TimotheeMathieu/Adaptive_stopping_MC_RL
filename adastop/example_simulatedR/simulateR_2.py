@@ -1,13 +1,15 @@
-import sys
+# import sys
 import os
-sys.path.insert(0, "/home/rdellave/Adaptive_stopping_MC_RL/adastop")
-sys.path.insert(0, "/home/ashilova/Adaptive_stopping_MC_RL/adastop")
+# sys.path.insert(0, "/home/rdellave/Adaptive_stopping_MC_RL/adastop")
+# sys.path.insert(0, "/home/ashilova/Adaptive_stopping_MC_RL/adastop")
 # print(sys.path)
-from rlberry.agents import Agent
-from rlberry.envs import Model
-import rlberry.spaces as spaces
+# from rlberry.agents import Agent
+# from rlberry.envs import Model
+# import rlberry.spaces as spaces
+from adastop import MultipleAgentsComparator
 from compare_agents import MultipleAgentsComparator
-import time
+from utils import *
+# import time
 import numpy as np
 from tqdm import tqdm
 from joblib import Parallel, delayed
@@ -20,103 +22,103 @@ n = 1  # size of a group
 B = 10000
 
 
-class DummyEnv(Model):
-    def __init__(self, **kwargs):
-        Model.__init__(self, **kwargs)
-        self.n_arms = 2
-        self.action_space = spaces.Discrete(1)
+# class DummyEnv(Model):
+#     def __init__(self, **kwargs):
+#         Model.__init__(self, **kwargs)
+#         self.n_arms = 2
+#         self.action_space = spaces.Discrete(1)
 
-    def step(self, action):
-        pass
+#     def step(self, action):
+#         pass
 
-    def reset(self):
-        return 0
+#     def reset(self):
+#         return 0
 
-class RandomAgent(Agent):
-    def __init__(self, env, drift=0, std = 1, **kwargs):
-        Agent.__init__(self, env)
-        self.drift = drift
-        self.std = std
-        if "type" in kwargs.keys():
-            self.type = kwargs["type"]
-        else:
-            self.type = "normal"
-        self.kwargs = kwargs
+# class RandomAgent(Agent):
+#     def __init__(self, env, drift=0, std = 1, **kwargs):
+#         Agent.__init__(self, env)
+#         self.drift = drift
+#         self.std = std
+#         if "type" in kwargs.keys():
+#             self.type = kwargs["type"]
+#         else:
+#             self.type = "normal"
+#         self.kwargs = kwargs
 
-    def fit(self, budget: int, **kwargs):
-        pass
+#     def fit(self, budget: int, **kwargs):
+#         pass
 
-    def eval(self, n_simulations=1, **kwargs):
-        if self.type == "normal":
-            noise = self.rng.normal(size=n_simulations)*self.std
-        elif self.type == "student":
-            if "df" in self.kwargs.keys():
-                df = self.kwargs["df"]
-            else:
-                df = 2.
-            noise = self.rng.standard_t(df, size=n_simulations)
-        return self.drift + noise
-
-
-#TODO check that comparator is using n_simulations
-class MixtureGaussianAgent(Agent):
-    def __init__(self, env, means=[0], stds=[1], prob_mixture = [1], **kwargs):
-        Agent.__init__(self, env, **kwargs)
-        self.means = np.array(means)
-        self.prob_mixture = np.array(prob_mixture)
-        self.stds = np.array(stds)
-
-    def fit(self, budget: int, **kwargs):
-        pass
-
-    def eval(self, n_simulations=1, **kwargs):
-        idxs = self.rng.choice(np.arange(len(self.means)), size=n_simulations, p=self.prob_mixture)
-        ret = self.means[idxs] + self.rng.normal(size=n_simulations)*self.stds[idxs]
-        return ret
+#     def eval(self, n_simulations=1, **kwargs):
+#         if self.type == "normal":
+#             noise = self.rng.normal(size=n_simulations)*self.std
+#         elif self.type == "student":
+#             if "df" in self.kwargs.keys():
+#                 df = self.kwargs["df"]
+#             else:
+#                 df = 2.
+#             noise = self.rng.standard_t(df, size=n_simulations)
+#         return self.drift + noise
 
 
-def make_same_agents(diff_means, probas = [0.5, 0.5]):
-    manager1 = (
-        MixtureGaussianAgent,
-        dict(
-            train_env=(DummyEnv, {}),
-            init_kwargs={"means": [0, 0+diff_means], "stds": [0.1, 0.1], "prob_mixture": probas},
-            fit_budget=1,
-            agent_name="Agent1",
-        ),
-    )
-    manager2 = (
-        MixtureGaussianAgent,
-        dict(
-            train_env=(DummyEnv, {}),
-            init_kwargs={"means": [0, 0 + diff_means], "stds": [0.1, 0.1], "prob_mixture": probas},
-            fit_budget=1,
-            agent_name="Agent2",
-        ),
-    )
-    return manager1, manager2
+# #TODO check that comparator is using n_simulations
+# class MixtureGaussianAgent(Agent):
+#     def __init__(self, env, means=[0], stds=[1], prob_mixture = [1], **kwargs):
+#         Agent.__init__(self, env, **kwargs)
+#         self.means = np.array(means)
+#         self.prob_mixture = np.array(prob_mixture)
+#         self.stds = np.array(stds)
+
+#     def fit(self, budget: int, **kwargs):
+#         pass
+
+#     def eval(self, n_simulations=1, **kwargs):
+#         idxs = self.rng.choice(np.arange(len(self.means)), size=n_simulations, p=self.prob_mixture)
+#         ret = self.means[idxs] + self.rng.normal(size=n_simulations)*self.stds[idxs]
+#         return ret
 
 
-def make_different_agents(mus, probas = [0.5, 0.5]):
-    manager1 = (
-        MixtureGaussianAgent,
-        dict(
-            train_env=(DummyEnv, {}),
-            init_kwargs={"means": mus, "stds": [0.1, 0.1], "prob_mixture": probas},
-            fit_budget=1,
-            agent_name="Agent1",
-        ),
-    )
-    manager2 = (
-        RandomAgent,
-        dict(
-            train_env=(DummyEnv, {}),
-            init_kwargs={"drift": 0, "std": 0.1},
-            fit_budget=1,
-            agent_name="Agent2",
-        ),
-    )
-    return manager1, manager2
+# def make_same_agents(diff_means, probas = [0.5, 0.5]):
+#     manager1 = (
+#         MixtureGaussianAgent,
+#         dict(
+#             train_env=(DummyEnv, {}),
+#             init_kwargs={"means": [0, 0+diff_means], "stds": [0.1, 0.1], "prob_mixture": probas},
+#             fit_budget=1,
+#             agent_name="Agent1",
+#         ),
+#     )
+#     manager2 = (
+#         MixtureGaussianAgent,
+#         dict(
+#             train_env=(DummyEnv, {}),
+#             init_kwargs={"means": [0, 0 + diff_means], "stds": [0.1, 0.1], "prob_mixture": probas},
+#             fit_budget=1,
+#             agent_name="Agent2",
+#         ),
+#     )
+#     return manager1, manager2
+
+
+# def make_different_agents(mus, probas = [0.5, 0.5]):
+#     manager1 = (
+#         MixtureGaussianAgent,
+#         dict(
+#             train_env=(DummyEnv, {}),
+#             init_kwargs={"means": mus, "stds": [0.1, 0.1], "prob_mixture": probas},
+#             fit_budget=1,
+#             agent_name="Agent1",
+#         ),
+#     )
+#     manager2 = (
+#         RandomAgent,
+#         dict(
+#             train_env=(DummyEnv, {}),
+#             init_kwargs={"drift": 0, "std": 0.1},
+#             fit_budget=1,
+#             agent_name="Agent2",
+#         ),
+#     )
+#     return manager1, manager2
 
 def exp1(diff_means):
     mus = [0-diff_means/2, 0+diff_means/2]
@@ -180,17 +182,6 @@ if __name__ == "__main__":
     num_comb = len(mesh[0].reshape(-1))
 
 
-    #TODO finish this part
-    # nk= np.unique(n_iter*K_iter)
-    # mesh2 = np.meshgrid(seeds, nk, B_list, dmu_list)
-
-    # seed_iter2 = mesh2[0].reshape(-1)
-    # nk_iter = mesh[1].reshape(-1)
-    # B_iter2 = mesh[2].reshape(-1)
-    # dmu_iter2 = mesh[3].reshape(-1)
-
-    # num_comb2 = len(mesh2[0].reshape(-1))
-    #TODO
 
 
     def decision(**kwargs):
@@ -216,34 +207,10 @@ if __name__ == "__main__":
     def decision_par(i):
         return decision(seed=seed_iter[i], n=n_iter[i],K= K_iter[i], B=B_iter[i],dist_params= dist_params_iter[i], exp_name = EXP)
 
-    #TODO
-    # def non_adaptive_decision(**kwargs):
-    #     K = 1
-    #     os.makedirs("mgres", exist_ok=True)
-    #     filename = "mgres/result_nonada_K={}-n={}-B={}-dmu={}-seed={}.pickle".format(K, kwargs["nk"], kwargs["B"], kwargs["diff_means"], kwargs["seed"])
-    #     comparator = Two_AgentsComparator(kwargs["nk"], K, kwargs["B"],  alpha, seed=kwargs["seed"])
-    #     manager1, manager2 = make_same_agents(kwargs["diff_means"])
-    #     comparator.compare(manager2, manager1)
-    #     with open(filename, "wb") as f:
-    #         pickle.dump(kwargs, f)
-    #         pickle.dump(comparator.__dict__, f)
-        
-    #     return comparator.decision, comparator.n_iter / 2
 
-    # def non_adaptive_decision_par(i):
-    #     return non_adaptive_decision(seed=seed_iter2[i], nk=nk_iter[i], B=B_iter2[i], diff_means= dmu_iter2[i])
-    #TODO
 
     res = Parallel(n_jobs=-5, backend="multiprocessing")(delayed(decision_par)(i) for i in tqdm(range(num_comb)))
-    # decision_par(0)
+
     print("Done!")
-    # res2 = Parallel(n_jobs=6, backend="multiprocessing")(delayed(non_adaptive_decision_par)(i) for i in tqdm(range(num_comb2)))
-    # decision(0)
-    # idxs = np.array([i[0] for i in res]) == "accept"
-    # # idxs2 = np.array([i[0] for i in res2]) == "accept"
 
 
-    # #print("mean running time", np.mean(np.array(restime)[idxs]))
-    # print("proba to reject in adaptive", np.mean(1 - idxs))
-    # # print("proba to reject in non adaptive", np.mean(1 - idxs2))
-    # print("proba to accept", np.mean(idxs))
