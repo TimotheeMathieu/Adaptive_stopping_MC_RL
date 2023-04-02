@@ -60,7 +60,6 @@ class MultipleAgentsComparator:
         list of the agents' names.
     decision: dict
         decision of the tests for each comparison, keys are the comparisons and values are in {"equal", "larger", "smaller"}.
-
     n_iters: dict
         number of iterations (i.e. number of fits) used for each agent. Keys are the agents' names and values are ints.
     
@@ -69,7 +68,7 @@ class MultipleAgentsComparator:
     One can either use rlberry with self.compare, pre-computed scalars with self.compare_scalar or one can use
     the following code compatible with basically anything:
 
-    >>> comparator = Comparator(n=6, K=6, B=10000, alpha=0.05, beta=0.01)
+    >>> comparator = MultipleAgentsComparator(n=6, K=6, B=10000, alpha=0.05)
     >>>
     >>> eval_values = {agent.name: [] for agent in agents}
     >>>
@@ -108,6 +107,7 @@ class MultipleAgentsComparator:
         self.k = 0
         self.level_spent = 0
         self.power_spent = 0
+        self.seed = seed
         self.rng = np.random.RandomState(seed)
         self.rejected_decision = []
         self.joblib_backend = joblib_backend
@@ -132,7 +132,7 @@ class MultipleAgentsComparator:
                 permutations = itertools.combinations(np.arange(2*self.n), self.n)
                 self.normalization = n_permutations
             else:
-                permutations = [ np.random.permutation(2*self.n)[:self.n] for _ in range(self.B)]
+                permutations = [ self.rng.permutation(2*self.n)[:self.n] for _ in range(self.B)]
                 self.normalization = self.B
 
             # Compute the summ differences on the evaluations for each comparisions and for each permutation
@@ -159,7 +159,7 @@ class MultipleAgentsComparator:
                 self.normalization = n_permutations ** (k+1) # number of permutations
             else :
                 n_perm_to_add = len(self.sum_diffs)
-                permutations_k = [np.random.permutation(2*self.n)[:self.n] for _ in range(n_perm_to_add)]
+                permutations_k = [self.rng.permutation(2*self.n)[:self.n] for _ in range(n_perm_to_add)]
                 began_random_at = np.floor(np.log(self.B)/np.log(n_permutations))
                 self.normalization = n_permutations ** began_random_at # number of permutations
 
@@ -196,19 +196,19 @@ class MultipleAgentsComparator:
             print Steps
         Returns
         -------
-        decision: str in {'accept', 'reject', 'continue'}
+        decision: str in {"equal", "larger", "smaller", "continue"}
            decision of the test at this step.
         T: float
            Test statistic.
         bk: float
            thresholds.
         """
-        Z = [eval_values[agent] for agent in eval_values]
+        if self.agent_names is None:
+            self.agent_names = list(eval_values.keys())
+        Z = [eval_values[agent] for agent in self.agent_names]
         n_managers = len(Z)
-
+        
         if self.k == 0:
-            if self.agent_names is None:
-                self.agent_names = list(eval_values.keys())
             # initialization
             if self.comparisons is None:
                 self.comparisons = np.array(
@@ -310,7 +310,8 @@ class MultipleAgentsComparator:
                     self.decisions[str(self.current_comparisons[id_reject])] = "larger"
                 else:
                     self.decisions[str(self.current_comparisons[id_reject])] = "smaller"
-                print("reject")
+                if verbose:
+                    print("reject")
             elif Tmin < bk_inf:
                 id_accept = np.arange(len(current_decisions))[current_decisions == "continue"][imin]
                 current_decisions[id_accept] = "accept"
@@ -447,7 +448,6 @@ class MultipleAgentsComparator:
     def plot_results(self, agent_names=None, axes = None):
         """
         visual representation of results.
-
         Parameters
         ----------
         agent_names : list of str or None
@@ -496,7 +496,7 @@ class MultipleAgentsComparator:
             annot+= [annot_i]
         if axes is None:
             fig, (ax1, ax2) = plt.subplots(
-                2, 1, gridspec_kw={"height_ratios": [1, 2]}, figsize=(6,5)
+                2, 1, gridspec_kw={"height_ratios": [1, 1]}, figsize=(6,5)
             )
         else:
             (ax1, ax2) = axes

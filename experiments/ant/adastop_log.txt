@@ -1,0 +1,4 @@
+2023-04-02 16:30:27,304 | runner | INFO | [ddpg] Ran batch of 5 seeds in 11.78932s.
+2023-04-02 16:30:30,690 | runner | INFO | [trpo] Ran batch of 5 seeds in 15.17491s.
+2023-04-02 16:30:30,731 | runner | INFO | [sac] Ran batch of 5 seeds in 15.21714s.
+2023-04-02 16:30:33,077 | runner | INFO | [ppo] Ran batch of 5 seeds in 17.56289s.
