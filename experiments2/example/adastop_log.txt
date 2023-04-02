@@ -1,0 +1,20 @@
+2023-04-02 17:09:34,107 | runner | INFO | [agent2] Ran batch of 5 seeds in 0.76981s.
+2023-04-02 17:09:34,110 | runner | INFO | [agent1] Ran batch of 5 seeds in 0.77341s.
+2023-04-02 17:09:34,131 | runner | INFO | [batch=0] evaluation agent1 = 0.469880 +/- 0.198657
+2023-04-02 17:09:34,131 | runner | INFO | [batch=0] evaluation agent2 = 0.752056 +/- 0.205408
+2023-04-02 17:09:34,131 | runner | INFO | [batch=0] comparison <agent1, agent2> = continue
+2023-04-02 17:09:34,903 | runner | INFO | [agent1] Ran batch of 5 seeds in 0.77047s.
+2023-04-02 17:09:34,906 | runner | INFO | [agent2] Ran batch of 5 seeds in 0.76512s.
+2023-04-02 17:09:34,923 | runner | INFO | [batch=1] evaluation agent1 = 0.503365 +/- 0.214992
+2023-04-02 17:09:34,923 | runner | INFO | [batch=1] evaluation agent2 = 0.791117 +/- 0.223104
+2023-04-02 17:09:34,923 | runner | INFO | [batch=1] comparison <agent1, agent2> = continue
+2023-04-02 17:09:35,719 | runner | INFO | [agent2] Ran batch of 5 seeds in 0.79186s.
+2023-04-02 17:09:35,721 | runner | INFO | [agent1] Ran batch of 5 seeds in 0.79639s.
+2023-04-02 17:09:35,737 | runner | INFO | [batch=2] evaluation agent1 = 0.479290 +/- 0.252188
+2023-04-02 17:09:35,737 | runner | INFO | [batch=2] evaluation agent2 = 0.663545 +/- 0.264230
+2023-04-02 17:09:35,737 | runner | INFO | [batch=2] comparison <agent1, agent2> = continue
+2023-04-02 17:09:36,531 | runner | INFO | [agent1] Ran batch of 5 seeds in 0.79229s.
+2023-04-02 17:09:36,534 | runner | INFO | [agent2] Ran batch of 5 seeds in 0.79589s.
+2023-04-02 17:09:36,549 | runner | INFO | [batch=3] evaluation agent1 = 0.434386 +/- 0.286105
+2023-04-02 17:09:36,549 | runner | INFO | [batch=3] evaluation agent2 = 0.705057 +/- 0.271954
+2023-04-02 17:09:36,549 | runner | INFO | [batch=3] comparison <agent1, agent2> = smaller

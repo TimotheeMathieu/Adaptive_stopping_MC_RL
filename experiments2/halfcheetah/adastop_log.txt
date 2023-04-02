@@ -1,0 +1,79 @@
+2023-03-10 15:49:51,497 | runner | INFO | [PPO] Ran train batch of 5 seeds in 10765.02940s.
+2023-03-10 15:51:26,538 | runner | INFO | [TRPO] Ran train batch of 5 seeds in 10860.06930s.
+2023-03-10 19:33:16,523 | runner | INFO | [DDPG] Ran train batch of 5 seeds in 24170.05474s.
+2023-03-11 01:12:24,095 | runner | INFO | [SAC] Ran train batch of 5 seeds in 44517.62729s.
+2023-03-11 01:12:25,814 | runner | INFO | [batch=0] evaluation PPO = 2513.796997 +/- 786.896869
+2023-03-11 01:12:25,815 | runner | INFO | [batch=0] evaluation SAC = 10161.371289 +/- 1418.519808
+2023-03-11 01:12:25,815 | runner | INFO | [batch=0] evaluation DDPG = 4073.081274 +/- 2271.725205
+2023-03-11 01:12:25,815 | runner | INFO | [batch=0] evaluation TRPO = 3874.319507 +/- 1286.604063
+2023-03-11 01:12:25,815 | runner | INFO | [batch=0] comparison <PPO, SAC> = smaller
+2023-03-11 01:12:25,815 | runner | INFO | [batch=0] comparison <PPO, DDPG> = continue
+2023-03-11 01:12:25,815 | runner | INFO | [batch=0] comparison <PPO, TRPO> = continue
+2023-03-11 01:12:25,815 | runner | INFO | [batch=0] comparison <SAC, DDPG> = larger
+2023-03-11 01:12:25,815 | runner | INFO | [batch=0] comparison <SAC, TRPO> = larger
+2023-03-11 01:12:25,815 | runner | INFO | [batch=0] comparison <DDPG, TRPO> = continue
+2023-03-11 03:51:21,734 | runner | INFO | [PPO] Ran train batch of 5 seeds in 9535.91529s.
+2023-03-11 03:51:58,004 | runner | INFO | [TRPO] Ran train batch of 5 seeds in 9572.18463s.
+2023-03-11 05:23:50,850 | runner | INFO | [DDPG] Ran train batch of 5 seeds in 15085.03151s.
+2023-03-11 05:23:51,389 | runner | INFO | [batch=1] evaluation PPO = 2528.186902 +/- 870.414588
+2023-03-11 05:23:51,389 | runner | INFO | [batch=1] evaluation SAC = 10161.371289 +/- 1418.519808
+2023-03-11 05:23:51,389 | runner | INFO | [batch=1] evaluation DDPG = 4291.514429 +/- 2179.432431
+2023-03-11 05:23:51,389 | runner | INFO | [batch=1] evaluation TRPO = 3720.093701 +/- 1260.307680
+2023-03-11 05:23:51,389 | runner | INFO | [batch=1] comparison <PPO, SAC> = smaller
+2023-03-11 05:23:51,389 | runner | INFO | [batch=1] comparison <PPO, DDPG> = continue
+2023-03-11 05:23:51,389 | runner | INFO | [batch=1] comparison <PPO, TRPO> = continue
+2023-03-11 05:23:51,389 | runner | INFO | [batch=1] comparison <SAC, DDPG> = larger
+2023-03-11 05:23:51,389 | runner | INFO | [batch=1] comparison <SAC, TRPO> = larger
+2023-03-11 05:23:51,389 | runner | INFO | [batch=1] comparison <DDPG, TRPO> = continue
+2023-03-11 08:03:20,308 | runner | INFO | [TRPO] Ran train batch of 5 seeds in 9568.91576s.
+2023-03-11 08:04:28,500 | runner | INFO | [PPO] Ran train batch of 5 seeds in 9637.10862s.
+2023-03-11 09:37:07,484 | runner | INFO | [DDPG] Ran train batch of 5 seeds in 15196.09185s.
+2023-03-11 09:37:08,025 | runner | INFO | [batch=2] evaluation PPO = 2486.292448 +/- 927.422482
+2023-03-11 09:37:08,026 | runner | INFO | [batch=2] evaluation SAC = 10161.371289 +/- 1418.519808
+2023-03-11 09:37:08,026 | runner | INFO | [batch=2] evaluation DDPG = 4958.804785 +/- 2366.827093
+2023-03-11 09:37:08,026 | runner | INFO | [batch=2] evaluation TRPO = 4014.059017 +/- 1139.292799
+2023-03-11 09:37:08,026 | runner | INFO | [batch=2] comparison <PPO, SAC> = smaller
+2023-03-11 09:37:08,026 | runner | INFO | [batch=2] comparison <PPO, DDPG> = smaller
+2023-03-11 09:37:08,026 | runner | INFO | [batch=2] comparison <PPO, TRPO> = continue
+2023-03-11 09:37:08,026 | runner | INFO | [batch=2] comparison <SAC, DDPG> = larger
+2023-03-11 09:37:08,026 | runner | INFO | [batch=2] comparison <SAC, TRPO> = larger
+2023-03-11 09:37:08,026 | runner | INFO | [batch=2] comparison <DDPG, TRPO> = continue
+2023-03-11 12:17:09,044 | runner | INFO | [PPO] Ran train batch of 5 seeds in 9601.01554s.
+2023-03-11 12:17:23,332 | runner | INFO | [TRPO] Ran train batch of 5 seeds in 9615.30329s.
+2023-03-11 13:45:18,303 | runner | INFO | [DDPG] Ran train batch of 5 seeds in 14890.27452s.
+2023-03-11 13:45:18,744 | runner | INFO | [batch=3] evaluation PPO = 2584.762616 +/- 963.348089
+2023-03-11 13:45:18,745 | runner | INFO | [batch=3] evaluation SAC = 10161.371289 +/- 1418.519808
+2023-03-11 13:45:18,745 | runner | INFO | [batch=3] evaluation DDPG = 4999.854590 +/- 2429.419742
+2023-03-11 13:45:18,745 | runner | INFO | [batch=3] evaluation TRPO = 3822.499432 +/- 1141.617677
+2023-03-11 13:45:18,745 | runner | INFO | [batch=3] comparison <PPO, SAC> = smaller
+2023-03-11 13:45:18,745 | runner | INFO | [batch=3] comparison <PPO, DDPG> = smaller
+2023-03-11 13:45:18,745 | runner | INFO | [batch=3] comparison <PPO, TRPO> = continue
+2023-03-11 13:45:18,745 | runner | INFO | [batch=3] comparison <SAC, DDPG> = larger
+2023-03-11 13:45:18,745 | runner | INFO | [batch=3] comparison <SAC, TRPO> = larger
+2023-03-11 13:45:18,745 | runner | INFO | [batch=3] comparison <DDPG, TRPO> = continue
+2023-03-11 16:24:51,991 | runner | INFO | [PPO] Ran train batch of 5 seeds in 9573.24354s.
+2023-03-11 16:25:54,207 | runner | INFO | [TRPO] Ran train batch of 5 seeds in 9635.45906s.
+2023-03-11 17:52:29,560 | runner | INFO | [DDPG] Ran train batch of 5 seeds in 14830.81211s.
+2023-03-11 17:52:29,983 | runner | INFO | [batch=4] evaluation PPO = 2489.430269 +/- 943.377959
+2023-03-11 17:52:29,983 | runner | INFO | [batch=4] evaluation SAC = 10161.371289 +/- 1418.519808
+2023-03-11 17:52:29,983 | runner | INFO | [batch=4] evaluation DDPG = 5153.247383 +/- 2313.153964
+2023-03-11 17:52:29,983 | runner | INFO | [batch=4] evaluation TRPO = 3676.492070 +/- 1183.159859
+2023-03-11 17:52:29,984 | runner | INFO | [batch=4] comparison <PPO, SAC> = smaller
+2023-03-11 17:52:29,984 | runner | INFO | [batch=4] comparison <PPO, DDPG> = smaller
+2023-03-11 17:52:29,984 | runner | INFO | [batch=4] comparison <PPO, TRPO> = continue
+2023-03-11 17:52:29,984 | runner | INFO | [batch=4] comparison <SAC, DDPG> = larger
+2023-03-11 17:52:29,984 | runner | INFO | [batch=4] comparison <SAC, TRPO> = larger
+2023-03-11 17:52:29,984 | runner | INFO | [batch=4] comparison <DDPG, TRPO> = continue
+2023-03-11 20:32:19,533 | runner | INFO | [TRPO] Ran train batch of 5 seeds in 9589.54644s.
+2023-03-11 20:33:10,000 | runner | INFO | [PPO] Ran train batch of 5 seeds in 9640.01362s.
+2023-03-11 22:09:56,923 | runner | INFO | [DDPG] Ran train batch of 5 seeds in 15446.93682s.
+2023-03-11 22:09:57,349 | runner | INFO | [batch=5] evaluation PPO = 2478.799670 +/- 906.452107
+2023-03-11 22:09:57,349 | runner | INFO | [batch=5] evaluation SAC = 10161.371289 +/- 1418.519808
+2023-03-11 22:09:57,349 | runner | INFO | [batch=5] evaluation DDPG = 5049.901143 +/- 2357.784602
+2023-03-11 22:09:57,349 | runner | INFO | [batch=5] evaluation TRPO = 3599.952885 +/- 1223.160245
+2023-03-11 22:09:57,349 | runner | INFO | [batch=5] comparison <PPO, SAC> = smaller
+2023-03-11 22:09:57,349 | runner | INFO | [batch=5] comparison <PPO, DDPG> = smaller
+2023-03-11 22:09:57,349 | runner | INFO | [batch=5] comparison <PPO, TRPO> = smaller
+2023-03-11 22:09:57,349 | runner | INFO | [batch=5] comparison <SAC, DDPG> = larger
+2023-03-11 22:09:57,349 | runner | INFO | [batch=5] comparison <SAC, TRPO> = larger
+2023-03-11 22:09:57,349 | runner | INFO | [batch=5] comparison <DDPG, TRPO> = larger
