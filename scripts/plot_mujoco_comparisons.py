@@ -61,8 +61,8 @@ def get_comparator(results_dir):
         path = os.path.join(results_dir, f"{env}{k+1}.csv")
         if not os.path.exists(path):
             break
-        df_k = pd.read_csv(path)
-        aux = {a: list(df_k[a]) for a in df_k.columns if a in ALGORITHMS}
+        df_k = pd.read_csv(path, index_col=0)
+        aux = {a: list(df_k[a]) for a in df_k.columns}
 
         # update partial evaluations
         for a in aux:
