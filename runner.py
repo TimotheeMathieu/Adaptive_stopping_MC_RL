@@ -116,9 +116,9 @@ if __name__ == "__main__":
     parser.add_argument('--B', '-B', type=int, default=10000,
         help='Number of random permutations to approximate the permutation distribution.')
     parser.add_argument('--alpha', '-a', type=float, default=0.05,
-        help='Significance level.')
+        help='Type I error.')
     parser.add_argument('--beta', '-b', type=float, default=0.0,
-        help='Power spent on early acceptance.')
+        help='Early accept parameter.')
     parser.add_argument('--comparisons', '-c', type=str, nargs="+", default=None,
         help='Comparisons to perform.')
     parser.add_argument('--seed', '-s', type=int, default=None,
