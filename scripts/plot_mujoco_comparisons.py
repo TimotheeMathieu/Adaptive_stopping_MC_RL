@@ -46,7 +46,7 @@ CONFIG = dict(
 
 def get_comparator(results_dir):
     n, K = CONFIG["n"], CONFIG["K"]
-    env = os.path.basename(results_dir)
+    env = os.path.basename(os.path.normpath(results_dir))
 
     # Seed
     np.random.seed(CONFIG["seed"])

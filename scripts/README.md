@@ -4,16 +4,18 @@
 
 The script `plot_mujoco_comparisons.py` plots Adastop comparisons for the MuJoCo experiments.
 
-This script assumes its given the path to a directory `parent_dir` containing the evaluations in `.npy` format, as follows:
-
+This script assumes its given the path to a directory `parent_dir` containing a comparison directories for each environment:
 ```
 parent_dir
-- ant.npy
-- halfcheetah.npy
-- humanoid.npy
-- humanoid.npy
-- walker.npy
+- ant
+  - ant1.csv
+  - ...
+- halfcheetah
+  - halfcheetah1.csv
+  - ...
+...
 ```
+The directory `evaluations` in this repository contains all the information necessary to reproduce the AdaStop decision plots.
 
 Additionally, there are more options to control the elements of the plot:
 
@@ -26,3 +28,5 @@ options:
   --draw-table    Whether to draw the `n_iter` table above decision table.
   --draw-boxplot  Whether to draw the boxplot below decision table.
 ```
+
+## MuJoCo Sample Efficiency Plots

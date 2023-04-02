@@ -46,7 +46,7 @@ dir
   ...
 ```
 That is, it assumes that inside `dir` there is another directory called `agents` containing the bash scripts for each agents.
-An agent bash script should accept the random seed as it first positional argument, and print the final evaluation to `stdout`.
+An agent bash script should accept the random seed as it first positional argument, and print the final evaluation to `stdout` preceeded by `AdaStop Evaluation: `.
 The directory `experiments/example/` is an example of the directory organization. Let's take a look at `experiments/example/agent1.sh`:
 ```
 #!/bin/bash
