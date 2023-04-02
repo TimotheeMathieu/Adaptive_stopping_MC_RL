@@ -314,6 +314,44 @@ $$ \P\left(\exists j \in \bf{I}:\quad  \text{reject }H_j\right)\le\alpha.$$
 % \newpage
 \section{Simulated experiments}
 
+\subsection{Toy examples}
+
+To start with, let us demonstrate the performance of our algorithm on several toy examples.
+ The first one compares one gaussian distribution $\mathcal{N}(0, 0.1)$ with the mixture of two gaussians $\left(\mathcal{N}(-\Delta/2 , 0.1), \mathcal{N}(\Delta/2, 0.1) \right)$. 
+ The second one compares gaussian $\mathcal{N}(0, 0.1)$ with the mixture of gaussians $\left(\mathcal{N}(0 , 0.1), \mathcal{N}(\Delta, 0.1) \right)$. Those two comparisons are presented in Figure~\ref{fig.exp1-2}.
+ The last one compares multiple different distributions such as $\mathcal{N}(0, 0.1)$, $\mathcal{N}(0, 0.1)$, mixture $\left(\mathcal{N}(-1 , 0.1), \mathcal{N}(1, 0.1) \right)$, mixture $\left(\mathcal{N}(-1 , 0.1), \mathcal{N}(1, 0.1) \right)$, mixture $\left(\mathcal{N}(-0.2 , 0.1), \mathcal{N}(0.2, 0.1) \right)$, Student's $t$ distribution with $\nu = 3$ and a mean at $0$, mixture $\left(\mathcal{N}(0 , 0.1), \mathcal{N}(8, 0.1) \right)$, mixture $\left(\mathcal{N}(0 , 0.1), \mathcal{N}(8, 0.1) \right)$, mixture of Student's $t$ distributions with $\nu = 3$ and means at $(0, 8)$ and one Student's $t$ distribution with $\nu = 3$ and a mean at $8$ (in Figure~\ref{fig.exp3} those distributions are denoted as N, *N, MG1, *MG1, MG2, tS1, MG3, *MG3, MtS and tS2 respectively). For all threes use cases, we execute Adaptive Stopping algorithm with $K= 5$, $N = 5$ and $\alpha = 0.05$. We also limit the maximum number of permutations to $B = 10 \ 000$.
+
+ In Figure~\ref{fig.exp1-2}, we plot the rate of rejection of the null hypothesis that states that compared distributions are the same. By varying $\Delta$ from $0$ to $1$, we observe the evolution of the power of tests. The first comparison shows that power of the test stays around $0.05$ level for all $\Delta$. Indeed, even though the distributions in the comparison are different their means remain the same. If the null hypothesis states that the means are the same, then Adaptive Stopping algorithm will return the correct answer with type I error not larger than $0.09$ for $\alpha=0.05$. 
+ %Moreover, the larger $\Delta$ is then the more stable the test.
+ \todo[inline]{AS: maybe cite some lemma here to give intuition behind this empirical result.}
+ In contrast, the second comparison demonstrates the increasing trend, reaching the level close to $1$ after $\Delta = 0.6$, which corresponds to the case when two modes are separated by $3$ standard deviations from both sides.
+ To obtain error bars, we have executed each comparison $M=5\ 000$ number of times and we plot confidence intervals corresponding to $3 \sigma / \sqrt{M}$ (more than $99\%$ of confidence) where $\sigma$ is a standard deviation of the test decision.
+
+
+ \begin{figure}[h]
+  \begin{center}
+    \includegraphics[width=0.8\textwidth]{fig/gaussianVSmg_exp1-2.pdf}
+    \caption{Rejection frequency of null hypothesis.}
+    \label{fig.exp1-2}
+  \end{center}
+\end{figure}
+
+ Finally, we also show the performance of AdaStop in case of multiple agent comparison. Figure~\ref{fig.exp3} shows the output of one instance of AdaStop. The table summarizes the decisions of the algorithm for every pair of comparisons, and box plots below reflects the form of distributions in the comparison with green triangle indicating the mean and orange line the median. From this figure, we can see that almost all agents are grouped in clusters of distributions with equal means, except for *MG3 that is assigned to two different groups at the same time. Interestingly, these clusters except for *MG3 are correctly formed. Moreover, similarly to two previous cases, we have executed AdaStop $M=5 \ 000$ times to measure FWE of the test. The empirical measurements are $0.0178$ of rejections of at least one correct hypothesis when comparing distributions and $0.0472$ of rejections when comparing means, which are both below $0.05$. Thus AdaStop can be efficiently used to compare performances of several agents simultaneously.
+
+
+
+
+
+\begin{figure}[h]
+  \begin{center}
+    \includegraphics[width=0.8\textwidth]{fig/multiagent_test.pdf}
+    \caption{Multiagent test}
+    \label{fig.exp3}
+  \end{center}
+\end{figure}
+
+
+
 \section{Comparison with non-adaptive approaches}
 
 \appendix
