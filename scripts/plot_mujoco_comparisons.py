@@ -202,7 +202,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     envs = ["ant", "halfcheetah", "hopper", "humanoid", "walker"]
-    
 
     n_rows = 4 if args.draw_boxplot else 2
     n_cols = 3
