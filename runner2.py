@@ -73,20 +73,18 @@ def save_evals(dirpath, k, evals_k):
 
 
 def run_batch(agent, seeds, script_path):
-    n_jobs = config.get('n_jobs', 1)
-
     cmds = [
         f'bash -c "{copy.copy(script_path)} {seed}"'
         for seed in seeds
     ]
 
     start = time.time()
-    outputs = Parallel(n_jobs=n_jobs, prefer="processes")(
+    outputs = Parallel(prefer="processes")(
         delayed(subprocess.run)(c, shell=True, capture_output=True)
         for c in cmds)
     duration = time.time() - start
 
-    logger.info(f"[{config['name']}] Ran batch of {len(seeds)} seeds in {duration:.5f}s.")
+    logger.info(f"[{agent}] Ran batch of {len(seeds)} seeds in {duration:.5f}s.")
     return agent, outputs
 
 
@@ -174,6 +172,7 @@ if __name__ == "__main__":
         comparator = init(dirpath, config)
 
         data = {a: np.array([], dtype=np.float32) for a in agent_names}
+        comparator.agent_names = agent_names
     else:
         print('Loading existing comparison.')
         comparator, config = load(dirpath)
@@ -186,7 +185,8 @@ if __name__ == "__main__":
     # Run comparison
     seeds = rng.integers(0, 2**32, size=(args.nb_fits * args.K, nb_agents))
 
-    for k in range(config['K']):
+    start_k = max([len(v) for v in data.values()]) // args.nb_fits
+    for k in range(start_k, config['K']):
         print(f'Step {k}:')
 
         # Run training
