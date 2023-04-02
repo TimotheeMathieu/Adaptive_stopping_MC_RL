@@ -9,6 +9,8 @@ import pickle
 import pandas as pd
 
 
+from rlberry.utils.logging import set_level
+set_level('ERROR')
 
 def exp1(diff_means):
     mus = [0-diff_means/2, 0+diff_means/2]
@@ -50,7 +52,7 @@ if __name__ == "__main__":
     p_vals = []
 
     M=5000
-    EXP = "exp1"
+    EXP = "exp2"
 
     seeds = np.arange(M)
     K_list = np.array([5])
@@ -75,7 +77,7 @@ if __name__ == "__main__":
         exp_name = kwargs["exp_name"]
         os.makedirs(os.path.join("mgres_alt", exp_name), exist_ok=True)
         filename = os.path.join("mgres_alt", exp_name, "result_K={}-n={}-B={}-dist_params={}-seed={}.pickle".format(kwargs["K"], kwargs["n"], kwargs["B"], kwargs["dist_params"], kwargs["seed"]))
-        comparator = MultipleAgentsComparator(n = kwargs["n"], K= kwargs["K"],B= kwargs["B"], alpha= alpha, beta=0, seed=kwargs["seed"])
+        comparator = MultipleAgentsComparator(n = kwargs["n"], K= kwargs["K"],B= kwargs["B"], alpha= alpha, beta=0, seed=kwargs["seed"], n_evaluations=1)
         if exp_name == "exp1":
             manager1, manager2 = exp1(kwargs["dist_params"])
         elif exp_name == "exp2":
