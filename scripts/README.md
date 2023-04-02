@@ -4,7 +4,7 @@
 
 The script `plot_mujoco_comparisons.py` plots Adastop comparisons for the MuJoCo experiments.
 
-This script assumes its given the path to a directory `parent_dir` containing the evaluations in `.npz` format, as follows:
+This script assumes its given the path to a directory `parent_dir` containing the evaluations in `.npy` format, as follows:
 
 ```
 parent_dir
