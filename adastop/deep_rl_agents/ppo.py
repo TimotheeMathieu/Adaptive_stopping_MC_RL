@@ -143,12 +143,12 @@ if __name__ == "__main__":
     )
 
     # initial evaluation
-
-    intial_evaluation = agent.agent_handlers[0].eval(
+    eval_kwargs = dict(
         eval_horizon=eval_horizon,
         n_simulations=n_eval_episodes,
         gamma=1.0,
     )
+    intial_evaluation = agent.eval_agents(1, eval_kwargs, 0, False)
     
     # train
     agent.fit(fit_budget)
