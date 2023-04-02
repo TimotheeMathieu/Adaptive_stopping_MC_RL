@@ -30,3 +30,11 @@ options:
 ```
 
 ## MuJoCo Sample Efficiency Plots
+
+The script `plot_mujoco_sample_efficiency.py` plots sample efficiency plots for the MuJoCo experiments.
+
+This script assumes its given the path to a directory `parent_dir` containing a comparison directories for each environment, as before.
+Additionally, it requires that each environment directory contains a `aggregate_evals.csv` file, which contains the aggregated results for each algorithm
+in different time steps.
+
+The aggregate scores are computed from logs if they are not already present. For this, the script requires a `results` directory in each environment directory, containing the logs for each algorithm. For the main experiments, a version of the `experiments` directory containing all the logs in available in the supplementary material.
