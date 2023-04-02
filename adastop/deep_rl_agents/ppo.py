@@ -141,6 +141,13 @@ if __name__ == "__main__":
         seed=args.seed,
         output_dir=output_dir_name # one folder for each agent
     )
+
+    # initial evaluation
+    intial_evaluation = agent.eval(
+        eval_horizon=eval_horizon,
+        n_simulations=n_eval_episodes,
+        gamma=1.0,
+    )
     
     # train
     agent.fit(fit_budget)
@@ -150,8 +157,8 @@ if __name__ == "__main__":
     data.to_csv(os.path.join(output_dir_name, "data.csv"))
 
     evals = data[data['tag'] == 'evaluation']
-    timesteps = evals['global_step'].to_numpy()
-    evaluations = evals['value'].to_numpy()
+    timesteps = np.hstack([0, evals['global_step'].to_numpy()])
+    evaluations = np.hstack([intial_evaluation, evals['value'].to_numpy()])
     np.savez(os.path.join(output_dir_name, "evaluations.npz"), timesteps=timesteps, evaluations=evaluations)
 
     # save agent and parameters

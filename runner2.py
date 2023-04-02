@@ -190,7 +190,6 @@ if __name__ == "__main__":
         print(f'Step {k}:')
 
         # Run training
-        # If the agent is still in one of the comparison considered, then run another batch of fits
         print('  training agents...', end=' ')
 
         if k == 0:
