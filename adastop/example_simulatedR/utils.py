@@ -162,31 +162,3 @@ def create_agents(agent_name, agent_label, **kwargs):
 
     return manager
 
-# def exp1(diff_means):
-#     mus = [0-diff_means/2, 0+diff_means/2]
-#     return make_different_agents(mus = mus)
-
-# def exp2(diff_means):
-#     mus = [0, diff_means]
-#     return make_different_agents(mus = mus)
-
-# def exp3(df):
-#     manager1 = (
-#         RandomAgent,
-#         dict(
-#             train_env=(DummyEnv, {}),
-#             init_kwargs={"drift": 0, "df": df, "type": "student"},
-#             fit_budget=1,
-#             agent_name="Agent1",
-#         ),
-#     )
-#     manager2 = (
-#         RandomAgent,
-#         dict(
-#             train_env=(DummyEnv, {}),
-#             init_kwargs={"drift": 0, "std": 1.},
-#             fit_budget=1,
-#             agent_name="Agent2",
-#         ),
-#     )
-#     return manager1, manager2

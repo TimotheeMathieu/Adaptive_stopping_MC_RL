@@ -13,34 +13,10 @@ workdir = os.path.join(home_folder,"Adaptive_stopping_MC_RL","adastop", "example
 from adastop import MultipleAgentsComparator
 
 
-# to read csv for old version of adastop
-def powers_case2(fname1, fname2):
 
-    decs_df = pd.read_csv(fname1, index_col = 0)
-    n_iter_df  = pd.read_csv(fname2, index_col = 0)
-
-
-    power = {}
-    power_std = {}
-    power_confidence_interval = {}
-    n_iter_avg = {}
-    sqrt_n = np.sqrt(len(decs_df))
-    print(sqrt_n)
-
-    for dmu in decs_df.columns:
-        p = np.array(decs_df[dmu]) == "reject"
-        power[dmu] = np.mean(p)
-        power_std[dmu] = np.std(p)
-        power_confidence_interval[dmu] = np.std(p)/sqrt_n*3
-    for k in n_iter_df.columns:
-        n_iter_avg[k] = np.mean(n_iter_df[k])
-
-    powers, power_stds, power_confidence_intervals = dict(sorted(power.items())),  dict(sorted(power_std.items())), dict(sorted(power_confidence_interval.items())) 
-
-    return powers, power_stds, power_confidence_intervals
 
 # to read csv for new version of adastop
-def powers_case1(fname1, fname2):
+def powers_case(fname1, fname2):
 
     decs_df = pd.read_csv(fname1, index_col = 0)
     n_iter_df  = pd.read_csv(fname2, index_col = 0)
@@ -117,11 +93,11 @@ if __name__ == "__main__":
     fname = os.path.join(workdir, "Case12_plot.pdf")
 
     # #for the plots from paper
-    # powers, power_stds, power_confidence_intervals = powers_case2("exp2_5000_decs.csv", "exp2_5000_niter.csv")
-    # powers2, power_stds2, power_confidence_intervals2 = powers_case1("exp1_5000_decs.csv", "exp1_5000_niter.csv")
+    powers, power_stds, power_confidence_intervals = powers_case("exp2_5000_decs.csv", "exp2_5000_niter.csv")
+    powers2, power_stds2, power_confidence_intervals2 = powers_case("exp1_5000_decs.csv", "exp1_5000_niter.csv")
 
-    powers2, power_stds2, power_confidence_intervals2 = powers_case1("exp1_10_decs.csv", "exp1_10_niter.csv")
-    powers, power_stds, power_confidence_intervals = powers_case1("exp2_10_decs.csv", "exp2_10_niter.csv")
+    # powers2, power_stds2, power_confidence_intervals2 = powers_case1("exp1_10_decs.csv", "exp1_10_niter.csv")
+    # powers, power_stds, power_confidence_intervals = powers_case1("exp2_10_decs.csv", "exp2_10_niter.csv")
 
 
     p = {"Case 2": powers, "Case 1": powers2,}

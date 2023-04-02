@@ -50,7 +50,7 @@ if __name__ == "__main__":
     p_vals = []
 
     M=5000
-    EXP = "exp2"
+    EXP = "exp1"
 
     seeds = np.arange(M)
     K_list = np.array([5])
