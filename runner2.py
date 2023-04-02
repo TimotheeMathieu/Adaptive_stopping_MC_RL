@@ -66,7 +66,8 @@ def get_agents(dirpath):
 
 
 def save_evals(dirpath, k, evals_k):
-    path = os.path.join(dirpath, f"{os.path.basename(dirpath)}{k+1}.csv")
+    name = os.path.basename(os.path.normpath(dirpath))
+    path = os.path.join(dirpath, f"{name}{k+1}.csv")
     df_k = {a: pd.Series(e) for a, e in evals_k.items()}
     df_k = pd.DataFrame(df_k)
     df_k.to_csv(path)
