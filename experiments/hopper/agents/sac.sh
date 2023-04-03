@@ -1,0 +1,4 @@
+#!/bin/bash
+echo "Seed: $1"
+source activate as_sb
+python ~/Adaptive_stopping_MC_RL/adastop/deep_rl_agents/sac.py -e Hopper-v3 -s $1
