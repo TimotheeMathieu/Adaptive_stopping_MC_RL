@@ -310,7 +310,8 @@ class MultipleAgentsComparator:
                     self.decisions[str(self.current_comparisons[id_reject])] = "larger"
                 else:
                     self.decisions[str(self.current_comparisons[id_reject])] = "smaller"
-                print("reject")
+                if verbose:
+                    print("reject")
             elif Tmin < bk_inf:
                 id_accept = np.arange(len(current_decisions))[current_decisions == "continue"][imin]
                 current_decisions[id_accept] = "accept"
@@ -371,7 +372,7 @@ class MultipleAgentsComparator:
 
         return self.decisions
 
-    def compare_scalars(self, scalars, agent_names=None):
+    def compare_scalars(self, scalars, agent_names=None, verbose=False):
         """
         Compare the managers for each of the comparisons in `comparisons`.
 
@@ -386,7 +387,7 @@ class MultipleAgentsComparator:
 
         for k in range(self.K):
             Z = self._get_z_scalars(scalars, Z, k)
-            self.partial_compare({self.agent_names[i] : Z[i] for i in range(len(scalars))}, k)
+            self.partial_compare({self.agent_names[i] : Z[i] for i in range(len(scalars))}, verbose=verbose)
             decisions = np.array(list(self.decisions.values()))
             if np.all([d in ["smaller", "larger", "equal"] for d in decisions]):
                 break
