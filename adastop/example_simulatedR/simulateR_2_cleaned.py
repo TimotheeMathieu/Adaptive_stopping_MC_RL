@@ -52,7 +52,7 @@ if __name__ == "__main__":
     p_vals = []
 
     M=5000
-    EXP = "exp2"
+    EXP = "exp1"
 
     seeds = np.arange(M)
     K_list = np.array([5])
@@ -98,7 +98,7 @@ if __name__ == "__main__":
 
 
 
-    res = Parallel(n_jobs=-5, backend="multiprocessing")(delayed(decision_par)(i) for i in tqdm(range(num_comb)))
+    res = Parallel(n_jobs=-1, backend="multiprocessing")(delayed(decision_par)(i) for i in tqdm(range(num_comb)))
 
     n_iters = {}
     decs = {}
