@@ -93,8 +93,8 @@ if __name__ == "__main__":
     fname = os.path.join(workdir, "Case12_plot.pdf")
 
     # #for the plots from paper
-    powers, power_stds, power_confidence_intervals = powers_case("exp2_5000_decs.csv", "exp2_5000_niter.csv")
-    powers2, power_stds2, power_confidence_intervals2 = powers_case("exp1_5000_decs.csv", "exp1_5000_niter.csv")
+    powers, power_stds, power_confidence_intervals = powers_case("exp2_5000_decs.csv", "exp2_5000_niter.csv") #Case 2 data
+    powers2, power_stds2, power_confidence_intervals2 = powers_case("exp1_5000_decs.csv", "exp1_5000_niter.csv") #Case 1 data
 
     # powers2, power_stds2, power_confidence_intervals2 = powers_case1("exp1_10_decs.csv", "exp1_10_niter.csv")
     # powers, power_stds, power_confidence_intervals = powers_case1("exp2_10_decs.csv", "exp2_10_niter.csv")
