@@ -43,7 +43,13 @@ def exp3(df):
 
 
 if __name__ == "__main__":
+    
+    # change the next two lines if you want to change an experiment or change the number of calls of AdaStop (M)
+    M=5000
+    EXP = "exp1"
 
+    
+    
     SAVE = False
     alpha = 0.05
 
@@ -51,8 +57,8 @@ if __name__ == "__main__":
     restime = []
     p_vals = []
 
-    M=5000
-    EXP = "exp1"
+    
+
 
     seeds = np.arange(M)
     K_list = np.array([5])
