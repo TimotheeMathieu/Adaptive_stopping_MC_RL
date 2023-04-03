@@ -98,7 +98,7 @@ if __name__ == "__main__":
 
 
 
-    res = Parallel(n_jobs=-5, backend="multiprocessing")(delayed(decision_par)(i) for i in tqdm(range(num_comb)))
+    res = Parallel(n_jobs=-1, backend="multiprocessing")(delayed(decision_par)(i) for i in tqdm(range(num_comb)))
 
     n_iters = {}
     decs = {}
