@@ -1,4 +1,4 @@
 #!/bin/bash
 echo "Seed: $1"
 source activate as_sb
-python ~/Adaptive_stopping_MC_RL/adastop/deep_rl_agents/sac.py -e Ant-v3 -b 1 -s $1
+python ~/Adaptive_stopping_MC_RL/adastop/deep_rl_agents/sac.py -e Ant-v3 -b 2000000 -s $1
