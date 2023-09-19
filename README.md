@@ -1,4 +1,4 @@
-This repository can be used to reproduce all the experiments in the paper [AdaStop: sequential testing for efficient andreliable comparisons of Deep RL Agents](https://arxiv.org/abs/2306.10882).
+This repository can be used to reproduce all the experiments in the paper [AdaStop: sequential testing for efficient and reliable comparisons of Deep RL Agents](https://arxiv.org/abs/2306.10882).
 
 ### Structure of the repository
 
