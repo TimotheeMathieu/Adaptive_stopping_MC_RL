@@ -3,5 +3,4 @@ rlberry_data
 *.pkl
 *.pyc
 *.egg-info
-results/
 __pycache__/

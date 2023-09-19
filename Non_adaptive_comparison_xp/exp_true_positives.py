@@ -11,6 +11,8 @@ import sys
 
 script_directory = os.path.realpath(os.path.dirname(__file__))
 
+
+
 parser = argparse.ArgumentParser(description='Process some integers.')
 parser.add_argument('--full-xp', dest='nb_runs', action='store_const',
                     const=int(1e3), default=50,
@@ -24,8 +26,12 @@ scalar_list2 = np.loadtxt(os.path.join(script_directory,"data/evals_td3_hc.txt")
 dist_means = np.abs(np.mean(scalar_list1)-np.mean(scalar_list2))
 pool_var = np.sqrt((np.std(scalar_list1)**2+np.std(scalar_list2)**2)/2)
 print("relative effect size = ", dist_means/pool_var)
-parameters = {}
 
+seed = 42
+np.random.seed(seed)
+
+parameters = {}
+parameters["seed"] = seed
 parameters["nb_exps"] = args.nb_runs
 combs = []
 for n in range(2, 7): 
