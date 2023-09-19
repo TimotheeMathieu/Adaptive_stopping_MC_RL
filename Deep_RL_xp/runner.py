@@ -13,7 +13,7 @@ from joblib import Parallel, delayed
 import numpy as np
 import pandas as pd
 
-from adastop.compare_agents import MultipleAgentsComparator
+from adastop import MultipleAgentsComparator
 
 
 AGENT_DIRNAME = "agents/"

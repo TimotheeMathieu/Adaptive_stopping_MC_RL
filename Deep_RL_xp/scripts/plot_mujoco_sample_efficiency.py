@@ -195,7 +195,7 @@ if __name__ == "__main__":
 
     fig.tight_layout()
     fig.savefig(
-        os.path.join(os.path.dirname(args.path), "learning_curves.pdf"),
+        os.path.join("results", "learning_curves.pdf"),
         format="pdf",
         bbox_inches="tight",
     )

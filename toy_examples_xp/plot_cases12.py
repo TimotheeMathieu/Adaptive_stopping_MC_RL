@@ -2,18 +2,10 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import os 
 import numpy as np
-
-
 import matplotlib
 import seaborn as sns
-home_folder = os.environ["HOME"]
-workdir = os.path.join(home_folder,"Adaptive_stopping_MC_RL","adastop", "example_simulatedR")
 
-
-from adastop import MultipleAgentsComparator
-
-
-
+workdir = os.path.realpath(os.path.dirname(__file__))
 
 # to read csv for new version of adastop
 def powers_case(fname1, fname2):
@@ -79,7 +71,6 @@ def plot_heatmap(data, annot, fname):
     plt.xlabel("$\Delta$")
     plt.ylabel("rejection frequency")
 
-
     plt.savefig(fname, bbox_inches='tight')
 
 
@@ -89,12 +80,11 @@ if __name__ == "__main__":
 
     labels = [r"0", r"$\frac{1}{9}$", r"$\frac{2}{9}$", r"$\frac{3}{9}$", r"$\frac{4}{9}$", r"$\frac{5}{9}$", r"$\frac{6}{9}$",r"$\frac{7}{9}$", r"$\frac{8}{9}$", r"1"]
 
-
-    fname = os.path.join(workdir, "Case12_plot.pdf")
+    fname = os.path.join("results", "Case12_plot.pdf")
 
     # #for the plots from paper
-    powers, power_stds, power_confidence_intervals = powers_case("exp2_5000_decs.csv", "exp2_5000_niter.csv") #Case 2 data
-    powers2, power_stds2, power_confidence_intervals2 = powers_case("exp1_5000_decs.csv", "exp1_5000_niter.csv") #Case 1 data
+    powers, power_stds, power_confidence_intervals = powers_case(os.path.join(workdir, "results", "exp2_5000_decs.csv"), os.path.join(workdir, "results", "exp2_5000_niter.csv")) #Case 2 data
+    powers2, power_stds2, power_confidence_intervals2 = powers_case(os.path.join(workdir, "results","exp1_5000_decs.csv"),os.path.join(workdir, "results", "exp1_5000_niter.csv")) #Case 1 data
 
     # powers2, power_stds2, power_confidence_intervals2 = powers_case1("exp1_10_decs.csv", "exp1_10_niter.csv")
     # powers, power_stds, power_confidence_intervals = powers_case1("exp2_10_decs.csv", "exp2_10_niter.csv")

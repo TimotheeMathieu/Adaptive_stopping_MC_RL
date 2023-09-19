@@ -1,9 +1,6 @@
 import os
-home_folder = os.environ["HOME"]
-workdir = os.path.join(home_folder,"Adaptive_stopping_MC_RL","adastop")
 
 from utils import *
-from adastop import MultipleAgentsComparator
 import numpy as np
 from tqdm import tqdm
 from joblib import Parallel, delayed
@@ -16,6 +13,8 @@ import seaborn as sns
 
 from rlberry.utils.logging import set_level
 set_level('ERROR')
+
+workdir = os.path.realpath(os.path.dirname(__file__))
 
 
 def plot_results(comp, fname, agent_names = None, axes= None):
@@ -35,9 +34,9 @@ def plot_results(comp, fname, agent_names = None, axes= None):
 
 
     decisions = {
-            'smaller': 0,
-            'equal': 1,
-            'larger': 2,
+            'smaller': 2,
+            'equal': 0,
+            'larger': 1,
             'na': 4,
         }
 
@@ -59,6 +58,7 @@ def plot_results(comp, fname, agent_names = None, axes= None):
     links = links[id_sort,:][:, id_sort]
     links = links + decisions['na'] * np.eye(len(links))
     print(links)
+    
     annot = []
     for i in range(len(links)):
         annot_i = []
@@ -73,25 +73,22 @@ def plot_results(comp, fname, agent_names = None, axes= None):
                 annot_i.append("${\\rightarrow  \leq}\downarrow$")
         annot+= [annot_i]
 
-
-
     n_iterations = [comp.n_iters[comp.agent_names[i]] for i in id_sort]
     the_table = ax2.table(
         cellText=[n_iterations], rowLabels=["n_iter"], loc="top", cellLoc="center", edges="open"
     )
 
-
     from matplotlib.colors import ListedColormap
 
     colors = matplotlib.colormaps['Pastel1'].colors
-    colors = [colors[0], 'lightgray', colors[1], 'white']
-    print(colors)
+    colors = ['lightgray',colors[1], colors[0], 'white']
     cmap = ListedColormap(colors, name="my_cmap")
-
+    annot = np.array(annot)
+    
     res = sns.heatmap(links, annot = annot, cmap=cmap, #vmax=2, center=0,
-                    linewidths=.5, ax =ax2, 
-                        cbar=False, yticklabels=np.array(agent_names)[id_sort],  
-                        xticklabels=np.array(agent_names)[id_sort],fmt='')
+                      linewidths=.5, ax =ax2, 
+                      cbar=False, yticklabels=np.array(agent_names)[id_sort],  
+                      xticklabels=np.array(agent_names)[id_sort],fmt='')
 
 
     # Drawing the frame
@@ -165,7 +162,7 @@ if __name__ == "__main__":
         exp_name = kwargs["exp_name"]
         os.makedirs(os.path.join(workdir, "example_simulatedR", "multc_sd_res", exp_name), exist_ok=True)
         filename = os.path.join(workdir, "example_simulatedR", "multc_sd_res", exp_name, "result_K={}-n={}-B={}-seed={}.pickle".format(kwargs["K"], kwargs["n"], kwargs["B"], kwargs["seed"]))
-        comparator = MultipleAgentsComparator(n = kwargs["n"], K = kwargs["K"], B = kwargs["B"], alpha = alpha, seed=kwargs["seed"], beta=0.01, n_evaluations=1)
+        comparator = RlberryComparator(n = kwargs["n"], K = kwargs["K"], B = kwargs["B"], alpha = alpha, seed=kwargs["seed"], beta=0.01, n_evaluations=1)
         if exp_name == "exp4":
             managers = exp4()
         else:
@@ -181,17 +178,9 @@ if __name__ == "__main__":
     res = Parallel(n_jobs=-5, backend="multiprocessing")(delayed(decision_par)(i) for i in tqdm(range(num_comb))) # n_jobs=1 for debugging
 
 
-    path = os.path.join(workdir, "example_simulatedR", "multiagent_test_plot.pdf")
-
-
+    path = os.path.join("results", "toy_example_multiagent_test_plot.pdf")
 
     plot_results(res[0], path, labels)
-
-
-
-
-
-
 
 
     # print(comparator.decisions,

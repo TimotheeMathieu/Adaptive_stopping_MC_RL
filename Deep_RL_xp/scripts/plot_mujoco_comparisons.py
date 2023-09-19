@@ -258,7 +258,7 @@ if __name__ == "__main__":
         cmap=cmap,
         cbar=False,
         xticklabels=envs,
-        yticklabels=[""] * len(ALGORITHMS),
+        yticklabels=ALGORITHMS,
         vmin=0,
         vmax=30,
     )
@@ -269,7 +269,7 @@ if __name__ == "__main__":
     fig.subplots_adjust(hspace=0.01, wspace=0.01)
     fig.tight_layout()
     fig.savefig(
-        os.path.join(os.path.dirname(args.path), "comparisons.pdf"),
+        os.path.join("results", "Deep_rl_comparisons.pdf"),
         format="pdf",
         bbox_inches="tight",
     )

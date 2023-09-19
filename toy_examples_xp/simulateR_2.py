@@ -1,16 +1,23 @@
 import os
-
-from adastop import MultipleAgentsComparator
 from utils import *
 import numpy as np
 from tqdm import tqdm
 from joblib import Parallel, delayed
 import pickle
 import pandas as pd
-
-
 from rlberry.utils.logging import set_level
 set_level('ERROR')
+
+import argparse
+script_directory = os.path.realpath(os.path.dirname(__file__))
+
+parser = argparse.ArgumentParser(description='Process some integers.')
+parser.add_argument('experiment', metavar='N', type=int, help='experiment identifier. Can be 1 or 2.')
+parser.add_argument('--full-xp', dest='M', action='store_const',
+                    const=5000, default=30,
+                    help='Do the full xp (default use less iterations for faster computation)')
+
+args = parser.parse_args()
 
 def exp1(diff_means):
     mus = [0-diff_means/2, 0+diff_means/2]
@@ -44,12 +51,10 @@ def exp3(df):
 
 if __name__ == "__main__":
     
-    # change the next two lines if you want to change an experiment or change the number of calls of AdaStop (M)
-    M=5000
-    EXP = "exp1"
+    # change the next two lines if you want to change the number of calls of AdaStop (M)
+    M=args.M
+    EXP = "exp"+str(args.experiment)
 
-    
-    
     SAVE = False
     alpha = 0.05
 
@@ -57,14 +62,14 @@ if __name__ == "__main__":
     restime = []
     p_vals = []
 
-    
-
-
     seeds = np.arange(M)
     K_list = np.array([5])
     n_list = np.array([5])
     B_list = np.array([10**4])
-    dist_params_list = np.linspace(0, 1, 10)
+    if M < 100:
+        dist_params_list = np.linspace(0, 1, 3) # reduced experiment
+    else:
+        dist_params_list = np.linspace(0, 1, 10)
 
     mesh = np.meshgrid(seeds, K_list, n_list, B_list, dist_params_list)
 
@@ -77,13 +82,11 @@ if __name__ == "__main__":
     num_comb = len(mesh[0].reshape(-1))
 
 
-
-
     def decision(save_results=SAVE, **kwargs):
         exp_name = kwargs["exp_name"]
         os.makedirs(os.path.join("mgres_alt", exp_name), exist_ok=True)
         filename = os.path.join("mgres_alt", exp_name, "result_K={}-n={}-B={}-dist_params={}-seed={}.pickle".format(kwargs["K"], kwargs["n"], kwargs["B"], kwargs["dist_params"], kwargs["seed"]))
-        comparator = MultipleAgentsComparator(n = kwargs["n"], K= kwargs["K"],B= kwargs["B"], alpha= alpha, beta=0, seed=kwargs["seed"], n_evaluations=1)
+        comparator = RlberryComparator(n = kwargs["n"], K= kwargs["K"],B= kwargs["B"], alpha= alpha, beta=0, seed=kwargs["seed"], n_evaluations=1)
         if exp_name == "exp1":
             manager1, manager2 = exp1(kwargs["dist_params"])
         elif exp_name == "exp2":
@@ -101,7 +104,6 @@ if __name__ == "__main__":
 
     def decision_par(i):
         return decision(seed=seed_iter[i], n=n_iter[i],K= K_iter[i], B=B_iter[i],dist_params= dist_params_iter[i], exp_name = EXP)
-
 
 
     res = Parallel(n_jobs=-1, backend="multiprocessing")(delayed(decision_par)(i) for i in tqdm(range(num_comb)))
@@ -125,9 +127,8 @@ if __name__ == "__main__":
     decs_df = pd.DataFrame(decs)
     n_iter_df = pd.DataFrame(n_iters)
 
-    decs_df.to_csv(EXP +"_" + str(M) + "_decs.csv")
-    n_iter_df.to_csv(EXP+"_" +str(M) +"_niter.csv")
-
+    decs_df.to_csv(os.path.join(script_directory, "results", EXP +"_" + str(M) + "_decs.csv"))
+    n_iter_df.to_csv(os.path.join(script_directory,"results",EXP+"_" +str(M) +"_niter.csv"))
     print("Done!")
 
 
