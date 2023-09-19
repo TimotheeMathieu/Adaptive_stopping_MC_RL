@@ -9,7 +9,7 @@ This repository can be used to reproduce all the experiments in the paper [AdaSt
 We provide a `requirements.txt` file which contains the dependencies and their versions at the time of the article.
 
 ### What is reproducible?
-We aim at having a completely reproducible paper. All the scripts for all the experiments are available and using the makefile all the figures and results of the paper can be reproduced. One can use `make all` to do the figures from the article with a reduced size of the experiments so that it runs in a reasonable amount of time. FOr more courageous people, you can use `make ARG=--full-xp all` which does the exact same figures as the ones in the article.
+We aim at having a completely reproducible paper. All the scripts for all the experiments are available and using the makefile all the figures and results of the paper can be reproduced. One can use `make all` (on linux) to do the figures from the article with a reduced size of the experiments so that it runs in a reasonable amount of time, using a virtual environment that is constructed in tmp folder. FOr more courageous people, you can use `make ARG=--full-xp all` which does the exact same figures as the ones in the article.
 
 Remark: due to its complexity, the deep rl experiments from Section 6.3. are not automatically recomputed, we only recompute the adastop algorithm and not the actual training of the agents.
 

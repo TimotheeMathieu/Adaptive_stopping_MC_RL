@@ -18,6 +18,7 @@ toy_examples: toy_examples_xp/simulateR_2.py toy_examples_xp/simulatedR_multi_1s
 	python3 toy_examples_xp/simulateR_2.py 1 $(ARG) ;\
 	python3 toy_examples_xp/simulateR_2.py 2 $(ARG) ;\
 	python3 toy_examples_xp/simulatedR_multi_1seed.py $(ARG) ;\
+	python3 toy_examples_xp/simulatedR_multi.py $(ARG);\
 	python3 toy_examples_xp/plot_cases12.py ;\
 	)
 
