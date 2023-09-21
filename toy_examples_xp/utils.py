@@ -1,5 +1,8 @@
 from rlberry.agents import Agent
 from rlberry.envs import Model
+from rlberry.seeding import Seeder
+from rlberry.envs.bandits import  Bandit
+from scipy import stats
 import rlberry.spaces as spaces
 import numpy as np
 from rlberry.manager import AgentManager
@@ -89,31 +92,33 @@ class DummyEnv(Model):
 class RandomAgent(Agent):
     def __init__(self, env, drift=0, std = 1, **kwargs):
         Agent.__init__(self, env)
-        self.drift = drift
-        self.std = std
+        
         if "type" in kwargs.keys():
             self.type = kwargs["type"]
         else:
             self.type = "normal"
-        self.kwargs = kwargs
-
-    def fit(self, budget: int, **kwargs):
-        pass
-
-    def eval(self, n_simulations=1, **kwargs):
+            
         if self.type == "normal":
-            noise = self.rng.normal(size=n_simulations)*self.std
+            law = stats.norm(loc = drift, scale=std)
         elif self.type == "student":
             if "df" in self.kwargs.keys():
                 df = self.kwargs["df"]
             else:
                 df = 2.
-            noise = self.rng.standard_t(df, size=n_simulations)
-        return self.drift + noise
+            law = stats.t(df, loc = drift)
+        self.bandit = Bandit([law])
 
-class MixtureAgent(Agent): 
-    def __init__(self, env, means=[0], stds=[1], prob_mixture = [1], **kwargs):
-        Agent.__init__(self, env, **kwargs)
+        self.bandit.seeder = Seeder(self.rng.integers(low=0, high=10000))
+
+    def fit(self, budget: int, **kwargs):
+        pass
+
+    def eval(self, n_simulations = 1, **kwargs):
+        # We will use only one simulation because we simulate directly law of empirical mean.
+        return self.bandit.step(0)[0]
+
+class MixtureLaw(): 
+    def __init__(self, means=[0], stds=[1], prob_mixture = [1], **kwargs):
         self.means = np.array(means)
         self.prob_mixture = np.array(prob_mixture)
         self.stds = np.array(stds)
@@ -122,41 +127,37 @@ class MixtureAgent(Agent):
         else:
             self.type = "normal"
 
-    def fit(self, budget: int, **kwargs):
-        pass
-
-    def eval(self, n_simulations=1, **kwargs):
-
+    def rvs(self, size, random_state):
         if self.type == "normal":
-            noise = self.rng.normal(size=n_simulations)
+            noise = random_state.normal(size=size)
         elif self.type == "student":
             if "df" in self.kwargs.keys():
                 df = self.kwargs["df"]
             else:
                 df = 2.
-            noise = self.rng.standard_t(df, size=n_simulations)
-
-        idxs = self.rng.choice(np.arange(len(self.means)), size=n_simulations, p=self.prob_mixture)
+            noise = random_state.standard_t(df, size=size)
+        idxs = random_state.choice(np.arange(len(self.means)), size=size, p=self.prob_mixture)
         ret = self.means[idxs] + noise*self.stds[idxs]
         return ret
-
+    def mean(self):
+        return np.sum(self.means*self.prob_mixture)
 
 #TODO check that comparator is using n_simulations
 class MixtureGaussianAgent(Agent):
     def __init__(self, env, means=[0], stds=[1], prob_mixture = [1], **kwargs):
         Agent.__init__(self, env, **kwargs)
-        self.means = np.array(means)
-        self.prob_mixture = np.array(prob_mixture)
-        self.stds = np.array(stds)
+        law = MixtureLaw(means, stds, prob_mixture)
+        self.bandit = Bandit([law])
+
+        self.bandit.seeder = Seeder(self.rng.integers(low=0, high=10000))
 
     def fit(self, budget: int, **kwargs):
         pass
 
-    def eval(self, n_simulations=1, **kwargs):
-        idxs = self.rng.choice(np.arange(len(self.means)), size=n_simulations, p=self.prob_mixture)
-        ret = self.means[idxs] + self.rng.normal(size=n_simulations)*self.stds[idxs]
-        return ret
-
+    def eval(self, n_simulations = 1, **kwargs):
+        # We will use only one simulation because we simulate directly law of empirical mean.
+        return self.bandit.step(0)[0]
+    
 
 def make_same_agents(diff_means, probas = [0.5, 0.5]):
     manager1 = (
