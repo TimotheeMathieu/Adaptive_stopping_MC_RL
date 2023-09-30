@@ -22,15 +22,16 @@ x_rttest = [0.059, 0.125, 0.304, 0.482, 0.638, 0.778, 0.842, 0.891, 0.951]
 x_boot = [0, 0.5, 0.57, 0.632, 0.705, 0.809, 0.862, 0.93, 0.966]
 x_perm = [0, 0.380, 0.475, 0.575, 0.670, 0.782, 0.835, 0.907, 0.953]
 y_non_adapt = [2, 3, 5, 7, 10, 15, 20, 30, 40]
-plt.plot(x_ttest, y_non_adapt, label = "t-test")
-plt.plot(x_welch, y_non_adapt, label = "Welch")
-plt.plot(x_mw, y_non_adapt, label = "Mann-Whit.")
-plt.plot(x_boot, y_non_adapt, label = "bootstrap.")
-plt.plot(x_perm, y_non_adapt, label = "permut.")
+with_5more = [7,8,10,12, 15,20, 25, 35, 45]
+plt.plot(x_ttest, with_5more, label = "t-test")
+plt.plot(x_welch, with_5more, label = "Welch")
+plt.plot(x_mw, with_5more, label = "Mann-Whit.")
+plt.plot(x_boot, with_5more, label = "bootstrap.")
+plt.plot(x_perm, with_5more, label = "permut.")
 plt.plot(x_adastop, y_adastop, label = "AdaStop n=5", linewidth=4)
 plt.grid()
 plt.legend()
 plt.ylabel("Nb of Random Seeds")
 plt.xlabel("Statistical Power")
 plt.vlines([0.8], [2], [40], linestyles="dashed", color = "black")
-plt.show()
+plt.savefig("power-seeds-nonadapt.pdf")
