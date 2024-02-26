@@ -175,7 +175,7 @@ if __name__ == "__main__":
     def decision_par(i):
         return decision(seed = seed_iter[i], n = n_iter[i], K = K_iter[i], B = B_iter[i], exp_name = EXP)
 
-    res = Parallel(n_jobs=-5, backend="multiprocessing")(delayed(decision_par)(i) for i in tqdm(range(num_comb))) # n_jobs=1 for debugging
+    res = Parallel(n_jobs=1)(delayed(decision_par)(i) for i in tqdm(range(num_comb))) # n_jobs=1 for debugging
 
 
     path = os.path.join("results", "toy_example_multiagent_test_plot.pdf")

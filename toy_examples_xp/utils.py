@@ -22,13 +22,15 @@ class RlberryComparator(MultipleAgentsComparator):
         seeder = Seeder(self.rng.randint(10000))
         seeders = seeder.spawn(len(managers) * self.K + 1)
         self.rng = seeders[-1].rng
-        
+
         for k in range(self.K):
             Z = self._fit(managers, Z, k, seeders)
+
             self.partial_compare({self.agent_names[i] : Z[i] for i in range(len(managers))}, verbose)
             decisions = np.array(list(self.decisions.values()))
             if np.all([d in ["smaller", "larger", "equal"] for d in decisions]):
                 break
+        
 
         return self.decisions
     def _fit(self, managers, Z, k, seeders):
@@ -50,7 +52,7 @@ class RlberryComparator(MultipleAgentsComparator):
             self.agent_names = [manager.agent_name for manager in managers_in]
 
         # For now, paralellize only training because _get_evals not pickleable
-        managers_in = Parallel(n_jobs=-1, backend=self.joblib_backend)(
+        managers_in = Parallel(n_jobs=1, backend="multiprocessing")(
             delayed(_fit_agent)(manager) for manager in managers_in
         )
 
@@ -101,21 +103,21 @@ class RandomAgent(Agent):
         if self.type == "normal":
             law = stats.norm(loc = drift, scale=std)
         elif self.type == "student":
-            if "df" in self.kwargs.keys():
-                df = self.kwargs["df"]
+            if "df" in kwargs.keys():
+                df = kwargs["df"]
             else:
                 df = 2.
             law = stats.t(df, loc = drift)
+
         self.bandit = Bandit([law])
-
         self.bandit.seeder = Seeder(self.rng.integers(low=0, high=10000))
-
+        
     def fit(self, budget: int, **kwargs):
         pass
 
     def eval(self, n_simulations = 1, **kwargs):
         # We will use only one simulation because we simulate directly law of empirical mean.
-        return self.bandit.step(0)[0]
+        return self.bandit.step(0)[1]
 
 class MixtureLaw(): 
     def __init__(self, means=[0], stds=[1], prob_mixture = [1], **kwargs):
@@ -156,7 +158,7 @@ class MixtureGaussianAgent(Agent):
 
     def eval(self, n_simulations = 1, **kwargs):
         # We will use only one simulation because we simulate directly law of empirical mean.
-        return self.bandit.step(0)[0]
+        return self.bandit.step(0)[1]
     
 
 def make_same_agents(diff_means, probas = [0.5, 0.5]):
@@ -208,14 +210,14 @@ def create_agents(agent_name, agent_label, **kwargs):
     if agent_name == "mixture":
         assert "mus" in kwargs.keys() and "probas" in kwargs.keys()
         manager =  (
-                        MixtureAgent,
-                        dict(
-                            train_env=(DummyEnv, {}),
-                            init_kwargs={"means": kwargs["mus"], "stds": [0.1, 0.1], "prob_mixture": kwargs["probas"]},
-                            fit_budget=1,
-                            agent_name=agent_label,
-                        ),
-                    )
+            MixtureGaussianAgent,
+            dict(
+                train_env=(DummyEnv, {}),
+                init_kwargs={"means": kwargs["mus"], "stds": [0.1, 0.1], "prob_mixture": kwargs["probas"]},
+                fit_budget=1,
+                agent_name=agent_label,
+            ),
+        )
     elif agent_name == "single":
         init_kwargs = dict(type = kwargs["type"], drift = kwargs["drift"])
         if kwargs["type"] == "student":
